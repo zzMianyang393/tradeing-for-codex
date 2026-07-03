@@ -1,0 +1,1272 @@
+{
+  "config": {
+    "start_equity": 10.0,
+    "timeframe_minutes": 60,
+    "taker_fee": 5e-05,
+    "slippage": 0.0,
+    "risk_per_trade": 0.16,
+    "max_margin_fraction": 0.85,
+    "max_total_margin_fraction": 0.85,
+    "symbol_risk_multipliers": {},
+    "allowed_symbols": [],
+    "max_positions": 1,
+    "active_symbol_limit": 4,
+    "short_window_symbol_limit": 4,
+    "short_window_days": 7,
+    "selector_lookback_bars": 672,
+    "selector_momentum_weight": 28.0,
+    "selector_volatility_weight": 60.0,
+    "selector_trend_weight": 0.25,
+    "selector_noise_penalty": 5.0,
+    "stop_atr": 2.0,
+    "take_profit_atr": 1.0,
+    "trailing_atr": 1.3,
+    "max_hold_bars": 6,
+    "cooldown_bars": 12,
+    "loss_cooldown_bars": 12,
+    "long_window_days": 30,
+    "long_window_preferred_symbols": [],
+    "min_score": 3.02,
+    "edge_lookback_trades": 12,
+    "edge_pause_bars": 192,
+    "invert_signals": false,
+    "enabled_regimes": [
+      "uptrend",
+      "range"
+    ],
+    "min_bars": 80,
+    "windows_days": [
+      365,
+      180,
+      90,
+      60,
+      30,
+      14,
+      7
+    ],
+    "validation_target_win_rate": 0.68,
+    "validation_target_profit": 0.0,
+    "leverage_caps": {
+      "BTC-USDT-SWAP": {
+        "max_leverage": 50,
+        "min_notional": 5.0
+      },
+      "ETH-USDT-SWAP": {
+        "max_leverage": 50,
+        "min_notional": 5.0
+      },
+      "SOL-USDT-SWAP": {
+        "max_leverage": 30,
+        "min_notional": 5.0
+      },
+      "BNB-USDT-SWAP": {
+        "max_leverage": 30,
+        "min_notional": 5.0
+      },
+      "XRP-USDT-SWAP": {
+        "max_leverage": 25,
+        "min_notional": 5.0
+      },
+      "ADA-USDT-SWAP": {
+        "max_leverage": 25,
+        "min_notional": 5.0
+      },
+      "DOGE-USDT-SWAP": {
+        "max_leverage": 20,
+        "min_notional": 5.0
+      },
+      "LINK-USDT-SWAP": {
+        "max_leverage": 20,
+        "min_notional": 5.0
+      },
+      "AVAX-USDT-SWAP": {
+        "max_leverage": 20,
+        "min_notional": 5.0
+      },
+      "APT-USDT-SWAP": {
+        "max_leverage": 15,
+        "min_notional": 5.0
+      },
+      "INJ-USDT-SWAP": {
+        "max_leverage": 15,
+        "min_notional": 5.0
+      },
+      "SUI-USDT-SWAP": {
+        "max_leverage": 15,
+        "min_notional": 5.0
+      },
+      "OP-USDT-SWAP": {
+        "max_leverage": 15,
+        "min_notional": 5.0
+      },
+      "ARB-USDT-SWAP": {
+        "max_leverage": 15,
+        "min_notional": 5.0
+      },
+      "TIA-USDT-SWAP": {
+        "max_leverage": 12,
+        "min_notional": 5.0
+      },
+      "FIL-USDT-SWAP": {
+        "max_leverage": 12,
+        "min_notional": 5.0
+      }
+    }
+  },
+  "data_dir": "..\\Quantify\\data",
+  "symbols": [
+    "APT-USDT-SWAP",
+    "AVAX-USDT-SWAP",
+    "ETH-USDT-SWAP",
+    "FIL-USDT-SWAP",
+    "INJ-USDT-SWAP",
+    "LINK-USDT-SWAP",
+    "OP-USDT-SWAP",
+    "SEI-USDT-SWAP",
+    "SOL-USDT-SWAP",
+    "SUI-USDT-SWAP",
+    "XRP-USDT-SWAP"
+  ],
+  "available_days": 20613.6103,
+  "windows": {
+    "365": {
+      "available": false,
+      "days": 365,
+      "reason": "eligible symbols have 29.98 overlapping days; download at least 365 days"
+    },
+    "180": {
+      "available": false,
+      "days": 180,
+      "reason": "eligible symbols have 29.98 overlapping days; download at least 180 days"
+    },
+    "90": {
+      "available": false,
+      "days": 90,
+      "reason": "eligible symbols have 29.98 overlapping days; download at least 90 days"
+    },
+    "60": {
+      "available": false,
+      "days": 60,
+      "reason": "eligible symbols have 29.98 overlapping days; download at least 60 days"
+    },
+    "30": {
+      "available": true,
+      "days": 30,
+      "from": "2026-05-30 08:26:00",
+      "to": "2026-06-29 08:00:00",
+      "start_equity": 10.0,
+      "end_equity": 8.6471,
+      "pnl": -1.3529,
+      "return_pct": -13.5293,
+      "max_drawdown_pct": 32.9059,
+      "trades": 9,
+      "wins": 6,
+      "losses": 3,
+      "win_rate": 0.6667,
+      "target_pass": false,
+      "selected_symbols_initial": [],
+      "by_symbol": {
+        "SEI-USDT-SWAP": {
+          "trades": 2,
+          "wins": 1,
+          "pnl": -1.5597,
+          "win_rate": 0.5
+        },
+        "FIL-USDT-SWAP": {
+          "trades": 1,
+          "wins": 0,
+          "pnl": -0.6569,
+          "win_rate": 0.0
+        },
+        "AVAX-USDT-SWAP": {
+          "trades": 4,
+          "wins": 4,
+          "pnl": 1.8633,
+          "win_rate": 1.0
+        },
+        "APT-USDT-SWAP": {
+          "trades": 2,
+          "wins": 1,
+          "pnl": -0.9738,
+          "win_rate": 0.5
+        }
+      },
+      "by_regime": {
+        "range": {
+          "trades": 9,
+          "wins": 6,
+          "pnl": -1.3271,
+          "win_rate": 0.6666666666666666
+        }
+      },
+      "equity_curve": [
+        [
+          "2026-05-30 08:26:00",
+          10.0
+        ],
+        [
+          "2026-05-30 16:00:00",
+          10.0
+        ],
+        [
+          "2026-05-31 00:00:00",
+          10.0
+        ],
+        [
+          "2026-05-31 08:00:00",
+          10.0
+        ],
+        [
+          "2026-05-31 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-01 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-01 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-01 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-02 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-02 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-02 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-03 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-03 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-03 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-04 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-04 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-04 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-05 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-05 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-05 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-06 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-06 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-06 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-07 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-07 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-07 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-08 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-08 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-08 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-09 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-09 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-09 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-10 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-10 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-10 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-11 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-11 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-11 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-12 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-12 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-12 16:00:00",
+          10.1401
+        ],
+        [
+          "2026-06-13 00:00:00",
+          10.1401
+        ],
+        [
+          "2026-06-13 08:00:00",
+          8.434
+        ],
+        [
+          "2026-06-13 16:00:00",
+          8.434
+        ],
+        [
+          "2026-06-14 00:00:00",
+          8.434
+        ],
+        [
+          "2026-06-14 08:00:00",
+          8.434
+        ],
+        [
+          "2026-06-14 16:00:00",
+          8.434
+        ],
+        [
+          "2026-06-15 00:00:00",
+          8.4308
+        ],
+        [
+          "2026-06-15 08:00:00",
+          7.7739
+        ],
+        [
+          "2026-06-15 16:00:00",
+          7.7739
+        ],
+        [
+          "2026-06-16 00:00:00",
+          7.7739
+        ],
+        [
+          "2026-06-16 08:00:00",
+          7.7739
+        ],
+        [
+          "2026-06-16 16:00:00",
+          7.7739
+        ],
+        [
+          "2026-06-17 00:00:00",
+          7.7739
+        ],
+        [
+          "2026-06-17 08:00:00",
+          7.7739
+        ],
+        [
+          "2026-06-17 16:00:00",
+          7.7739
+        ],
+        [
+          "2026-06-18 00:00:00",
+          7.7739
+        ],
+        [
+          "2026-06-18 08:00:00",
+          7.771
+        ],
+        [
+          "2026-06-18 16:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-19 00:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-19 08:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-19 16:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-20 00:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-20 08:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-20 16:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-21 00:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-21 08:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-21 16:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-22 00:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-22 08:00:00",
+          7.7858
+        ],
+        [
+          "2026-06-22 16:00:00",
+          8.5101
+        ],
+        [
+          "2026-06-23 00:00:00",
+          8.5101
+        ],
+        [
+          "2026-06-23 08:00:00",
+          6.8059
+        ],
+        [
+          "2026-06-23 16:00:00",
+          6.8059
+        ],
+        [
+          "2026-06-24 00:00:00",
+          6.8034
+        ],
+        [
+          "2026-06-24 08:00:00",
+          7.4453
+        ],
+        [
+          "2026-06-24 16:00:00",
+          7.4453
+        ],
+        [
+          "2026-06-25 00:00:00",
+          8.195
+        ],
+        [
+          "2026-06-25 08:00:00",
+          8.195
+        ],
+        [
+          "2026-06-25 16:00:00",
+          8.195
+        ],
+        [
+          "2026-06-26 00:00:00",
+          8.195
+        ],
+        [
+          "2026-06-26 08:00:00",
+          8.195
+        ],
+        [
+          "2026-06-26 16:00:00",
+          8.195
+        ],
+        [
+          "2026-06-27 00:00:00",
+          8.195
+        ],
+        [
+          "2026-06-27 08:00:00",
+          8.195
+        ],
+        [
+          "2026-06-27 16:00:00",
+          8.195
+        ],
+        [
+          "2026-06-28 00:00:00",
+          8.195
+        ],
+        [
+          "2026-06-28 08:00:00",
+          8.195
+        ],
+        [
+          "2026-06-28 16:00:00",
+          8.195
+        ],
+        [
+          "2026-06-29 00:00:00",
+          8.195
+        ],
+        [
+          "2026-06-29 08:00:00",
+          8.1924
+        ]
+      ],
+      "trades_detail": [
+        {
+          "symbol": "SEI-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-12 14:00:00",
+          "exit_time": "2026-06-12 15:00:00",
+          "entry": 0.0523,
+          "exit": 0.05217663,
+          "notional": 62.025,
+          "pnl": 0.1432,
+          "pnl_pct_equity": 1.4325,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "stop_or_trail",
+          "win": true
+        },
+        {
+          "symbol": "SEI-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-13 03:00:00",
+          "exit_time": "2026-06-13 06:00:00",
+          "entry": 0.05323,
+          "exit": 0.05464412,
+          "notional": 63.9785,
+          "pnl": -1.7029,
+          "pnl_pct_equity": -16.7986,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "stop_or_trail",
+          "win": false
+        },
+        {
+          "symbol": "FIL-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-14 23:00:00",
+          "exit_time": "2026-06-15 03:00:00",
+          "entry": 0.7937,
+          "exit": 0.80165083,
+          "notional": 65.2488,
+          "pnl": -0.6569,
+          "pnl_pct_equity": -7.7915,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "stop_or_trail",
+          "win": false
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "long",
+          "entry_time": "2026-06-18 05:00:00",
+          "exit_time": "2026-06-18 11:00:00",
+          "entry": 6.613,
+          "exit": 6.615,
+          "notional": 58.6692,
+          "pnl": 0.0148,
+          "pnl_pct_equity": 0.1906,
+          "regime": "range",
+          "reason": "range_revert_long",
+          "exit_reason": "time_exit",
+          "win": true
+        },
+        {
+          "symbol": "APT-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-22 11:00:00",
+          "exit_time": "2026-06-22 14:00:00",
+          "entry": 0.6808,
+          "exit": 0.67251347,
+          "notional": 60.0011,
+          "pnl": 0.7273,
+          "pnl_pct_equity": 9.3452,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "take_profit",
+          "win": true
+        },
+        {
+          "symbol": "APT-USDT-SWAP",
+          "direction": "long",
+          "entry_time": "2026-06-23 07:00:00",
+          "exit_time": "2026-06-23 08:00:00",
+          "entry": 0.6358,
+          "exit": 0.61838696,
+          "notional": 61.9998,
+          "pnl": -1.7011,
+          "pnl_pct_equity": -19.9968,
+          "regime": "range",
+          "reason": "range_revert_long",
+          "exit_reason": "stop_or_trail",
+          "win": false
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-23 22:00:00",
+          "exit_time": "2026-06-24 04:00:00",
+          "entry": 6.468,
+          "exit": 6.38286438,
+          "notional": 48.9518,
+          "pnl": 0.6419,
+          "pnl_pct_equity": 9.4347,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "take_profit",
+          "win": true
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "long",
+          "entry_time": "2026-06-24 18:00:00",
+          "exit_time": "2026-06-24 20:00:00",
+          "entry": 6.091,
+          "exit": 6.19524469,
+          "notional": 44.0645,
+          "pnl": 0.7519,
+          "pnl_pct_equity": 10.1025,
+          "regime": "range",
+          "reason": "range_revert_long",
+          "exit_reason": "stop_or_trail",
+          "win": true
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-29 04:00:00",
+          "exit_time": "2026-06-29 08:00:00",
+          "entry": 6.582,
+          "exit": 6.526,
+          "notional": 53.7619,
+          "pnl": 0.4547,
+          "pnl_pct_equity": 5.5506,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "end_of_test",
+          "win": true
+        }
+      ]
+    },
+    "14": {
+      "available": true,
+      "days": 14,
+      "from": "2026-06-15 08:00:00",
+      "to": "2026-06-29 08:00:00",
+      "start_equity": 10.0,
+      "end_equity": 11.1232,
+      "pnl": 1.1232,
+      "return_pct": 11.2321,
+      "max_drawdown_pct": 20.0547,
+      "trades": 6,
+      "wins": 5,
+      "losses": 1,
+      "win_rate": 0.8333,
+      "target_pass": true,
+      "selected_symbols_initial": [
+        "APT-USDT-SWAP",
+        "AVAX-USDT-SWAP",
+        "FIL-USDT-SWAP",
+        "INJ-USDT-SWAP"
+      ],
+      "by_symbol": {
+        "AVAX-USDT-SWAP": {
+          "trades": 4,
+          "wins": 4,
+          "pnl": 2.397,
+          "win_rate": 1.0
+        },
+        "APT-USDT-SWAP": {
+          "trades": 2,
+          "wins": 1,
+          "pnl": -1.2527,
+          "win_rate": 0.5
+        }
+      },
+      "by_regime": {
+        "range": {
+          "trades": 6,
+          "wins": 5,
+          "pnl": 1.1443,
+          "win_rate": 0.8333333333333334
+        }
+      },
+      "equity_curve": [
+        [
+          "2026-06-15 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-15 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-16 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-16 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-16 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-17 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-17 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-17 16:00:00",
+          10.0
+        ],
+        [
+          "2026-06-18 00:00:00",
+          10.0
+        ],
+        [
+          "2026-06-18 08:00:00",
+          9.9962
+        ],
+        [
+          "2026-06-18 16:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-19 00:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-19 08:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-19 16:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-20 00:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-20 08:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-20 16:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-21 00:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-21 08:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-21 16:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-22 00:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-22 08:00:00",
+          10.0153
+        ],
+        [
+          "2026-06-22 16:00:00",
+          10.947
+        ],
+        [
+          "2026-06-23 00:00:00",
+          10.947
+        ],
+        [
+          "2026-06-23 08:00:00",
+          8.7548
+        ],
+        [
+          "2026-06-23 16:00:00",
+          8.7548
+        ],
+        [
+          "2026-06-24 00:00:00",
+          8.7516
+        ],
+        [
+          "2026-06-24 08:00:00",
+          9.5773
+        ],
+        [
+          "2026-06-24 16:00:00",
+          9.5773
+        ],
+        [
+          "2026-06-25 00:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-25 08:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-25 16:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-26 00:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-26 08:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-26 16:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-27 00:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-27 08:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-27 16:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-28 00:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-28 08:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-28 16:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-29 00:00:00",
+          10.5417
+        ],
+        [
+          "2026-06-29 08:00:00",
+          10.5383
+        ]
+      ],
+      "trades_detail": [
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "long",
+          "entry_time": "2026-06-18 05:00:00",
+          "exit_time": "2026-06-18 11:00:00",
+          "entry": 6.613,
+          "exit": 6.615,
+          "notional": 75.4694,
+          "pnl": 0.0191,
+          "pnl_pct_equity": 0.1906,
+          "regime": "range",
+          "reason": "range_revert_long",
+          "exit_reason": "time_exit",
+          "win": true
+        },
+        {
+          "symbol": "APT-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-22 11:00:00",
+          "exit_time": "2026-06-22 14:00:00",
+          "entry": 0.6808,
+          "exit": 0.67251347,
+          "notional": 77.1827,
+          "pnl": 0.9356,
+          "pnl_pct_equity": 9.3452,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "take_profit",
+          "win": true
+        },
+        {
+          "symbol": "APT-USDT-SWAP",
+          "direction": "long",
+          "entry_time": "2026-06-23 07:00:00",
+          "exit_time": "2026-06-23 08:00:00",
+          "entry": 0.6358,
+          "exit": 0.61838696,
+          "notional": 79.7539,
+          "pnl": -2.1883,
+          "pnl_pct_equity": -19.9968,
+          "regime": "range",
+          "reason": "range_revert_long",
+          "exit_reason": "stop_or_trail",
+          "win": false
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-23 22:00:00",
+          "exit_time": "2026-06-24 04:00:00",
+          "entry": 6.468,
+          "exit": 6.38286438,
+          "notional": 62.9694,
+          "pnl": 0.8257,
+          "pnl_pct_equity": 9.4347,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "take_profit",
+          "win": true
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "long",
+          "entry_time": "2026-06-24 18:00:00",
+          "exit_time": "2026-06-24 20:00:00",
+          "entry": 6.091,
+          "exit": 6.19524469,
+          "notional": 56.6827,
+          "pnl": 0.9673,
+          "pnl_pct_equity": 10.1025,
+          "regime": "range",
+          "reason": "range_revert_long",
+          "exit_reason": "stop_or_trail",
+          "win": true
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-29 04:00:00",
+          "exit_time": "2026-06-29 08:00:00",
+          "entry": 6.582,
+          "exit": 6.526,
+          "notional": 69.157,
+          "pnl": 0.5849,
+          "pnl_pct_equity": 5.5506,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "end_of_test",
+          "win": true
+        }
+      ]
+    },
+    "7": {
+      "available": true,
+      "days": 7,
+      "from": "2026-06-22 08:00:00",
+      "to": "2026-06-29 08:00:00",
+      "start_equity": 10.0,
+      "end_equity": 10.2694,
+      "pnl": 0.2694,
+      "return_pct": 2.6941,
+      "max_drawdown_pct": 20.0547,
+      "trades": 6,
+      "wins": 4,
+      "losses": 2,
+      "win_rate": 0.6667,
+      "target_pass": false,
+      "selected_symbols_initial": [
+        "APT-USDT-SWAP",
+        "AVAX-USDT-SWAP",
+        "INJ-USDT-SWAP",
+        "SUI-USDT-SWAP"
+      ],
+      "by_symbol": {
+        "APT-USDT-SWAP": {
+          "trades": 2,
+          "wins": 1,
+          "pnl": -1.2507,
+          "win_rate": 0.5
+        },
+        "AVAX-USDT-SWAP": {
+          "trades": 3,
+          "wins": 3,
+          "pnl": 2.3302,
+          "win_rate": 1.0
+        },
+        "INJ-USDT-SWAP": {
+          "trades": 1,
+          "wins": 0,
+          "pnl": -0.7896,
+          "win_rate": 0.0
+        }
+      },
+      "by_regime": {
+        "range": {
+          "trades": 6,
+          "wins": 4,
+          "pnl": 0.2899,
+          "win_rate": 0.6666666666666666
+        }
+      },
+      "equity_curve": [
+        [
+          "2026-06-22 08:00:00",
+          10.0
+        ],
+        [
+          "2026-06-22 16:00:00",
+          10.9303
+        ],
+        [
+          "2026-06-23 00:00:00",
+          10.9303
+        ],
+        [
+          "2026-06-23 08:00:00",
+          8.7414
+        ],
+        [
+          "2026-06-23 16:00:00",
+          8.7414
+        ],
+        [
+          "2026-06-24 00:00:00",
+          8.7383
+        ],
+        [
+          "2026-06-24 08:00:00",
+          9.5627
+        ],
+        [
+          "2026-06-24 16:00:00",
+          9.5627
+        ],
+        [
+          "2026-06-25 00:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-25 08:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-25 16:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-26 00:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-26 08:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-26 16:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-27 00:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-27 08:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-27 16:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-28 00:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-28 08:00:00",
+          10.5257
+        ],
+        [
+          "2026-06-28 16:00:00",
+          10.5221
+        ],
+        [
+          "2026-06-29 00:00:00",
+          9.7326
+        ],
+        [
+          "2026-06-29 08:00:00",
+          9.7294
+        ]
+      ],
+      "trades_detail": [
+        {
+          "symbol": "APT-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-22 11:00:00",
+          "exit_time": "2026-06-22 14:00:00",
+          "entry": 0.6808,
+          "exit": 0.67251347,
+          "notional": 77.065,
+          "pnl": 0.9342,
+          "pnl_pct_equity": 9.3452,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "take_profit",
+          "win": true
+        },
+        {
+          "symbol": "APT-USDT-SWAP",
+          "direction": "long",
+          "entry_time": "2026-06-23 07:00:00",
+          "exit_time": "2026-06-23 08:00:00",
+          "entry": 0.6358,
+          "exit": 0.61838696,
+          "notional": 79.6322,
+          "pnl": -2.1849,
+          "pnl_pct_equity": -19.9968,
+          "regime": "range",
+          "reason": "range_revert_long",
+          "exit_reason": "stop_or_trail",
+          "win": false
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-23 22:00:00",
+          "exit_time": "2026-06-24 04:00:00",
+          "entry": 6.468,
+          "exit": 6.38286438,
+          "notional": 62.8733,
+          "pnl": 0.8244,
+          "pnl_pct_equity": 9.4347,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "take_profit",
+          "win": true
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "long",
+          "entry_time": "2026-06-24 18:00:00",
+          "exit_time": "2026-06-24 20:00:00",
+          "entry": 6.091,
+          "exit": 6.19524469,
+          "notional": 56.5962,
+          "pnl": 0.9658,
+          "pnl_pct_equity": 10.1025,
+          "regime": "range",
+          "reason": "range_revert_long",
+          "exit_reason": "stop_or_trail",
+          "win": true
+        },
+        {
+          "symbol": "INJ-USDT-SWAP",
+          "direction": "long",
+          "entry_time": "2026-06-28 16:00:00",
+          "exit_time": "2026-06-28 22:00:00",
+          "entry": 4.572,
+          "exit": 4.52096718,
+          "notional": 70.4212,
+          "pnl": -0.7896,
+          "pnl_pct_equity": -7.5038,
+          "regime": "range",
+          "reason": "range_revert_long",
+          "exit_reason": "stop_or_trail",
+          "win": false
+        },
+        {
+          "symbol": "AVAX-USDT-SWAP",
+          "direction": "short",
+          "entry_time": "2026-06-29 04:00:00",
+          "exit_time": "2026-06-29 08:00:00",
+          "entry": 6.582,
+          "exit": 6.526,
+          "notional": 63.8486,
+          "pnl": 0.54,
+          "pnl_pct_equity": 5.5506,
+          "regime": "range",
+          "reason": "range_revert_short",
+          "exit_reason": "end_of_test",
+          "win": true
+        }
+      ]
+    }
+  },
+  "audit": {
+    "complete": false,
+    "failures": [
+      "365d unavailable",
+      "180d unavailable",
+      "90d unavailable",
+      "60d unavailable",
+      "30d pnl -1.3529 <= 0",
+      "30d win rate 66.67% < 68.00%",
+      "7d win rate 66.67% < 68.00%"
+    ],
+    "required_windows": [
+      365,
+      180,
+      90,
+      60,
+      30,
+      14,
+      7
+    ],
+    "min_win_rate": 0.68,
+    "min_pnl": 0.0
+  }
+}

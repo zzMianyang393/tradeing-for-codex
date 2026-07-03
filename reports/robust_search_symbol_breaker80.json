@@ -1,0 +1,6656 @@
+{
+  "stage1": [
+    {
+      "trial": 54,
+      "score": -15.4407,
+      "passed": 2,
+      "min_return": -37.3517,
+      "min_win": 0.4737,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.13,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 5,
+        "short_window_symbol_limit": 7,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 6.0,
+        "selector_volatility_weight": 25.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 9.0,
+        "stop_atr": 1.4,
+        "take_profit_atr": 0.8,
+        "trailing_atr": 1.19,
+        "max_hold_bars": 8,
+        "cooldown_bars": 18,
+        "loss_cooldown_bars": 36,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.2,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 7.7599,
+          "return_pct": 77.5991,
+          "win_rate": 0.6944,
+          "trades": 36,
+          "max_drawdown_pct": 29.5524,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -3.7352,
+          "return_pct": -37.3517,
+          "win_rate": 0.4737,
+          "trades": 19,
+          "max_drawdown_pct": 50.5818,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 3.3657,
+          "return_pct": 33.6567,
+          "win_rate": 0.7778,
+          "trades": 9,
+          "max_drawdown_pct": 16.37,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 74,
+      "score": 41.707,
+      "passed": 1,
+      "min_return": 4.8902,
+      "min_win": 0.75,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.1,
+        "max_margin_fraction": 0.3,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 6,
+        "short_window_days": 7,
+        "selector_lookback_bars": 288,
+        "selector_momentum_weight": 44.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 9.0,
+        "stop_atr": 2.2,
+        "take_profit_atr": 0.42,
+        "trailing_atr": 1.2100000000000002,
+        "max_hold_bars": 24,
+        "cooldown_bars": 72,
+        "loss_cooldown_bars": 72,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.4,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 0.713,
+          "return_pct": 7.1304,
+          "win_rate": 0.75,
+          "trades": 16,
+          "max_drawdown_pct": 5.2308,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 1.0055,
+          "return_pct": 10.0549,
+          "win_rate": 1.0,
+          "trades": 7,
+          "max_drawdown_pct": 0.075,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.489,
+          "return_pct": 4.8902,
+          "win_rate": 1.0,
+          "trades": 3,
+          "max_drawdown_pct": 0.075,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 13,
+      "score": 17.4809,
+      "passed": 1,
+      "min_return": 3.2275,
+      "min_win": 0.6,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.13,
+        "max_margin_fraction": 0.45,
+        "max_total_margin_fraction": 0.3,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 5,
+        "short_window_symbol_limit": 5,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 140.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 2.0,
+        "stop_atr": 1.6,
+        "take_profit_atr": 1.0,
+        "trailing_atr": 1.36,
+        "max_hold_bars": 18,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 16,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.4,
+        "edge_lookback_trades": 6,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 288,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 0.6061,
+          "return_pct": 6.0606,
+          "win_rate": 0.6,
+          "trades": 10,
+          "max_drawdown_pct": 5.6938,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.9627,
+          "return_pct": 9.6271,
+          "win_rate": 1.0,
+          "trades": 4,
+          "max_drawdown_pct": 0.03,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.3227,
+          "return_pct": 3.2275,
+          "win_rate": 1.0,
+          "trades": 1,
+          "max_drawdown_pct": 0.0225,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 23,
+      "score": -11.962,
+      "passed": 1,
+      "min_return": -24.7019,
+      "min_win": 0.619,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.1,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.45,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 5,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 44.0,
+        "selector_volatility_weight": 70.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 2.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.85,
+        "trailing_atr": 1.54,
+        "max_hold_bars": 8,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.02,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -2.4702,
+          "return_pct": -24.7019,
+          "win_rate": 0.619,
+          "trades": 63,
+          "max_drawdown_pct": 34.4474,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 1.992,
+          "return_pct": 19.9198,
+          "win_rate": 0.6875,
+          "trades": 48,
+          "max_drawdown_pct": 20.6174,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 5.7961,
+          "return_pct": 57.9612,
+          "win_rate": 0.7742,
+          "trades": 31,
+          "max_drawdown_pct": 11.819,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 2,
+      "score": -48.0152,
+      "passed": 1,
+      "min_return": -9.9155,
+      "min_win": 0.625,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.06,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 3,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 28.0,
+        "selector_volatility_weight": 60.0,
+        "selector_trend_weight": 0.25,
+        "selector_noise_penalty": 5.0,
+        "stop_atr": 2.4,
+        "take_profit_atr": 0.55,
+        "trailing_atr": 1.56,
+        "max_hold_bars": 6,
+        "cooldown_bars": 12,
+        "loss_cooldown_bars": 12,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.1,
+        "edge_lookback_trades": 12,
+        "edge_pause_bars": 192,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 0.7755,
+          "return_pct": 7.755,
+          "win_rate": 0.7174,
+          "trades": 46,
+          "max_drawdown_pct": 16.7372,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.9915,
+          "return_pct": -9.9155,
+          "win_rate": 0.625,
+          "trades": 24,
+          "max_drawdown_pct": 16.3612,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 1.0697,
+          "return_pct": 10.697,
+          "win_rate": 0.7647,
+          "trades": 17,
+          "max_drawdown_pct": 6.5998,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 3,
+      "score": -99.836,
+      "passed": 1,
+      "min_return": -5.4051,
+      "min_win": 0.5333,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.04,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 4,
+        "short_window_symbol_limit": 4,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 28.0,
+        "selector_volatility_weight": 60.0,
+        "selector_trend_weight": 0.25,
+        "selector_noise_penalty": 5.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.7,
+        "trailing_atr": 1.8199999999999998,
+        "max_hold_bars": 6,
+        "cooldown_bars": 12,
+        "loss_cooldown_bars": 12,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 12,
+        "edge_pause_bars": 192,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 0.4989,
+          "return_pct": 4.9885,
+          "win_rate": 0.6957,
+          "trades": 69,
+          "max_drawdown_pct": 20.5324,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.5405,
+          "return_pct": -5.4051,
+          "win_rate": 0.5625,
+          "trades": 32,
+          "max_drawdown_pct": 7.9921,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.0576,
+          "return_pct": 0.5761,
+          "win_rate": 0.5333,
+          "trades": 15,
+          "max_drawdown_pct": 7.0616,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 64,
+      "score": -100.1802,
+      "passed": 1,
+      "min_return": -7.4236,
+      "min_win": 0.5294,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.055,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.6,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 3,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 25.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 6.0,
+        "stop_atr": 2.6,
+        "take_profit_atr": 0.7,
+        "trailing_atr": 1.4300000000000002,
+        "max_hold_bars": 4,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 48,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 1.9143,
+          "return_pct": 19.1434,
+          "win_rate": 0.64,
+          "trades": 100,
+          "max_drawdown_pct": 16.9134,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.7424,
+          "return_pct": -7.4236,
+          "win_rate": 0.5294,
+          "trades": 51,
+          "max_drawdown_pct": 15.8386,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.1634,
+          "return_pct": 1.6341,
+          "win_rate": 0.5333,
+          "trades": 15,
+          "max_drawdown_pct": 8.9818,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 22,
+      "score": -156.7098,
+      "passed": 1,
+      "min_return": -26.5147,
+      "min_win": 0.3889,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.055,
+        "max_margin_fraction": 0.75,
+        "max_total_margin_fraction": 0.75,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 5,
+        "short_window_symbol_limit": 5,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 16.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 4.0,
+        "stop_atr": 1.8,
+        "take_profit_atr": 1.25,
+        "trailing_atr": 1.53,
+        "max_hold_bars": 36,
+        "cooldown_bars": 12,
+        "loss_cooldown_bars": 36,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.2,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 4.3922,
+          "return_pct": 43.9222,
+          "win_rate": 0.625,
+          "trades": 40,
+          "max_drawdown_pct": 18.4965,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -2.6515,
+          "return_pct": -26.5147,
+          "win_rate": 0.3889,
+          "trades": 18,
+          "max_drawdown_pct": 32.007,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -1.4394,
+          "return_pct": -14.3936,
+          "win_rate": 0.4,
+          "trades": 10,
+          "max_drawdown_pct": 23.2171,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 58,
+      "score": -28.7154,
+      "passed": 0,
+      "min_return": -16.58,
+      "min_win": 0.7021,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.03,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 4,
+        "short_window_symbol_limit": 8,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 10.0,
+        "selector_volatility_weight": 140.0,
+        "selector_trend_weight": 0.0,
+        "selector_noise_penalty": 4.0,
+        "stop_atr": 2.2,
+        "take_profit_atr": 0.42,
+        "trailing_atr": 1.87,
+        "max_hold_bars": 8,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.65,
+        "edge_lookback_trades": 8,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -1.658,
+          "return_pct": -16.58,
+          "win_rate": 0.7021,
+          "trades": 47,
+          "max_drawdown_pct": 18.9998,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.1808,
+          "return_pct": 1.8079,
+          "win_rate": 0.8,
+          "trades": 40,
+          "max_drawdown_pct": 8.1125,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.4397,
+          "return_pct": 4.3968,
+          "win_rate": 0.8667,
+          "trades": 15,
+          "max_drawdown_pct": 3.8437,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 52,
+      "score": -29.4193,
+      "passed": 0,
+      "min_return": -8.331,
+      "min_win": 0.72,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.04,
+        "max_margin_fraction": 0.75,
+        "max_total_margin_fraction": 0.75,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 8,
+        "short_window_symbol_limit": 12,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 6.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 6.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.85,
+        "trailing_atr": 2.38,
+        "max_hold_bars": 24,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.8331,
+          "return_pct": -8.331,
+          "win_rate": 0.72,
+          "trades": 50,
+          "max_drawdown_pct": 24.0622,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 2.027,
+          "return_pct": 20.2695,
+          "win_rate": 0.7955,
+          "trades": 44,
+          "max_drawdown_pct": 10.022,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -0.1471,
+          "return_pct": -1.471,
+          "win_rate": 0.7222,
+          "trades": 18,
+          "max_drawdown_pct": 14.6092,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 26,
+      "score": -53.4167,
+      "passed": 0,
+      "min_return": -2.4762,
+      "min_win": 0.6667,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.04,
+        "max_margin_fraction": 0.3,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 5,
+        "short_window_symbol_limit": 7,
+        "short_window_days": 7,
+        "selector_lookback_bars": 480,
+        "selector_momentum_weight": 10.0,
+        "selector_volatility_weight": 25.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 6.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.85,
+        "trailing_atr": 2.38,
+        "max_hold_bars": 18,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 48,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.4,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 96,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.1737,
+          "return_pct": -1.7374,
+          "win_rate": 0.6923,
+          "trades": 13,
+          "max_drawdown_pct": 5.2037,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.5158,
+          "return_pct": 5.1579,
+          "win_rate": 0.875,
+          "trades": 8,
+          "max_drawdown_pct": 4.9492,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -0.2476,
+          "return_pct": -2.4762,
+          "win_rate": 0.6667,
+          "trades": 3,
+          "max_drawdown_pct": 4.9635,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 41,
+      "score": -60.6656,
+      "passed": 0,
+      "min_return": -7.9755,
+      "min_win": 0.5625,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.02,
+        "max_margin_fraction": 0.45,
+        "max_total_margin_fraction": 0.3,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 2,
+        "short_window_symbol_limit": 4,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 24.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.25,
+        "selector_noise_penalty": 4.0,
+        "stop_atr": 2.6,
+        "take_profit_atr": 0.7,
+        "trailing_atr": 1.4300000000000002,
+        "max_hold_bars": 8,
+        "cooldown_bars": 72,
+        "loss_cooldown_bars": 144,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.02,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 288,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.7976,
+          "return_pct": -7.9755,
+          "win_rate": 0.5625,
+          "trades": 32,
+          "max_drawdown_pct": 10.5321,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.8697,
+          "return_pct": 8.6974,
+          "win_rate": 0.7931,
+          "trades": 29,
+          "max_drawdown_pct": 2.3758,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.2497,
+          "return_pct": 2.4972,
+          "win_rate": 0.6667,
+          "trades": 15,
+          "max_drawdown_pct": 1.5739,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 20,
+      "score": -66.5155,
+      "passed": 0,
+      "min_return": -14.1839,
+      "min_win": 0.6,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.16,
+        "max_margin_fraction": 0.45,
+        "max_total_margin_fraction": 0.3,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 5,
+        "short_window_symbol_limit": 10,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.0,
+        "selector_noise_penalty": 9.0,
+        "stop_atr": 2.6,
+        "take_profit_atr": 0.7,
+        "trailing_atr": 1.4300000000000002,
+        "max_hold_bars": 12,
+        "cooldown_bars": 72,
+        "loss_cooldown_bars": 216,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.45,
+        "edge_lookback_trades": 6,
+        "edge_pause_bars": 384,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -1.4184,
+          "return_pct": -14.1839,
+          "win_rate": 0.6,
+          "trades": 30,
+          "max_drawdown_pct": 15.0747,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 1.1672,
+          "return_pct": 11.6721,
+          "win_rate": 0.7692,
+          "trades": 26,
+          "max_drawdown_pct": 13.1353,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.5703,
+          "return_pct": 5.7031,
+          "win_rate": 0.6364,
+          "trades": 11,
+          "max_drawdown_pct": 5.6278,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 36,
+      "score": -86.7515,
+      "passed": 0,
+      "min_return": 0.6327,
+      "min_win": 0.5472,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.03,
+        "max_margin_fraction": 0.6,
+        "max_total_margin_fraction": 0.75,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 4,
+        "short_window_symbol_limit": 6,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 44.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 12.0,
+        "stop_atr": 3.2,
+        "take_profit_atr": 1.2,
+        "trailing_atr": 2.2399999999999998,
+        "max_hold_bars": 8,
+        "cooldown_bars": 12,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 384,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 0.0633,
+          "return_pct": 0.6327,
+          "win_rate": 0.5472,
+          "trades": 53,
+          "max_drawdown_pct": 13.5474,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 1.0423,
+          "return_pct": 10.4229,
+          "win_rate": 0.6444,
+          "trades": 45,
+          "max_drawdown_pct": 6.9533,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.4348,
+          "return_pct": 4.3476,
+          "win_rate": 0.5714,
+          "trades": 21,
+          "max_drawdown_pct": 4.9142,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 75,
+      "score": -93.5082,
+      "passed": 0,
+      "min_return": -41.2087,
+      "min_win": 0.6964,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.13,
+        "max_margin_fraction": 0.3,
+        "max_total_margin_fraction": 0.3,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 3,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 6.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 12.0,
+        "stop_atr": 2.4,
+        "take_profit_atr": 0.55,
+        "trailing_atr": 1.68,
+        "max_hold_bars": 12,
+        "cooldown_bars": 48,
+        "loss_cooldown_bars": 48,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.45,
+        "edge_lookback_trades": 8,
+        "edge_pause_bars": 96,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "range",
+          "transition"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -4.1209,
+          "return_pct": -41.2087,
+          "win_rate": 0.6964,
+          "trades": 56,
+          "max_drawdown_pct": 50.3897,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.1262,
+          "return_pct": -1.2623,
+          "win_rate": 0.6977,
+          "trades": 43,
+          "max_drawdown_pct": 22.9674,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.5646,
+          "return_pct": 5.6463,
+          "win_rate": 0.7692,
+          "trades": 13,
+          "max_drawdown_pct": 10.7845,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 56,
+      "score": -96.4213,
+      "passed": 0,
+      "min_return": -18.3349,
+      "min_win": 0.5714,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.04,
+        "max_margin_fraction": 0.3,
+        "max_total_margin_fraction": 0.45,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 5,
+        "short_window_symbol_limit": 5,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 44.0,
+        "selector_volatility_weight": 70.0,
+        "selector_trend_weight": 0.0,
+        "selector_noise_penalty": 4.0,
+        "stop_atr": 2.6,
+        "take_profit_atr": 0.7,
+        "trailing_atr": 2.21,
+        "max_hold_bars": 18,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 16,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.2,
+        "edge_lookback_trades": 8,
+        "edge_pause_bars": 192,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "transition",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -1.8335,
+          "return_pct": -18.3349,
+          "win_rate": 0.5714,
+          "trades": 21,
+          "max_drawdown_pct": 22.5001,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.7759,
+          "return_pct": -7.7586,
+          "win_rate": 0.6667,
+          "trades": 15,
+          "max_drawdown_pct": 15.5207,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -0.0454,
+          "return_pct": -0.4538,
+          "win_rate": 0.7778,
+          "trades": 9,
+          "max_drawdown_pct": 4.7568,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 16,
+      "score": -100.4433,
+      "passed": 0,
+      "min_return": 6.4461,
+      "min_win": 0.4706,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.13,
+        "max_margin_fraction": 0.6,
+        "max_total_margin_fraction": 0.3,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 3,
+        "short_window_days": 7,
+        "selector_lookback_bars": 480,
+        "selector_momentum_weight": 24.0,
+        "selector_volatility_weight": 140.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 2.0,
+        "stop_atr": 1.8,
+        "take_profit_atr": 1.25,
+        "trailing_atr": 1.26,
+        "max_hold_bars": 24,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 72,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.65,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 96,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 2.3593,
+          "return_pct": 23.593,
+          "win_rate": 0.475,
+          "trades": 40,
+          "max_drawdown_pct": 15.0013,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.6446,
+          "return_pct": 6.4461,
+          "win_rate": 0.4706,
+          "trades": 17,
+          "max_drawdown_pct": 9.0393,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.8943,
+          "return_pct": 8.9434,
+          "win_rate": 0.5556,
+          "trades": 9,
+          "max_drawdown_pct": 4.814,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 49,
+      "score": -107.2417,
+      "passed": 0,
+      "min_return": -20.4893,
+      "min_win": 0.6154,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.13,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.3,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 2,
+        "short_window_symbol_limit": 4,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 6.0,
+        "selector_volatility_weight": 70.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 6.0,
+        "stop_atr": 2.2,
+        "take_profit_atr": 0.42,
+        "trailing_atr": 1.54,
+        "max_hold_bars": 8,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.02,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.8353,
+          "return_pct": -8.3525,
+          "win_rate": 0.7857,
+          "trades": 28,
+          "max_drawdown_pct": 19.9234,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -2.0489,
+          "return_pct": -20.4893,
+          "win_rate": 0.619,
+          "trades": 21,
+          "max_drawdown_pct": 33.5859,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -0.5381,
+          "return_pct": -5.3807,
+          "win_rate": 0.6154,
+          "trades": 13,
+          "max_drawdown_pct": 10.0082,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 62,
+      "score": -109.7954,
+      "passed": 0,
+      "min_return": -33.8328,
+      "min_win": 0.567,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.055,
+        "max_margin_fraction": 0.3,
+        "max_total_margin_fraction": 0.6,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 8,
+        "short_window_symbol_limit": 10,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 16.0,
+        "selector_volatility_weight": 70.0,
+        "selector_trend_weight": 0.25,
+        "selector_noise_penalty": 12.0,
+        "stop_atr": 3.5,
+        "take_profit_atr": 1.45,
+        "trailing_atr": 2.975,
+        "max_hold_bars": 24,
+        "cooldown_bars": 48,
+        "loss_cooldown_bars": 96,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.45,
+        "edge_lookback_trades": 6,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 288,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "range",
+          "transition"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -3.3833,
+          "return_pct": -33.8328,
+          "win_rate": 0.567,
+          "trades": 97,
+          "max_drawdown_pct": 50.0699,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.0521,
+          "return_pct": -0.5205,
+          "win_rate": 0.6429,
+          "trades": 56,
+          "max_drawdown_pct": 30.0789,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 1.4891,
+          "return_pct": 14.8914,
+          "win_rate": 0.7222,
+          "trades": 18,
+          "max_drawdown_pct": 11.1152,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 73,
+      "score": -114.7521,
+      "passed": 0,
+      "min_return": 7.7766,
+      "min_win": 0.4828,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.04,
+        "max_margin_fraction": 0.75,
+        "max_total_margin_fraction": 0.6,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 12,
+        "short_window_days": 7,
+        "selector_lookback_bars": 480,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 2.0,
+        "stop_atr": 3.5,
+        "take_profit_atr": 1.45,
+        "trailing_atr": 2.975,
+        "max_hold_bars": 6,
+        "cooldown_bars": 48,
+        "loss_cooldown_bars": 144,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.65,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "range",
+          "transition"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": 0.7777,
+          "return_pct": 7.7766,
+          "win_rate": 0.5098,
+          "trades": 51,
+          "max_drawdown_pct": 12.2559,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.7893,
+          "return_pct": 7.8933,
+          "win_rate": 0.5,
+          "trades": 36,
+          "max_drawdown_pct": 9.4445,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.9468,
+          "return_pct": 9.4683,
+          "win_rate": 0.4828,
+          "trades": 29,
+          "max_drawdown_pct": 3.0455,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 63,
+      "score": -115.1018,
+      "passed": 0,
+      "min_return": -6.3825,
+      "min_win": 0.4828,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.02,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.45,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 4,
+        "short_window_symbol_limit": 4,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 10.0,
+        "selector_volatility_weight": 25.0,
+        "selector_trend_weight": 0.25,
+        "selector_noise_penalty": 2.0,
+        "stop_atr": 3.0,
+        "take_profit_atr": 1.0,
+        "trailing_atr": 2.0999999999999996,
+        "max_hold_bars": 6,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 16,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.45,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 384,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.6383,
+          "return_pct": -6.3825,
+          "win_rate": 0.4828,
+          "trades": 29,
+          "max_drawdown_pct": 9.0338,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.3913,
+          "return_pct": -3.9126,
+          "win_rate": 0.5312,
+          "trades": 32,
+          "max_drawdown_pct": 8.9104,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.3895,
+          "return_pct": 3.8951,
+          "win_rate": 0.6957,
+          "trades": 23,
+          "max_drawdown_pct": 2.388,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 42,
+      "score": -115.5744,
+      "passed": 0,
+      "min_return": -19.3196,
+      "min_win": 0.5172,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.04,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.75,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 4,
+        "short_window_symbol_limit": 4,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 25.0,
+        "selector_trend_weight": 0.25,
+        "selector_noise_penalty": 12.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.85,
+        "trailing_atr": 2.38,
+        "max_hold_bars": 4,
+        "cooldown_bars": 36,
+        "loss_cooldown_bars": 36,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.65,
+        "edge_lookback_trades": 12,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -1.932,
+          "return_pct": -19.3196,
+          "win_rate": 0.5172,
+          "trades": 29,
+          "max_drawdown_pct": 21.434,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.0886,
+          "return_pct": -0.8864,
+          "win_rate": 0.6562,
+          "trades": 32,
+          "max_drawdown_pct": 7.7357,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.1152,
+          "return_pct": 1.1522,
+          "win_rate": 0.6429,
+          "trades": 14,
+          "max_drawdown_pct": 6.4003,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 71,
+      "score": -119.2432,
+      "passed": 0,
+      "min_return": -58.6461,
+      "min_win": 0.45,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.13,
+        "max_margin_fraction": 0.45,
+        "max_total_margin_fraction": 0.45,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 6,
+        "short_window_days": 7,
+        "selector_lookback_bars": 288,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.0,
+        "selector_noise_penalty": 9.0,
+        "stop_atr": 3.0,
+        "take_profit_atr": 1.0,
+        "trailing_atr": 2.0999999999999996,
+        "max_hold_bars": 4,
+        "cooldown_bars": 12,
+        "loss_cooldown_bars": 36,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 8,
+        "edge_pause_bars": 96,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 288,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -5.8646,
+          "return_pct": -58.6461,
+          "win_rate": 0.45,
+          "trades": 60,
+          "max_drawdown_pct": 65.4191,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 8.6961,
+          "return_pct": 86.9612,
+          "win_rate": 0.5821,
+          "trades": 67,
+          "max_drawdown_pct": 27.3433,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.1302,
+          "return_pct": 1.3017,
+          "win_rate": 0.5,
+          "trades": 14,
+          "max_drawdown_pct": 12.5374,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 38,
+      "score": -119.5237,
+      "passed": 0,
+      "min_return": -2.4961,
+      "min_win": 0.45,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.02,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.75,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 4,
+        "short_window_symbol_limit": 6,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 16.0,
+        "selector_volatility_weight": 25.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 4.0,
+        "stop_atr": 2.6,
+        "take_profit_atr": 0.7,
+        "trailing_atr": 1.092,
+        "max_hold_bars": 8,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 16,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.2,
+        "edge_lookback_trades": 6,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.1397,
+          "return_pct": -1.3972,
+          "win_rate": 0.5,
+          "trades": 32,
+          "max_drawdown_pct": 5.0023,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.2496,
+          "return_pct": -2.4961,
+          "win_rate": 0.45,
+          "trades": 20,
+          "max_drawdown_pct": 5.7586,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.1776,
+          "return_pct": 1.7764,
+          "win_rate": 0.6875,
+          "trades": 16,
+          "max_drawdown_pct": 1.7771,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 27,
+      "score": -123.5649,
+      "passed": 0,
+      "min_return": -9.2502,
+      "min_win": 0.4615,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.03,
+        "max_margin_fraction": 0.45,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 8,
+        "short_window_symbol_limit": 10,
+        "short_window_days": 7,
+        "selector_lookback_bars": 288,
+        "selector_momentum_weight": 44.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 12.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.85,
+        "trailing_atr": 1.54,
+        "max_hold_bars": 6,
+        "cooldown_bars": 72,
+        "loss_cooldown_bars": 216,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.2,
+        "edge_lookback_trades": 6,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.4752,
+          "return_pct": -4.752,
+          "win_rate": 0.5667,
+          "trades": 30,
+          "max_drawdown_pct": 10.859,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.925,
+          "return_pct": -9.2502,
+          "win_rate": 0.4615,
+          "trades": 13,
+          "max_drawdown_pct": 11.8684,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.2183,
+          "return_pct": 2.1832,
+          "win_rate": 0.6667,
+          "trades": 12,
+          "max_drawdown_pct": 3.0053,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 46,
+      "score": -126.8532,
+      "passed": 0,
+      "min_return": -5.8642,
+      "min_win": 0.5,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.03,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 6,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 44.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 4.0,
+        "stop_atr": 1.4,
+        "take_profit_atr": 0.8,
+        "trailing_atr": 1.19,
+        "max_hold_bars": 6,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.4,
+        "edge_lookback_trades": 8,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "range",
+          "transition"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.5864,
+          "return_pct": -5.8642,
+          "win_rate": 0.5,
+          "trades": 8,
+          "max_drawdown_pct": 13.3743,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.1483,
+          "return_pct": -1.4828,
+          "win_rate": 0.6,
+          "trades": 5,
+          "max_drawdown_pct": 5.5181,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.1444,
+          "return_pct": 1.4444,
+          "win_rate": 0.6667,
+          "trades": 3,
+          "max_drawdown_pct": 2.7108,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 19,
+      "score": -128.7874,
+      "passed": 0,
+      "min_return": -20.3718,
+      "min_win": 0.5652,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.055,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 6,
+        "short_window_days": 7,
+        "selector_lookback_bars": 480,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 12.0,
+        "stop_atr": 3.0,
+        "take_profit_atr": 1.0,
+        "trailing_atr": 2.0999999999999996,
+        "max_hold_bars": 36,
+        "cooldown_bars": 36,
+        "loss_cooldown_bars": 108,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 12,
+        "edge_pause_bars": 384,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -2.0372,
+          "return_pct": -20.3718,
+          "win_rate": 0.5652,
+          "trades": 23,
+          "max_drawdown_pct": 29.8202,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.0499,
+          "return_pct": 0.4994,
+          "win_rate": 0.65,
+          "trades": 20,
+          "max_drawdown_pct": 9.5682,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -1.0453,
+          "return_pct": -10.4531,
+          "win_rate": 0.6154,
+          "trades": 13,
+          "max_drawdown_pct": 18.0889,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 21,
+      "score": -135.053,
+      "passed": 0,
+      "min_return": -3.3228,
+      "min_win": 0.375,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.02,
+        "max_margin_fraction": 0.3,
+        "max_total_margin_fraction": 0.3,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 2,
+        "short_window_symbol_limit": 4,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 10.0,
+        "selector_volatility_weight": 140.0,
+        "selector_trend_weight": 0.25,
+        "selector_noise_penalty": 12.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.85,
+        "trailing_atr": 1.176,
+        "max_hold_bars": 6,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.02,
+        "edge_lookback_trades": 8,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.3323,
+          "return_pct": -3.3228,
+          "win_rate": 0.4667,
+          "trades": 15,
+          "max_drawdown_pct": 5.3278,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.1934,
+          "return_pct": 1.9339,
+          "win_rate": 0.6842,
+          "trades": 19,
+          "max_drawdown_pct": 4.1759,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -0.0802,
+          "return_pct": -0.8024,
+          "win_rate": 0.375,
+          "trades": 8,
+          "max_drawdown_pct": 2.0944,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 53,
+      "score": -136.8801,
+      "passed": 0,
+      "min_return": -26.6893,
+      "min_win": 0.625,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.13,
+        "max_margin_fraction": 0.75,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 2,
+        "short_window_symbol_limit": 4,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 24.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.0,
+        "selector_noise_penalty": 6.0,
+        "stop_atr": 2.2,
+        "take_profit_atr": 0.42,
+        "trailing_atr": 1.2100000000000002,
+        "max_hold_bars": 36,
+        "cooldown_bars": 72,
+        "loss_cooldown_bars": 216,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -1.8709,
+          "return_pct": -18.7092,
+          "win_rate": 0.6774,
+          "trades": 31,
+          "max_drawdown_pct": 27.2006,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -2.6689,
+          "return_pct": -26.6893,
+          "win_rate": 0.6364,
+          "trades": 22,
+          "max_drawdown_pct": 37.1771,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -0.5109,
+          "return_pct": -5.1095,
+          "win_rate": 0.625,
+          "trades": 16,
+          "max_drawdown_pct": 10.0893,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 44,
+      "score": -144.2259,
+      "passed": 0,
+      "min_return": -4.8085,
+      "min_win": 0.4444,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.04,
+        "max_margin_fraction": 0.3,
+        "max_total_margin_fraction": 0.6,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 6,
+        "short_window_days": 7,
+        "selector_lookback_bars": 288,
+        "selector_momentum_weight": 10.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 6.0,
+        "stop_atr": 3.5,
+        "take_profit_atr": 1.45,
+        "trailing_atr": 1.9250000000000003,
+        "max_hold_bars": 6,
+        "cooldown_bars": 18,
+        "loss_cooldown_bars": 54,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.4,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "60": {
+          "available": true,
+          "pnl": -0.4808,
+          "return_pct": -4.8085,
+          "win_rate": 0.4444,
+          "trades": 9,
+          "max_drawdown_pct": 8.6017,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.2682,
+          "return_pct": 2.6823,
+          "win_rate": 0.5,
+          "trades": 4,
+          "max_drawdown_pct": 1.4094,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -0.0645,
+          "return_pct": -0.6451,
+          "win_rate": 0.6667,
+          "trades": 3,
+          "max_drawdown_pct": 4.4813,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    }
+  ],
+  "finalists": [
+    {
+      "trial": 74,
+      "score": 19.1551,
+      "passed": 3,
+      "min_return": -54.1857,
+      "min_win": 0.5455,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.1,
+        "max_margin_fraction": 0.3,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 6,
+        "short_window_days": 7,
+        "selector_lookback_bars": 288,
+        "selector_momentum_weight": 44.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 9.0,
+        "stop_atr": 2.2,
+        "take_profit_atr": 0.42,
+        "trailing_atr": 1.2100000000000002,
+        "max_hold_bars": 24,
+        "cooldown_bars": 72,
+        "loss_cooldown_bars": 72,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.4,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -5.4186,
+          "return_pct": -54.1857,
+          "win_rate": 0.5821,
+          "trades": 67,
+          "max_drawdown_pct": 60.5554,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": -2.6277,
+          "return_pct": -26.2772,
+          "win_rate": 0.5455,
+          "trades": 44,
+          "max_drawdown_pct": 36.2927,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": 0.6973,
+          "return_pct": 6.9733,
+          "win_rate": 0.7273,
+          "trades": 22,
+          "max_drawdown_pct": 6.1105,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": 0.713,
+          "return_pct": 7.1304,
+          "win_rate": 0.75,
+          "trades": 16,
+          "max_drawdown_pct": 5.2308,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 1.0055,
+          "return_pct": 10.0549,
+          "win_rate": 1.0,
+          "trades": 7,
+          "max_drawdown_pct": 0.075,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": 0.5798,
+          "return_pct": 5.7978,
+          "win_rate": 1.0,
+          "trades": 4,
+          "max_drawdown_pct": 0.075,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.489,
+          "return_pct": 4.8902,
+          "win_rate": 1.0,
+          "trades": 3,
+          "max_drawdown_pct": 0.075,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 2,
+      "score": -75.8505,
+      "passed": 3,
+      "min_return": -47.5764,
+      "min_win": 0.625,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.06,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 3,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 28.0,
+        "selector_volatility_weight": 60.0,
+        "selector_trend_weight": 0.25,
+        "selector_noise_penalty": 5.0,
+        "stop_atr": 2.4,
+        "take_profit_atr": 0.55,
+        "trailing_atr": 1.56,
+        "max_hold_bars": 6,
+        "cooldown_bars": 12,
+        "loss_cooldown_bars": 12,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.1,
+        "edge_lookback_trades": 12,
+        "edge_pause_bars": 192,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -4.7576,
+          "return_pct": -47.5764,
+          "win_rate": 0.6507,
+          "trades": 146,
+          "max_drawdown_pct": 58.3196,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": -1.2858,
+          "return_pct": -12.858,
+          "win_rate": 0.6667,
+          "trades": 72,
+          "max_drawdown_pct": 23.359,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": 0.0127,
+          "return_pct": 0.1272,
+          "win_rate": 0.6889,
+          "trades": 45,
+          "max_drawdown_pct": 17.7576,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": 0.7755,
+          "return_pct": 7.755,
+          "win_rate": 0.7174,
+          "trades": 46,
+          "max_drawdown_pct": 16.7372,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.9915,
+          "return_pct": -9.9155,
+          "win_rate": 0.625,
+          "trades": 24,
+          "max_drawdown_pct": 16.3612,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": 0.4014,
+          "return_pct": 4.0144,
+          "win_rate": 0.7333,
+          "trades": 15,
+          "max_drawdown_pct": 6.5998,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 1.0697,
+          "return_pct": 10.697,
+          "win_rate": 0.7647,
+          "trades": 17,
+          "max_drawdown_pct": 6.5998,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 64,
+      "score": -171.6428,
+      "passed": 3,
+      "min_return": -47.6095,
+      "min_win": 0.5294,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.055,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.6,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 3,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 25.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 6.0,
+        "stop_atr": 2.6,
+        "take_profit_atr": 0.7,
+        "trailing_atr": 1.4300000000000002,
+        "max_hold_bars": 4,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 48,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -4.761,
+          "return_pct": -47.6095,
+          "win_rate": 0.577,
+          "trades": 357,
+          "max_drawdown_pct": 57.3718,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": -3.8611,
+          "return_pct": -38.611,
+          "win_rate": 0.5676,
+          "trades": 185,
+          "max_drawdown_pct": 52.0744,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": 2.928,
+          "return_pct": 29.2803,
+          "win_rate": 0.6391,
+          "trades": 133,
+          "max_drawdown_pct": 15.5489,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": 1.9143,
+          "return_pct": 19.1434,
+          "win_rate": 0.64,
+          "trades": 100,
+          "max_drawdown_pct": 16.9134,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.7424,
+          "return_pct": -7.4236,
+          "win_rate": 0.5294,
+          "trades": 51,
+          "max_drawdown_pct": 15.8386,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": 0.6779,
+          "return_pct": 6.7794,
+          "win_rate": 0.6364,
+          "trades": 22,
+          "max_drawdown_pct": 8.9818,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.1634,
+          "return_pct": 1.6341,
+          "win_rate": 0.5333,
+          "trades": 15,
+          "max_drawdown_pct": 8.9818,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 54,
+      "score": -206.4011,
+      "passed": 3,
+      "min_return": -72.1684,
+      "min_win": 0.4737,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.13,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 5,
+        "short_window_symbol_limit": 7,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 6.0,
+        "selector_volatility_weight": 25.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 9.0,
+        "stop_atr": 1.4,
+        "take_profit_atr": 0.8,
+        "trailing_atr": 1.19,
+        "max_hold_bars": 8,
+        "cooldown_bars": 18,
+        "loss_cooldown_bars": 36,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.2,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -7.2168,
+          "return_pct": -72.1684,
+          "win_rate": 0.4833,
+          "trades": 60,
+          "max_drawdown_pct": 68.9804,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": -3.3182,
+          "return_pct": -33.1816,
+          "win_rate": 0.5946,
+          "trades": 74,
+          "max_drawdown_pct": 65.1041,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": -5.2817,
+          "return_pct": -52.817,
+          "win_rate": 0.561,
+          "trades": 41,
+          "max_drawdown_pct": 70.5853,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": 7.7599,
+          "return_pct": 77.5991,
+          "win_rate": 0.6944,
+          "trades": 36,
+          "max_drawdown_pct": 29.5524,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -3.7352,
+          "return_pct": -37.3517,
+          "win_rate": 0.4737,
+          "trades": 19,
+          "max_drawdown_pct": 50.5818,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": 1.6801,
+          "return_pct": 16.8006,
+          "win_rate": 0.7,
+          "trades": 10,
+          "max_drawdown_pct": 23.3307,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 3.3657,
+          "return_pct": 33.6567,
+          "win_rate": 0.7778,
+          "trades": 9,
+          "max_drawdown_pct": 16.37,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 13,
+      "score": 29.8915,
+      "passed": 2,
+      "min_return": -3.5357,
+      "min_win": 0.5,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.13,
+        "max_margin_fraction": 0.45,
+        "max_total_margin_fraction": 0.3,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 5,
+        "short_window_symbol_limit": 5,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 140.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 2.0,
+        "stop_atr": 1.6,
+        "take_profit_atr": 1.0,
+        "trailing_atr": 1.36,
+        "max_hold_bars": 18,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 16,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.4,
+        "edge_lookback_trades": 6,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 288,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -0.3536,
+          "return_pct": -3.5357,
+          "win_rate": 0.5472,
+          "trades": 53,
+          "max_drawdown_pct": 27.0837,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": 0.7877,
+          "return_pct": 7.8769,
+          "win_rate": 0.5172,
+          "trades": 29,
+          "max_drawdown_pct": 12.9294,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": 0.5547,
+          "return_pct": 5.5471,
+          "win_rate": 0.5,
+          "trades": 14,
+          "max_drawdown_pct": 5.4017,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": 0.6061,
+          "return_pct": 6.0606,
+          "win_rate": 0.6,
+          "trades": 10,
+          "max_drawdown_pct": 5.6938,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.9627,
+          "return_pct": 9.6271,
+          "win_rate": 1.0,
+          "trades": 4,
+          "max_drawdown_pct": 0.03,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": 0.7686,
+          "return_pct": 7.6864,
+          "win_rate": 1.0,
+          "trades": 3,
+          "max_drawdown_pct": 0.03,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.3227,
+          "return_pct": 3.2275,
+          "win_rate": 1.0,
+          "trades": 1,
+          "max_drawdown_pct": 0.0225,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 52,
+      "score": -10.9027,
+      "passed": 2,
+      "min_return": -28.628,
+      "min_win": 0.65,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.04,
+        "max_margin_fraction": 0.75,
+        "max_total_margin_fraction": 0.75,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 8,
+        "short_window_symbol_limit": 12,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 6.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 6.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.85,
+        "trailing_atr": 2.38,
+        "max_hold_bars": 24,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -2.7127,
+          "return_pct": -27.1266,
+          "win_rate": 0.6995,
+          "trades": 213,
+          "max_drawdown_pct": 43.8052,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": -2.8628,
+          "return_pct": -28.628,
+          "win_rate": 0.65,
+          "trades": 100,
+          "max_drawdown_pct": 33.6874,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": 2.3534,
+          "return_pct": 23.5339,
+          "win_rate": 0.7765,
+          "trades": 85,
+          "max_drawdown_pct": 14.4433,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": -0.8331,
+          "return_pct": -8.331,
+          "win_rate": 0.72,
+          "trades": 50,
+          "max_drawdown_pct": 24.0622,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 2.027,
+          "return_pct": 20.2695,
+          "win_rate": 0.7955,
+          "trades": 44,
+          "max_drawdown_pct": 10.022,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": 0.3275,
+          "return_pct": 3.2748,
+          "win_rate": 0.7407,
+          "trades": 27,
+          "max_drawdown_pct": 7.3722,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -0.1471,
+          "return_pct": -1.471,
+          "win_rate": 0.7222,
+          "trades": 18,
+          "max_drawdown_pct": 14.6092,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 3,
+      "score": -150.0172,
+      "passed": 2,
+      "min_return": -25.0535,
+      "min_win": 0.5333,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.04,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 4,
+        "short_window_symbol_limit": 4,
+        "short_window_days": 7,
+        "selector_lookback_bars": 672,
+        "selector_momentum_weight": 28.0,
+        "selector_volatility_weight": 60.0,
+        "selector_trend_weight": 0.25,
+        "selector_noise_penalty": 5.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.7,
+        "trailing_atr": 1.8199999999999998,
+        "max_hold_bars": 6,
+        "cooldown_bars": 12,
+        "loss_cooldown_bars": 12,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.85,
+        "edge_lookback_trades": 12,
+        "edge_pause_bars": 192,
+        "symbol_edge_lookback_trades": 3,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -2.5054,
+          "return_pct": -25.0535,
+          "win_rate": 0.6303,
+          "trades": 211,
+          "max_drawdown_pct": 30.2268,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": -1.7491,
+          "return_pct": -17.4908,
+          "win_rate": 0.6346,
+          "trades": 104,
+          "max_drawdown_pct": 29.2374,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": -1.3144,
+          "return_pct": -13.1442,
+          "win_rate": 0.6042,
+          "trades": 48,
+          "max_drawdown_pct": 21.7211,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": 0.4989,
+          "return_pct": 4.9885,
+          "win_rate": 0.6957,
+          "trades": 69,
+          "max_drawdown_pct": 20.5324,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -0.5405,
+          "return_pct": -5.4051,
+          "win_rate": 0.5625,
+          "trades": 32,
+          "max_drawdown_pct": 7.9921,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": 0.7574,
+          "return_pct": 7.5737,
+          "win_rate": 0.6296,
+          "trades": 27,
+          "max_drawdown_pct": 7.0616,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.0576,
+          "return_pct": 0.5761,
+          "win_rate": 0.5333,
+          "trades": 15,
+          "max_drawdown_pct": 7.0616,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 23,
+      "score": -198.6347,
+      "passed": 2,
+      "min_return": -70.5564,
+      "min_win": 0.5049,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.1,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.45,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 2,
+        "active_symbol_limit": 3,
+        "short_window_symbol_limit": 5,
+        "short_window_days": 7,
+        "selector_lookback_bars": 1344,
+        "selector_momentum_weight": 44.0,
+        "selector_volatility_weight": 70.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 2.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 0.85,
+        "trailing_atr": 1.54,
+        "max_hold_bars": 8,
+        "cooldown_bars": 8,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.02,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 4,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 1344,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -7.0014,
+          "return_pct": -70.0137,
+          "win_rate": 0.5049,
+          "trades": 103,
+          "max_drawdown_pct": 69.1424,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": -7.0556,
+          "return_pct": -70.5564,
+          "win_rate": 0.525,
+          "trades": 120,
+          "max_drawdown_pct": 75.4112,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": -0.8634,
+          "return_pct": -8.6339,
+          "win_rate": 0.6224,
+          "trades": 98,
+          "max_drawdown_pct": 52.6925,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": -2.4702,
+          "return_pct": -24.7019,
+          "win_rate": 0.619,
+          "trades": 63,
+          "max_drawdown_pct": 34.4474,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 1.992,
+          "return_pct": 19.9198,
+          "win_rate": 0.6875,
+          "trades": 48,
+          "max_drawdown_pct": 20.6174,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": 1.5794,
+          "return_pct": 15.7937,
+          "win_rate": 0.6429,
+          "trades": 28,
+          "max_drawdown_pct": 17.1453,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 5.7961,
+          "return_pct": 57.9612,
+          "win_rate": 0.7742,
+          "trades": 31,
+          "max_drawdown_pct": 11.819,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 22,
+      "score": -476.7999,
+      "passed": 1,
+      "min_return": -65.958,
+      "min_win": 0.3125,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.055,
+        "max_margin_fraction": 0.75,
+        "max_total_margin_fraction": 0.75,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 5,
+        "short_window_symbol_limit": 5,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 16.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.45,
+        "selector_noise_penalty": 4.0,
+        "stop_atr": 1.8,
+        "take_profit_atr": 1.25,
+        "trailing_atr": 1.53,
+        "max_hold_bars": 36,
+        "cooldown_bars": 12,
+        "loss_cooldown_bars": 36,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 3.2,
+        "edge_lookback_trades": 16,
+        "edge_pause_bars": 288,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.25,
+        "symbol_edge_pause_bars": 672,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "downtrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -6.5958,
+          "return_pct": -65.958,
+          "win_rate": 0.4569,
+          "trades": 116,
+          "max_drawdown_pct": 77.9546,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": -3.2522,
+          "return_pct": -32.522,
+          "win_rate": 0.4805,
+          "trades": 77,
+          "max_drawdown_pct": 57.5779,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": -4.7652,
+          "return_pct": -47.6522,
+          "win_rate": 0.3611,
+          "trades": 36,
+          "max_drawdown_pct": 50.9863,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": 4.3922,
+          "return_pct": 43.9222,
+          "win_rate": 0.625,
+          "trades": 40,
+          "max_drawdown_pct": 18.4965,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": -2.6515,
+          "return_pct": -26.5147,
+          "win_rate": 0.3889,
+          "trades": 18,
+          "max_drawdown_pct": 32.007,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": -2.4854,
+          "return_pct": -24.8536,
+          "win_rate": 0.3125,
+          "trades": 16,
+          "max_drawdown_pct": 28.1718,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": -1.4394,
+          "return_pct": -14.3936,
+          "win_rate": 0.4,
+          "trades": 10,
+          "max_drawdown_pct": 23.2171,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    },
+    {
+      "trial": 58,
+      "score": 1.2927,
+      "passed": 0,
+      "min_return": -24.0006,
+      "min_win": 0.7021,
+      "config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.03,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.85,
+        "symbol_risk_multipliers": {},
+        "allowed_symbols": [],
+        "max_positions": 1,
+        "active_symbol_limit": 4,
+        "short_window_symbol_limit": 8,
+        "short_window_days": 7,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 10.0,
+        "selector_volatility_weight": 140.0,
+        "selector_trend_weight": 0.0,
+        "selector_noise_penalty": 4.0,
+        "stop_atr": 2.2,
+        "take_profit_atr": 0.42,
+        "trailing_atr": 1.87,
+        "max_hold_bars": 8,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 24,
+        "long_window_days": 30,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.65,
+        "edge_lookback_trades": 8,
+        "edge_pause_bars": 144,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 2880,
+        "invert_signals": true,
+        "enabled_regimes": [
+          "uptrend",
+          "range"
+        ],
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.68,
+        "validation_target_profit": 0.0,
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "available": true,
+          "pnl": -2.4001,
+          "return_pct": -24.0006,
+          "win_rate": 0.7525,
+          "trades": 202,
+          "max_drawdown_pct": 35.0569,
+          "from": "2025-05-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "180": {
+          "available": true,
+          "pnl": -1.4131,
+          "return_pct": -14.1312,
+          "win_rate": 0.75,
+          "trades": 112,
+          "max_drawdown_pct": 27.0065,
+          "from": "2025-12-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "90": {
+          "available": true,
+          "pnl": -0.2578,
+          "return_pct": -2.5784,
+          "win_rate": 0.7746,
+          "trades": 71,
+          "max_drawdown_pct": 12.6904,
+          "from": "2026-03-01 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "60": {
+          "available": true,
+          "pnl": -1.658,
+          "return_pct": -16.58,
+          "win_rate": 0.7021,
+          "trades": 47,
+          "max_drawdown_pct": 18.9998,
+          "from": "2026-03-31 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "30": {
+          "available": true,
+          "pnl": 0.1808,
+          "return_pct": 1.8079,
+          "win_rate": 0.8,
+          "trades": 40,
+          "max_drawdown_pct": 8.1125,
+          "from": "2026-04-30 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "14": {
+          "available": true,
+          "pnl": -0.1104,
+          "return_pct": -1.1043,
+          "win_rate": 0.7368,
+          "trades": 19,
+          "max_drawdown_pct": 3.7099,
+          "from": "2026-05-16 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        },
+        "7": {
+          "available": true,
+          "pnl": 0.4397,
+          "return_pct": 4.3968,
+          "win_rate": 0.8667,
+          "trades": 15,
+          "max_drawdown_pct": 3.8437,
+          "from": "2026-05-23 06:15:00",
+          "to": "2026-05-30 06:15:00"
+        }
+      }
+    }
+  ]
+}
