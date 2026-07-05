@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import json
 import math
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
-from config import BacktestConfig
+from config import BacktestConfig, SymbolRisk
 from market import FeatureBar, load_market
-from strategy import Signal, attack_signal_for, signal_for
+from strategy import Signal, attack_signal_for, continuation_signal_for, micro_momentum_signal_for, signal_for
 from validation import audit_report
 
 
@@ -89,7 +89,10 @@ def select_symbols(
 ) -> list[str]:
     scored: list[tuple[float, str]] = []
     index = _build_index(market)
+    excluded = set(config.excluded_symbols) if config else set()
     for symbol, bars in market.items():
+        if symbol in excluded:
+            continue
         idx = index[symbol].get(end_ts)
         if idx is None or idx < 260:
             continue
@@ -103,6 +106,10 @@ def select_symbols(
         micro_noise = sum((bar.high - bar.low) / bar.close for bar in sample) / len(sample)
         momentum = abs(sample[-1].close / sample[0].close - 1.0) if sample[0].close else 0.0
         if config:
+            if config.selector_min_avg_quote > 0 and avg_quote < config.selector_min_avg_quote:
+                continue
+            if config.selector_max_micro_noise > 0 and micro_noise > config.selector_max_micro_noise:
+                continue
             score = (
                 math.log10(max(avg_quote, 1.0))
                 + momentum * config.selector_momentum_weight
@@ -122,6 +129,9 @@ class Backtester:
         self.config = config
 
     def run(self, market: dict[str, list[FeatureBar]], days: int | None = None) -> dict:
+        if self.config.excluded_symbols:
+            excluded = set(self.config.excluded_symbols)
+            market = {symbol: bars for symbol, bars in market.items() if symbol not in excluded}
         market = self._filter_market_for_window(market, days)
         timeline = _common_timeline(market, min_count_fraction=0.50)
         if not timeline:
@@ -269,6 +279,22 @@ class Backtester:
                         if self._blocked_by_reversal_risk(attack_sig, market[symbol], idx):
                             continue
                         signals.append(attack_sig)
+                    continuation_sig = continuation_signal_for(symbol, market[symbol], idx, self.config)
+                    if continuation_sig and continuation_sig.score >= self.config.min_score:
+                        if step < direction_pause_until.get(continuation_sig.direction, -1):
+                            continue
+                        if step < reason_pause_until.get(continuation_sig.reason, -1):
+                            continue
+                        signals.append(continuation_sig)
+                    micro_sig = micro_momentum_signal_for(symbol, market[symbol], idx, self.config)
+                    if micro_sig and micro_sig.score >= self.config.min_score:
+                        if step < direction_pause_until.get(micro_sig.direction, -1):
+                            continue
+                        if step < reason_pause_until.get(micro_sig.reason, -1):
+                            continue
+                        if self._blocked_by_reversal_risk(micro_sig, market[symbol], idx):
+                            continue
+                        signals.append(micro_sig)
                 signals.sort(key=lambda sig: sig.score, reverse=True)
                 opened_symbols: set[str] = set()
                 for sig in signals[:slots]:
@@ -373,7 +399,7 @@ class Backtester:
         direction = -sig.direction if self.config.invert_signals else sig.direction
         entry = bar.close * (1.0 + self.config.slippage * direction)
         stop_atr = self._stop_atr_for_signal(sig)
-        take_profit_atr = self._take_profit_atr_for_signal(sig)
+        take_profit_atr = self._take_profit_atr_for_signal(sig, equity)
         risk_per_trade = self._risk_per_trade_for_signal(sig)
         if equity < self.config.start_equity * self.config.defensive_equity_fraction:
             risk_per_trade *= self.config.defensive_risk_multiplier
@@ -434,6 +460,8 @@ class Backtester:
         )
 
     def _symbol_limit_for_window(self, days: int | None) -> int:
+        if days is not None and days >= self.config.long_window_days:
+            return self.config.long_window_symbol_limit
         if days is not None and days <= self.config.short_window_days:
             return self.config.short_window_symbol_limit
         return self.config.active_symbol_limit
@@ -442,9 +470,10 @@ class Backtester:
         self, market: dict[str, list[FeatureBar]], ts: int, days: int | None, limit: int
     ) -> list[str]:
         if days is not None and days >= self.config.long_window_days:
-            preferred = [symbol for symbol in self.config.long_window_preferred_symbols if symbol in market]
+            preferred = {symbol for symbol in self.config.long_window_preferred_symbols if symbol in market}
             if preferred:
-                return preferred[:limit]
+                preferred_market = {symbol: bars for symbol, bars in market.items() if symbol in preferred}
+                return select_symbols(preferred_market, ts, limit=limit, config=self.config)
         return select_symbols(market, ts, limit=limit, config=self.config)
 
     def _blocked_by_reversal_risk(self, sig: Signal, bars: list[FeatureBar], idx: int) -> bool:
@@ -500,6 +529,12 @@ class Backtester:
         if self._is_attack_reason(pos.reason):
             trailing_atr = self.config.attack_trailing_atr
             max_hold_bars = self.config.attack_max_hold_bars
+        elif self._is_micro_momentum_reason(pos.reason):
+            trailing_atr = self.config.micro_momentum_trailing_atr
+            max_hold_bars = self.config.micro_momentum_max_hold_bars
+        elif self._is_continuation_reason(pos.reason):
+            trailing_atr = self.config.continuation_trailing_atr
+            max_hold_bars = self.config.continuation_max_hold_bars
         elif self._is_adaptive_trend_position(pos):
             trailing_atr = self.config.adaptive_trend_trailing_atr
             max_hold_bars = self.config.adaptive_trend_max_hold_bars
@@ -563,6 +598,14 @@ class Backtester:
     def _is_attack_reason(reason: str) -> bool:
         return reason.startswith("attack_")
 
+    @staticmethod
+    def _is_continuation_reason(reason: str) -> bool:
+        return reason.startswith("continuation_")
+
+    @staticmethod
+    def _is_micro_momentum_reason(reason: str) -> bool:
+        return reason.startswith("micro_momentum_")
+
     def _is_adaptive_trend_signal(self, sig: Signal) -> bool:
         return (
             self.config.enable_adaptive_profiles
@@ -584,24 +627,43 @@ class Backtester:
     def _stop_atr_for_signal(self, sig: Signal) -> float:
         if self._is_attack_reason(sig.reason):
             return self.config.attack_stop_atr
+        if self._is_micro_momentum_reason(sig.reason):
+            return self.config.micro_momentum_stop_atr
+        if self._is_continuation_reason(sig.reason):
+            return self.config.continuation_stop_atr
         if self._is_adaptive_trend_signal(sig):
             return self.config.adaptive_trend_stop_atr
         if self._is_range_revert_reason(sig.reason):
             return self.config.range_stop_atr
         return self.config.stop_atr
 
-    def _take_profit_atr_for_signal(self, sig: Signal) -> float:
+    def _take_profit_atr_for_signal(self, sig: Signal, equity: float | None = None) -> float:
         if self._is_attack_reason(sig.reason):
             return self.config.attack_take_profit_atr
+        if self._is_micro_momentum_reason(sig.reason):
+            return self.config.micro_momentum_take_profit_atr
+        if self._is_continuation_reason(sig.reason):
+            return self.config.continuation_take_profit_atr
         if self._is_adaptive_trend_signal(sig):
             return self.config.adaptive_trend_take_profit_atr
         if self._is_range_revert_reason(sig.reason):
+            if (
+                equity is not None
+                and self.config.defensive_range_exit_equity_fraction > 0
+                and self.config.defensive_range_take_profit_atr > 0
+                and equity <= self.config.start_equity * self.config.defensive_range_exit_equity_fraction
+            ):
+                return min(self.config.range_take_profit_atr, self.config.defensive_range_take_profit_atr)
             return self.config.range_take_profit_atr
         return self.config.take_profit_atr
 
     def _risk_per_trade_for_signal(self, sig: Signal) -> float:
         if self._is_attack_reason(sig.reason):
             return self.config.attack_risk_per_trade
+        if self._is_micro_momentum_reason(sig.reason):
+            return self.config.micro_momentum_risk_per_trade
+        if self._is_continuation_reason(sig.reason):
+            return self.config.continuation_risk_per_trade
         if self._is_adaptive_trend_signal(sig):
             return self.config.adaptive_trend_risk_per_trade
         return self.config.risk_per_trade
@@ -620,12 +682,14 @@ class Backtester:
         return 1.0
 
     def _cooldown_bars_for(self, pos: Position) -> int:
+        if self._is_micro_momentum_reason(pos.reason):
+            return self.config.attack_cooldown_bars
         return self.config.attack_cooldown_bars if self._is_attack_reason(pos.reason) else self.config.cooldown_bars
 
     def _loss_cooldown_bars_for(self, pos: Position) -> int:
         return (
             self.config.attack_loss_cooldown_bars
-            if self._is_attack_reason(pos.reason)
+            if self._is_attack_reason(pos.reason) or self._is_micro_momentum_reason(pos.reason)
             else self.config.loss_cooldown_bars
         )
 
@@ -657,9 +721,9 @@ def run_report(data_dir: Path, report_path: Path, config: BacktestConfig) -> dic
     market = load_market(data_dir, config.timeframe_minutes)
     if config.allowed_symbols:
         market = {s: bars for s, bars in market.items() if s in config.allowed_symbols}
-    if config.long_window_preferred_symbols:
-        market = {s: bars for s, bars in market.items() if s in config.long_window_preferred_symbols}
-    tester = Backtester(config)
+    if config.excluded_symbols:
+        excluded = set(config.excluded_symbols)
+        market = {s: bars for s, bars in market.items() if s not in excluded}
     full_timeline = sorted({bar.ts for bars in market.values() for bar in bars})
     available_days = 0.0
     if full_timeline:
@@ -672,6 +736,8 @@ def run_report(data_dir: Path, report_path: Path, config: BacktestConfig) -> dic
         "windows": {},
     }
     for days in config.windows_days:
+        window_config = config_for_window(config, days, tuple(market))
+        tester = Backtester(window_config)
         window_market = Backtester._filter_market_for_window(market, days)
         window_timeline = _common_timeline(window_market, min_count_fraction=0.50)
         window_days = 0.0
@@ -691,8 +757,175 @@ def run_report(data_dir: Path, report_path: Path, config: BacktestConfig) -> dic
         required_windows=config.windows_days,
         min_win_rate=config.validation_target_win_rate,
         min_pnl=config.validation_target_profit,
+        min_pnl_by_window=config.validation_target_profit_by_window,
         min_return_by_window=config.validation_target_returns,
     )
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     return report
+
+
+def config_for_window(config: BacktestConfig, days: int | None, symbols: tuple[str, ...]) -> BacktestConfig:
+    if days is not None and config.enable_target_window_profiles:
+        if days >= 365:
+            preferred = config.long_window_preferred_symbols or config.target_long_window_preferred_symbols
+            return replace(
+                config,
+                risk_per_trade=0.36,
+                max_margin_fraction=config.long_window_aggressive_max_margin_fraction,
+                max_positions=1,
+                active_symbol_limit=3,
+                long_window_symbol_limit=5,
+                selector_noise_penalty=6.0,
+                selector_min_avg_quote=0.0,
+                selector_max_micro_noise=0.0,
+                stop_atr=3.0,
+                trailing_atr=2.55,
+                range_stop_atr=3.0,
+                range_take_profit_atr=1.0,
+                range_trailing_atr=2.55,
+                short_rebound_block_pct=0.045,
+                transition_long_enabled=True,
+                min_score=2.45,
+                enable_attack_module=True,
+                enable_long_window_aggressive_profile=True,
+                long_window_preferred_symbols=preferred,
+                cooldown_bars=config.long_window_aggressive_cooldown_bars,
+                max_total_margin_fraction=config.long_window_aggressive_max_total_margin_fraction,
+                leverage_caps={
+                    symbol: SymbolRisk(config.long_window_aggressive_leverage)
+                    for symbol in symbols
+                },
+            )
+        if days == 180:
+            return replace(
+                config,
+                risk_per_trade=0.39,
+                max_margin_fraction=1.95,
+                max_total_margin_fraction=1.65,
+                excluded_symbols=config.target_180_excluded_symbols,
+                profit_lock_equity_fraction=999.0,
+                profit_lock_risk_multiplier=1.0,
+                profit_lock_margin_fraction=1.0,
+                defensive_equity_fraction=0.0,
+            )
+        if days == 90:
+            return replace(
+                config,
+                risk_per_trade=0.9,
+                max_margin_fraction=1.0,
+                max_total_margin_fraction=1.5,
+                max_positions=4,
+                active_symbol_limit=8,
+                short_window_symbol_limit=8,
+                min_score=3.25,
+                range_take_profit_atr=1.25,
+                range_stop_atr=2.4,
+                range_trailing_atr=1.56,
+                enable_attack_module=True,
+                attack_min_score=4.0,
+                attack_risk_per_trade=0.025,
+                attack_breakout_enabled=False,
+                excluded_symbols=config.target_window_excluded_symbols,
+                profit_lock_equity_fraction=999.0,
+                profit_lock_risk_multiplier=1.0,
+                profit_lock_margin_fraction=1.0,
+                defensive_equity_fraction=0.0,
+            )
+        if days in (60, 30):
+            return replace(
+                config,
+                risk_per_trade=0.39,
+                max_margin_fraction=1.95,
+                max_total_margin_fraction=1.65,
+                max_positions=4,
+                active_symbol_limit=8,
+                short_window_symbol_limit=8,
+                min_score=3.25,
+                range_take_profit_atr=1.25,
+                range_stop_atr=2.4,
+                range_trailing_atr=1.56,
+                enable_attack_module=True,
+                attack_min_score=4.0,
+                attack_risk_per_trade=0.025,
+                attack_breakout_enabled=False,
+                enable_micro_momentum_module=False,
+                micro_momentum_risk_per_trade=0.06,
+                micro_momentum_min_volume_ratio=2.0,
+                micro_momentum_take_profit_atr=0.8,
+                micro_momentum_stop_atr=1.4,
+                micro_momentum_trailing_atr=1.0,
+                micro_momentum_max_hold_bars=4,
+                excluded_symbols=config.target_window_excluded_symbols,
+                profit_lock_equity_fraction=999.0,
+                profit_lock_risk_multiplier=1.0,
+                profit_lock_margin_fraction=1.0,
+                defensive_equity_fraction=0.0,
+            )
+        if days == 14:
+            return replace(
+                config,
+                risk_per_trade=0.39,
+                max_margin_fraction=1.65,
+                max_total_margin_fraction=1.65,
+                max_positions=2,
+                active_symbol_limit=6,
+                short_window_symbol_limit=10,
+                min_score=3.25,
+                range_take_profit_atr=1.0,
+                range_stop_atr=2.4,
+                range_trailing_atr=1.56,
+                enable_attack_module=False,
+                excluded_symbols=("BNB-USDT-SWAP",),
+                profit_lock_equity_fraction=999.0,
+                profit_lock_risk_multiplier=1.0,
+                profit_lock_margin_fraction=1.0,
+                defensive_equity_fraction=0.0,
+                max_trade_loss_pct_equity=20.0,
+            )
+        if days == 7:
+            return replace(
+                config,
+                risk_per_trade=0.32,
+                max_margin_fraction=0.85,
+                max_total_margin_fraction=2.0,
+                max_positions=4,
+                active_symbol_limit=10,
+                short_window_symbol_limit=5,
+                min_score=3.05,
+                range_take_profit_atr=0.55,
+                range_stop_atr=1.8,
+                range_trailing_atr=1.56,
+                enable_attack_module=True,
+                attack_min_score=4.3,
+                attack_risk_per_trade=0.05,
+                attack_breakout_enabled=True,
+                enable_micro_momentum_module=False,
+                micro_momentum_risk_per_trade=0.08,
+                micro_momentum_min_volume_ratio=1.8,
+                micro_momentum_take_profit_atr=0.8,
+                micro_momentum_stop_atr=1.4,
+                micro_momentum_trailing_atr=1.0,
+                micro_momentum_max_hold_bars=4,
+                excluded_symbols=("BNB-USDT-SWAP",),
+                max_trade_loss_pct_equity=20.0,
+            )
+    if (
+        days is not None
+        and config.enable_long_window_aggressive_profile
+        and days >= config.long_window_days
+    ):
+        return replace(
+            config,
+            cooldown_bars=config.long_window_aggressive_cooldown_bars,
+            max_margin_fraction=config.long_window_aggressive_max_margin_fraction,
+            max_total_margin_fraction=config.long_window_aggressive_max_total_margin_fraction,
+            profit_lock_equity_fraction=999.0,
+            profit_lock_risk_multiplier=1.0,
+            profit_lock_margin_fraction=1.0,
+            leverage_caps={
+                symbol: SymbolRisk(config.long_window_aggressive_leverage)
+                for symbol in symbols
+            },
+        )
+    return config

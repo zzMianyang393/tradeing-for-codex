@@ -186,3 +186,80 @@ def attack_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None
                 return Signal(symbol, -1, score, regime, "attack_exhaustion_short")
 
     return None
+
+
+def continuation_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Signal | None:
+    if not getattr(config, "enable_continuation_module", False):
+        return None
+    if idx < 260:
+        return None
+    bar = bars[idx]
+    prev = bars[idx - 1]
+    vol_ratio = bar.volume_quote / bar.vol_sma if bar.vol_sma > 0 else 1.0
+    min_volume = getattr(config, "continuation_min_volume_ratio", 1.45)
+    min_trend = getattr(config, "continuation_min_trend_strength", 1.2)
+    if vol_ratio < min_volume:
+        return None
+    up_structure = (
+        bar.ema20 > bar.ema50 > bar.ema200
+        and bar.trend_strength >= min_trend
+        and prev.close <= prev.donchian_high
+        and bar.close >= bar.donchian_high * 0.999
+        and 45 <= bar.rsi <= 72
+    )
+    if up_structure:
+        score = 3.15 + min(0.85, vol_ratio / 5.0) + min(0.75, bar.trend_strength / 4.0)
+        return Signal(symbol, 1, score, "continuation", "continuation_long")
+    down_structure = (
+        bar.ema20 < bar.ema50 < bar.ema200
+        and bar.trend_strength <= -min_trend
+        and prev.close >= prev.donchian_low
+        and bar.close <= bar.donchian_low * 1.001
+        and 28 <= bar.rsi <= 55
+    )
+    if down_structure:
+        score = 3.15 + min(0.85, vol_ratio / 5.0) + min(0.75, abs(bar.trend_strength) / 4.0)
+        return Signal(symbol, -1, score, "continuation", "continuation_short")
+    return None
+
+
+def micro_momentum_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Signal | None:
+    if not getattr(config, "enable_micro_momentum_module", False):
+        return None
+    if idx < 220:
+        return None
+    bar = bars[idx]
+    prev = bars[idx - 1]
+    vol_ratio = bar.volume_quote / bar.vol_sma if bar.vol_sma > 0 else 1.0
+    min_volume = getattr(config, "micro_momentum_min_volume_ratio", 1.8)
+    if vol_ratio < min_volume:
+        return None
+    atr_pct = max(bar.atr_pct, 0.0001)
+    body_pct = abs(bar.close - bar.open) / bar.close if bar.close else 0.0
+    min_body = getattr(config, "micro_momentum_min_body_atr", 0.7)
+    if body_pct < atr_pct * min_body:
+        return None
+    candle_range = (bar.high - bar.low) / bar.close if bar.close else 0.0
+    if candle_range < atr_pct * 0.9:
+        return None
+    bullish = (
+        bar.close > bar.open
+        and bar.close >= bar.donchian_high * 0.999
+        and prev.close <= prev.donchian_high * 1.001
+        and bar.close > bar.ema20
+        and 48 <= bar.rsi <= 72
+    )
+    if bullish:
+        score = 3.25 + min(0.8, vol_ratio / 5.0) + min(0.5, body_pct / max(atr_pct * 2.0, 0.0001))
+        return Signal(symbol, 1, score, "micro_momentum", "micro_momentum_long")
+    bearish = (
+        bar.close < bar.open
+        and bar.close <= bar.donchian_low * 1.001
+        and prev.close >= prev.donchian_low * 0.999
+        and bar.close < bar.ema20
+        and 28 <= bar.rsi <= 52
+    )
+    if bearish:
+        score = 3.25 + min(0.8, vol_ratio / 5.0) + min(0.5, body_pct / max(atr_pct * 2.0, 0.0001))
+        return Signal(symbol, -1, score, "micro_momentum", "micro_momentum_short")
+    return None

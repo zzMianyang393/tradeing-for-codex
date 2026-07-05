@@ -11,7 +11,7 @@ multi-regime strategy from a configurable starting balance.
 - Handles uptrend, downtrend, and range regimes with different entry/exit logic.
 - Sizes every trade from account equity, ATR stop distance, leverage caps, and portfolio exposure limits.
 - Includes fees, slippage, stop loss, take profit, time stop, and trailing exit.
-- Produces validation reports for the configured target windows.
+- Produces validation reports and overfit/rolling-window audit reports for the configured target windows.
 - Marks unavailable windows when the selected symbol pool does not have enough overlapping data.
 - Can download more OKX history with the included downloader.
 
@@ -39,24 +39,69 @@ The downloader writes files in the same format as the existing local CSVs.
 ## Outputs
 
 - `reports/latest.json`: machine-readable full report.
+- `reports/overfit_audit_summary.json`: compares the current window-specific profile with same-config control cases.
+- `reports/rolling_window_audit.json`: tests repeated historical slices instead of only the latest endpoint.
+- `reports/consistency_search.json`: ranks candidate configs by rolling-window consistency.
 - Console summary: period PnL, win rate, drawdown, trade count, and symbol breakdown.
+
+## Consistency search
+
+Use this before accepting a high-return configuration:
+
+```bash
+python consistency_search.py --trials 12 --max-windows 12 --top 5 --out reports\consistency_search.json
+```
+
+This search scores repeated historical windows by profitability rate, median
+return, worst return, and drawdown. A high single-window return is not enough.
+The default search uses 12 rolling endpoints; reducing `--max-windows` is faster
+but can overfit to recent slices.
 
 ## Notes
 
 - The included `data` folder contains the downloaded local research dataset used by the latest reports.
-- The default profile is now an aggressive 10 USDT dynamic-universe short-window target profile.
+- The current default profile is a research profile, not a proven robust production profile.
+- Long-term development should follow `docs/development_roadmap.md`: mature the project through data expansion, strategy portfolios, anti-overfit validation, risk management, simulated execution, and monitoring.
 - Allowed symbols: all loaded symbols; the program dynamically selects the top symbols each window.
-- Enabled regimes: `uptrend`, `range`.
-- Target gates: 30 day return >= 50%, 7 day return >= 20%, win rate >= 68%.
+- Enabled regimes: `transition`, `range`, with a low-risk adaptive downtrend module.
+- Target gates: 365/180/90/60/30/14/7 day return floors plus win rate >= 66%.
+- Risk controls include profit locking after equity growth and faster range exits while equity is in defense mode.
+- The default profile disables the old 365 day aggressive profile and transition long entries.
+- Selector quality gates filter low-liquidity and high-noise symbols before ranking candidates.
 
 Latest default validation:
 
 ```text
-30d  equity=23.2603  pnl=13.2603  return=132.603%  win=68.09%
-7d   equity=13.6537  pnl=3.6537   return=36.537%   win=80.00%
+365d  equity=10.6521 pnl=0.6521 return= 6.521% win=76.60%
+180d  equity=15.2297 pnl=5.2297 return=52.297% win=84.21%
+ 90d  equity=13.1013 pnl=3.1013 return=31.012% win=83.33%
+ 60d  equity=11.7097 pnl=1.7097 return=17.097% win=76.92%
+ 30d  equity=13.8567 pnl=3.8567 return=38.567% win=92.86%
+ 14d  equity=11.6257 pnl=1.6257 return=16.257% win=83.33%
+  7d  equity=10.4073 pnl=0.4073 return= 4.073% win=66.67%
 ```
 
-Robustness note: this profile is an aggressive short-window mode. The included
-`robustness_matrix.py` shows it does not generalize cleanly to 14/60 day gates,
-major-only pools, or higher timeframes. Treat it as a tactical module, not a
-validated all-weather strategy.
+Overfit audit:
+
+```text
+window_specific_current: 365d passes, but 180d returns only 3.39%, so audit=CHECK
+same_conservative_all_windows: 365d returns -33.08%, so the 365d jump is not produced by the base profile
+same_aggressive_all_windows: 180d returns -40.02% and 60d returns 0.51%, so the aggressive profile is not generally stable
+```
+
+Rolling-window audit with the default non-window-specific profile:
+
+```text
+180d profitable windows: 12/12, median return  5.08%, worst return  0.77%
+ 90d profitable windows: 11/12, median return 28.32%, worst return -0.13%
+ 60d profitable windows: 12/12, median return 13.68%, worst return  2.48%
+ 30d profitable windows: 11/12, median return  6.34%, worst return -5.17%
+ 14d profitable windows:  9/12, median return  4.44%, worst return -5.40%
+  7d profitable windows: 10/12, median return  3.85%, worst return -3.33%
+```
+
+Conclusion: the current default is much less spectacular than the previous
+365-day fitted profile, but it is a cleaner research baseline because repeated
+windows across 7 to 180 days are mostly profitable. The next optimization target
+is reducing the remaining 7/14 day low-trade-count variance without reintroducing
+365-day special casing.

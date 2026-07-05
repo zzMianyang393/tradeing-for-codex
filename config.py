@@ -13,15 +13,15 @@ class BacktestConfig:
     timeframe_minutes: int = 15
     taker_fee: float = 0.00005
     slippage: float = 0.0
-    risk_per_trade: float = 0.32
-    max_margin_fraction: float = 0.75
-    max_total_margin_fraction: float = 0.60
+    risk_per_trade: float = 0.13
+    max_margin_fraction: float = 0.65
+    max_total_margin_fraction: float = 0.55
     defensive_equity_fraction: float = 0.80
     defensive_risk_multiplier: float = 0.65
     defensive_margin_fraction: float = 0.35
-    profit_lock_equity_fraction: float = 999.0
-    profit_lock_risk_multiplier: float = 1.0
-    profit_lock_margin_fraction: float = 1.0
+    profit_lock_equity_fraction: float = 1.25
+    profit_lock_risk_multiplier: float = 0.55
+    profit_lock_margin_fraction: float = 0.35
     volatility_target_atr_pct: float = 0.022
     volatility_risk_floor: float = 0.75
     volatility_risk_power: float = 0.75
@@ -38,23 +38,28 @@ class BacktestConfig:
         }
     )
     allowed_symbols: tuple[str, ...] = ()
-    max_positions: int = 1
-    active_symbol_limit: int = 3
-    short_window_symbol_limit: int = 5
+    excluded_symbols: tuple[str, ...] = ()
+    max_positions: int = 2
+    active_symbol_limit: int = 6
+    short_window_symbol_limit: int = 10
     short_window_days: int = 30
     selector_lookback_bars: int = 96 * 21
     selector_momentum_weight: float = 32.0
     selector_volatility_weight: float = 140.0
     selector_trend_weight: float = 0.12
-    selector_noise_penalty: float = 6.0
-    stop_atr: float = 3.0
+    selector_noise_penalty: float = 9.0
+    selector_min_avg_quote: float = 250_000.0
+    selector_max_micro_noise: float = 0.0072
+    stop_atr: float = 3.6
     take_profit_atr: float = 1.0
-    trailing_atr: float = 2.55
+    trailing_atr: float = 2.34
     max_hold_bars: int = 8
-    range_stop_atr: float = 3.0
-    range_take_profit_atr: float = 1.0
-    range_trailing_atr: float = 2.55
+    range_stop_atr: float = 2.4
+    range_take_profit_atr: float = 0.55
+    range_trailing_atr: float = 1.56
     range_max_hold_bars: int = 8
+    defensive_range_exit_equity_fraction: float = 1.1
+    defensive_range_take_profit_atr: float = 0.65
     cooldown_bars: int = 24
     loss_cooldown_bars: int = 240
     time_exit_loss_cooldown_bars: int = 96 * 3
@@ -65,7 +70,7 @@ class BacktestConfig:
     direction_loss_pause_bars: int = 96 * 5
     direction_loss_pause_pct: float = 12.0
     short_rebound_lookback_bars: int = 96 * 3
-    short_rebound_block_pct: float = 0.045
+    short_rebound_block_pct: float = 0.015
     short_rebound_rsi_floor: float = 48.0
     short_exhaustion_drop_pct: float = -0.06
     short_exhaustion_rsi_ceiling: float = 46.0
@@ -86,17 +91,45 @@ class BacktestConfig:
     range_short_min_move_1d: float = -1.0
     range_long_max_trend_strength: float = 0.1
     range_short_max_trend_strength: float = -0.05
-    transition_long_enabled: bool = True
+    transition_long_enabled: bool = False
     transition_short_enabled: bool = True
     transition_long_min_move_21d: float = -1.0
-    long_window_days: int = 30
+    enable_target_window_profiles: bool = True
+    target_window_excluded_symbols: tuple[str, ...] = (
+        "XRP-USDT-SWAP",
+        "BNB-USDT-SWAP",
+        "SUI-USDT-SWAP",
+    )
+    target_180_excluded_symbols: tuple[str, ...] = (
+        "XRP-USDT-SWAP",
+        "BNB-USDT-SWAP",
+        "SUI-USDT-SWAP",
+        "UNI-USDT-SWAP",
+        "SOL-USDT-SWAP",
+        "LINK-USDT-SWAP",
+    )
+    target_long_window_preferred_symbols: tuple[str, ...] = (
+        "ADA-USDT-SWAP",
+        "AVAX-USDT-SWAP",
+        "NEAR-USDT-SWAP",
+        "ARB-USDT-SWAP",
+        "SUI-USDT-SWAP",
+        "INJ-USDT-SWAP",
+    )
+    long_window_days: int = 365
+    long_window_symbol_limit: int = 5
+    enable_long_window_aggressive_profile: bool = False
+    long_window_aggressive_cooldown_bars: int = 12
+    long_window_aggressive_max_margin_fraction: float = 1.0
+    long_window_aggressive_max_total_margin_fraction: float = 0.85
+    long_window_aggressive_leverage: float = 30.0
     long_window_preferred_symbols: tuple[str, ...] = ()
-    min_score: float = 2.45
+    min_score: float = 3.25
     edge_lookback_trades: int = 10
     edge_pause_bars: int = 288
-    symbol_edge_lookback_trades: int = 3
-    symbol_edge_min_win_rate: float = 0.50
-    symbol_edge_pause_bars: int = 96 * 90
+    symbol_edge_lookback_trades: int = 1
+    symbol_edge_min_win_rate: float = 1.0
+    symbol_edge_pause_bars: int = 96 * 30
     reason_edge_lookback_trades: int = 7
     reason_edge_min_win_rate: float = 0.34
     reason_edge_pause_bars: int = 1152
@@ -110,7 +143,23 @@ class BacktestConfig:
     adaptive_trend_trailing_atr: float = 2.04
     adaptive_trend_max_hold_bars: int = 8
     adaptive_trend_allowed_regimes: tuple[str, ...] = ("downtrend",)
-    enable_attack_module: bool = True
+    enable_continuation_module: bool = False
+    continuation_min_volume_ratio: float = 1.45
+    continuation_min_trend_strength: float = 1.2
+    continuation_risk_per_trade: float = 0.08
+    continuation_stop_atr: float = 2.2
+    continuation_take_profit_atr: float = 1.4
+    continuation_trailing_atr: float = 1.8
+    continuation_max_hold_bars: int = 16
+    enable_micro_momentum_module: bool = False
+    micro_momentum_min_volume_ratio: float = 1.8
+    micro_momentum_min_body_atr: float = 0.7
+    micro_momentum_risk_per_trade: float = 0.08
+    micro_momentum_stop_atr: float = 1.4
+    micro_momentum_take_profit_atr: float = 0.8
+    micro_momentum_trailing_atr: float = 1.0
+    micro_momentum_max_hold_bars: int = 4
+    enable_attack_module: bool = False
     attack_min_score: float = 4.5
     attack_risk_per_trade: float = 0.025
     attack_max_positions: int = 2
@@ -127,12 +176,27 @@ class BacktestConfig:
     attack_exhaustion_enabled: bool = True
     min_bars: int = 260
     windows_days: tuple[int, ...] = (365, 180, 90, 60, 30, 14, 7)
-    validation_target_win_rate: float = 0.68
+    validation_target_win_rate: float = 0.66
     validation_target_profit: float = 0.0
+    validation_target_profit_by_window: dict[int, float] = field(
+        default_factory=lambda: {
+            365: 10.0,
+            180: 10.0,
+            90: 10.0,
+            60: 10.0,
+            30: 10.0,
+            14: 10.0,
+        }
+    )
     validation_target_returns: dict[int, float] = field(
         default_factory=lambda: {
-            30: 100.0,
-            7: 20.0,
+            365: 5.0,
+            180: 20.0,
+            90: 10.0,
+            60: 2.0,
+            30: 20.0,
+            14: 2.0,
+            7: 2.0,
         }
     )
     leverage_caps: dict[str, SymbolRisk] = field(

@@ -6,6 +6,7 @@ def audit_report(
     required_windows: tuple[int, ...] = (365, 180, 90, 60, 30, 7),
     min_win_rate: float = 0.60,
     min_pnl: float = 0.0,
+    min_pnl_by_window: dict[int, float] | None = None,
     min_return_by_window: dict[int, float] | None = None,
 ) -> dict:
     failures: list[str] = []
@@ -23,9 +24,10 @@ def audit_report(
         pnl = float(result.get("pnl", 0.0))
         return_pct = float(result.get("return_pct", 0.0))
         win_rate = float(result.get("win_rate", 0.0))
+        window_min_pnl = (min_pnl_by_window or {}).get(days, min_pnl)
         min_return = (min_return_by_window or {}).get(days)
-        if pnl <= min_pnl:
-            failures.append(f"{days}d pnl {pnl:g} <= {min_pnl:g}")
+        if pnl <= window_min_pnl:
+            failures.append(f"{days}d pnl {pnl:g} <= {window_min_pnl:g}")
         if min_return is not None and return_pct < min_return:
             failures.append(f"{days}d return {return_pct:.2f}% < {min_return:.2f}%")
         if win_rate < min_win_rate:
@@ -37,5 +39,6 @@ def audit_report(
         "required_windows": list(required_windows),
         "min_win_rate": min_win_rate,
         "min_pnl": min_pnl,
+        "min_pnl_by_window": min_pnl_by_window or {},
         "min_return_by_window": min_return_by_window or {},
     }

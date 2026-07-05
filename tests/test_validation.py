@@ -60,6 +60,24 @@ class ValidationAuditTests(unittest.TestCase):
         self.assertFalse(audit["complete"])
         self.assertIn("30d win rate 66.67% < 68.00%", audit["failures"])
 
+    def test_uses_window_specific_minimum_profit(self):
+        report = {
+            "windows": {
+                "14": {"available": True, "pnl": 9.99, "win_rate": 0.7},
+                "7": {"available": True, "pnl": 0.1, "win_rate": 0.7},
+            }
+        }
+
+        audit = audit_report(
+            report,
+            required_windows=(14, 7),
+            min_pnl_by_window={14: 10.0},
+        )
+
+        self.assertFalse(audit["complete"])
+        self.assertIn("14d pnl 9.99 <= 10", audit["failures"])
+        self.assertNotIn("7d pnl 0.1 <= 10", audit["failures"])
+
 
 if __name__ == "__main__":
     unittest.main()
