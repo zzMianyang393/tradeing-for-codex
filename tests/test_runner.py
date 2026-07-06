@@ -4,6 +4,7 @@ import contextlib
 import io
 import json
 import os
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -964,6 +965,46 @@ class TestRunnerCli(unittest.TestCase):
                 self.assertEqual("api_failure", alerts[0]["kind"])
             finally:
                 db.close()
+
+    def test_okx_health_report_uses_configurable_stale_order_threshold(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                order_id = db.save_order("BTC-USDT-SWAP", "long", 0.0002, price=50000.0)
+                db.update_order_status(order_id, "live", exchange_order_id="okx-live-1")
+            finally:
+                db.close()
+            conn = sqlite3.connect(str(db_path))
+            try:
+                conn.execute("UPDATE orders SET created_at='2000-01-01 00:00:00' WHERE id=?", (order_id,))
+                conn.commit()
+            finally:
+                conn.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_positions.return_value = []
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+                with contextlib.redirect_stdout(output):
+                    code = main([
+                        "--okx-health-report",
+                        "--db",
+                        str(db_path),
+                        "--stale-order-minutes",
+                        "5",
+                    ])
+
+            self.assertEqual(1, code)
+            payload = json.loads(output.getvalue())
+            self.assertEqual("warning", payload["status"])
+            self.assertEqual("stale_order", payload["issues"][0]["kind"])
+            self.assertEqual(1, payload["alerts_saved"])
 
 
 if __name__ == "__main__":

@@ -130,6 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--confirm-okx-close-position", action="store_true")
     parser.add_argument("--position-id", default="")
     parser.add_argument("--okx-close-price", type=float, default=0.0)
+    parser.add_argument("--stale-order-minutes", type=int, default=30)
     args = parser.parse_args(argv)
 
     if args.status:
@@ -176,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
         return code
 
     if args.okx_health_report:
-        payload, code = _okx_health_report_payload(args.db)
+        payload, code = _okx_health_report_payload(args.db, args.stale_order_minutes)
         _print_json(payload)
         return code
 
@@ -656,7 +657,7 @@ def _okx_monitor_loop_payload(db_path: Path, iterations: int, interval: float) -
     }, 0
 
 
-def _okx_health_report_payload(db_path: Path) -> tuple[dict, int]:
+def _okx_health_report_payload(db_path: Path, stale_order_minutes: int = 30) -> tuple[dict, int]:
     exchange, error = _okx_exchange_from_env()
     if error:
         error["okx_health_report"] = False
@@ -672,6 +673,7 @@ def _okx_health_report_payload(db_path: Path) -> tuple[dict, int]:
             report = build_health_report(
                 active_orders=active_orders,
                 reconciliation=reconciliation,
+                stale_order_minutes=stale_order_minutes,
                 local_open_positions=len(local_positions),
                 exchange_open_positions=len(exchange_positions),
             )
@@ -679,10 +681,12 @@ def _okx_health_report_payload(db_path: Path) -> tuple[dict, int]:
             report = build_health_report(
                 active_orders=active_orders,
                 api_error=str(exc),
+                stale_order_minutes=stale_order_minutes,
                 local_open_positions=len(local_positions),
             )
         payload = report.to_dict()
         payload["okx_health_report"] = True
+        payload["stale_order_minutes"] = stale_order_minutes
         report_id = db.save_health_report(payload)
         alerts_saved = _save_health_alerts(db, report_id, payload["issues"])
     finally:

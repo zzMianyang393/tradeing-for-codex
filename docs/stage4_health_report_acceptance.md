@@ -12,6 +12,7 @@ submitting orders.
   OKX simulated trading health.
 - Health reports are saved into SQLite `health_reports`.
 - Each `warning` or `critical` issue is saved into SQLite `health_alerts`.
+- Stale active-order detection is configurable with `--stale-order-minutes`.
 - Status levels are `ok`, `warning`, and `critical`.
 - Critical issues:
   - OKX API failure while reading positions.
@@ -26,14 +27,14 @@ submitting orders.
   notifications.
 - Risk pause detection is implemented in the pure report builder but is not yet
   wired to a persisted runtime risk-state source.
-- Stale-order threshold uses the default 30 minutes and is not yet exposed as a
-  CLI flag.
+- Drift detection currently treats any mismatch as critical; it does not yet
+  support tolerated or ignored symbols.
 
 ## Next Step
 
 Add alert delivery controls:
 
-- Add configurable stale-order and drift thresholds.
+- Add configurable drift tolerances and ignored symbol rules.
 - Add repeated-alert suppression so stable warnings do not spam downstream
   channels.
 - Add a dry-run notification adapter before wiring external channels.
