@@ -681,12 +681,33 @@ def _okx_health_report_payload(db_path: Path) -> tuple[dict, int]:
                 api_error=str(exc),
                 local_open_positions=len(local_positions),
             )
+        payload = report.to_dict()
+        payload["okx_health_report"] = True
+        report_id = db.save_health_report(payload)
+        alerts_saved = _save_health_alerts(db, report_id, payload["issues"])
     finally:
         db.close()
 
-    payload = report.to_dict()
-    payload["okx_health_report"] = True
+    payload["health_report_id"] = report_id
+    payload["alerts_saved"] = alerts_saved
     return payload, 0 if report.status == "ok" else 1
+
+
+def _save_health_alerts(db: StateDB, report_id: int, issues: list[dict]) -> int:
+    saved = 0
+    for issue in issues:
+        severity = issue.get("severity", "")
+        if severity not in ("warning", "critical"):
+            continue
+        db.save_health_alert(
+            report_id=report_id,
+            severity=severity,
+            kind=issue.get("kind", "unknown"),
+            message=issue.get("message", ""),
+            context=issue.get("context") or {},
+        )
+        saved += 1
+    return saved
 
 
 def _open_position_for_filled_order(

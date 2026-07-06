@@ -229,6 +229,47 @@ class TestRiskEvents(_DBMixin, unittest.TestCase):
         self.assertIsNotNone(eid)
 
 
+# -- Health reports -------------------------------------------------------
+
+class TestHealthReports(_DBMixin, unittest.TestCase):
+
+    def test_save_and_get_recent_health_reports(self):
+        report_id = self.db.save_health_report(
+            {
+                "status": "warning",
+                "generated_at": "2026-07-06 12:00:00",
+                "issues": [{"kind": "stale_order"}],
+            }
+        )
+
+        reports = self.db.get_recent_health_reports(5)
+
+        self.assertEqual(1, len(reports))
+        self.assertEqual(report_id, reports[0]["id"])
+        self.assertEqual("warning", reports[0]["status"])
+        self.assertEqual(1, reports[0]["issue_count"])
+        self.assertIn("stale_order", reports[0]["payload"])
+
+    def test_save_and_get_recent_health_alerts(self):
+        report_id = self.db.save_health_report({"status": "critical", "issues": []})
+        alert_id = self.db.save_health_alert(
+            report_id=report_id,
+            severity="critical",
+            kind="api_failure",
+            message="Exchange API check failed",
+            context={"error": "unavailable"},
+        )
+
+        alerts = self.db.get_recent_health_alerts(5)
+
+        self.assertEqual(1, len(alerts))
+        self.assertEqual(alert_id, alerts[0]["id"])
+        self.assertEqual(report_id, alerts[0]["report_id"])
+        self.assertEqual("critical", alerts[0]["severity"])
+        self.assertEqual("api_failure", alerts[0]["kind"])
+        self.assertIn("unavailable", alerts[0]["context"])
+
+
 # ── Reconciliation ──────────────────────────────────────────────────────
 
 class TestReconciliation(_DBMixin, unittest.TestCase):

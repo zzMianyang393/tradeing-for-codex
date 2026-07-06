@@ -88,6 +88,25 @@ CREATE TABLE IF NOT EXISTS risk_events (
     event_type TEXT NOT NULL,
     detail TEXT
 );
+
+CREATE TABLE IF NOT EXISTS health_reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    status TEXT NOT NULL,
+    issue_count INTEGER NOT NULL,
+    payload TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS health_alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    report_id INTEGER,
+    ts TEXT NOT NULL,
+    severity TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    message TEXT NOT NULL,
+    context TEXT,
+    FOREIGN KEY(report_id) REFERENCES health_reports(id)
+);
 """
 
 
@@ -359,6 +378,59 @@ class StateDB:
     def get_risk_events(self, n: int = 50) -> list[dict]:
         rows = self._conn.execute(
             "SELECT * FROM risk_events ORDER BY id DESC LIMIT ?", (n,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    # ------------------------------------------------------------------
+    # Health reports and alerts
+    # ------------------------------------------------------------------
+
+    def save_health_report(self, report: dict[str, Any]) -> int:
+        issues = report.get("issues") or []
+        cursor = self._conn.execute(
+            "INSERT INTO health_reports (ts, status, issue_count, payload) VALUES (?,?,?,?)",
+            (
+                _now_utc(),
+                report.get("status", "unknown"),
+                len(issues),
+                json.dumps(report, ensure_ascii=False),
+            ),
+        )
+        self._conn.commit()
+        return cursor.lastrowid or 0
+
+    def get_recent_health_reports(self, n: int = 20) -> list[dict]:
+        rows = self._conn.execute(
+            "SELECT * FROM health_reports ORDER BY id DESC LIMIT ?", (n,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def save_health_alert(
+        self,
+        report_id: int,
+        severity: str,
+        kind: str,
+        message: str,
+        context: dict[str, Any] | None = None,
+    ) -> int:
+        cursor = self._conn.execute(
+            "INSERT INTO health_alerts (report_id, ts, severity, kind, message, context) "
+            "VALUES (?,?,?,?,?,?)",
+            (
+                report_id,
+                _now_utc(),
+                severity,
+                kind,
+                message,
+                json.dumps(context, ensure_ascii=False) if context else None,
+            ),
+        )
+        self._conn.commit()
+        return cursor.lastrowid or 0
+
+    def get_recent_health_alerts(self, n: int = 20) -> list[dict]:
+        rows = self._conn.execute(
+            "SELECT * FROM health_alerts ORDER BY id DESC LIMIT ?", (n,)
         ).fetchall()
         return [dict(r) for r in rows]
 

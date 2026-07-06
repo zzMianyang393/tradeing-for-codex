@@ -930,6 +930,8 @@ class TestRunnerCli(unittest.TestCase):
             self.assertEqual([], payload["issues"])
             self.assertEqual(1, payload["local_open_positions"])
             self.assertEqual(1, payload["exchange_open_positions"])
+            self.assertGreater(payload["health_report_id"], 0)
+            self.assertEqual(0, payload["alerts_saved"])
 
     def test_okx_health_report_returns_critical_when_exchange_fails(self):
         fake_exchange = MagicMock()
@@ -939,18 +941,29 @@ class TestRunnerCli(unittest.TestCase):
             "OKX_API_SECRET": "secret",
             "OKX_API_PASSPHRASE": "passphrase",
         }
-        output = io.StringIO()
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            output = io.StringIO()
 
-        with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
-            with contextlib.redirect_stdout(output):
-                code = main(["--okx-health-report"])
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+                with contextlib.redirect_stdout(output):
+                    code = main(["--okx-health-report", "--db", str(db_path)])
 
-        self.assertEqual(1, code)
-        payload = json.loads(output.getvalue())
-        self.assertTrue(payload["okx_health_report"])
-        self.assertEqual("critical", payload["status"])
-        self.assertEqual("api_failure", payload["issues"][0]["kind"])
-        self.assertIn("unavailable", payload["issues"][0]["message"])
+            self.assertEqual(1, code)
+            payload = json.loads(output.getvalue())
+            self.assertTrue(payload["okx_health_report"])
+            self.assertEqual("critical", payload["status"])
+            self.assertEqual("api_failure", payload["issues"][0]["kind"])
+            self.assertIn("unavailable", payload["issues"][0]["message"])
+            self.assertGreater(payload["health_report_id"], 0)
+            self.assertEqual(1, payload["alerts_saved"])
+            db = StateDB(db_path)
+            try:
+                alerts = db.get_recent_health_alerts()
+                self.assertEqual(1, len(alerts))
+                self.assertEqual("api_failure", alerts[0]["kind"])
+            finally:
+                db.close()
 
 
 if __name__ == "__main__":

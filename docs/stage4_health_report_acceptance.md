@@ -10,6 +10,8 @@ submitting orders.
   status payload.
 - `runner.py --okx-health-report --db reports\dry_run_state.db` prints JSON for
   OKX simulated trading health.
+- Health reports are saved into SQLite `health_reports`.
+- Each `warning` or `critical` issue is saved into SQLite `health_alerts`.
 - Status levels are `ok`, `warning`, and `critical`.
 - Critical issues:
   - OKX API failure while reading positions.
@@ -20,7 +22,8 @@ submitting orders.
 
 ## Current Limits
 
-- The report is local JSON only; it does not send notifications.
+- The report and alerts are local SQLite/JSON only; they do not send external
+  notifications.
 - Risk pause detection is implemented in the pure report builder but is not yet
   wired to a persisted runtime risk-state source.
 - Stale-order threshold uses the default 30 minutes and is not yet exposed as a
@@ -28,9 +31,9 @@ submitting orders.
 
 ## Next Step
 
-Add alert delivery and persistence:
+Add alert delivery controls:
 
-- Save health report snapshots into SQLite.
 - Add configurable stale-order and drift thresholds.
-- Emit alert events for repeated `warning` or any `critical` status.
+- Add repeated-alert suppression so stable warnings do not spam downstream
+  channels.
 - Add a dry-run notification adapter before wiring external channels.
