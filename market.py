@@ -236,6 +236,7 @@ def load_market(
     include_funding: bool = False,
     include_open_interest: bool = False,
     include_trade_flow: bool = False,
+    include_order_book: bool = False,
 ) -> dict[str, list[FeatureBar]]:
     market: dict[str, list[FeatureBar]] = {}
     for symbol in discover_symbols(data_dir):
@@ -275,6 +276,12 @@ def load_market(
             trade_ticks_path = trade_ticks_output_path(symbol, data_dir)
             if trade_ticks_path.exists():
                 features = add_trade_flow_features(features, load_trade_ticks(trade_ticks_path))
+        if include_order_book:
+            from order_book import add_order_book_features, load_order_book_snapshots, order_book_output_path
+
+            order_book_path = order_book_output_path(symbol, data_dir)
+            if order_book_path.exists():
+                features = add_order_book_features(features, load_order_book_snapshots(order_book_path))
         if features:
             market[symbol] = features
     return market

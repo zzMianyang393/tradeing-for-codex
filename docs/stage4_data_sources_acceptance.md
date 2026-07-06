@@ -1,7 +1,8 @@
 # Stage 4 Data Sources Acceptance
 
 Stage 4 expands research inputs beyond OHLCV K lines. The first implemented
-sources are OKX funding-rate history, open-interest history, and trade flow.
+sources are OKX funding-rate history, open-interest history, trade flow, and
+order-book snapshots.
 
 ## Implemented
 
@@ -46,6 +47,22 @@ sources are OKX funding-rate history, open-interest history, and trade flow.
   - `trade_flow_imbalance`
 - `load_market(..., include_trade_flow=True)` attaches cached trade-flow
   features when a matching `<symbol>_trades.csv` file exists.
+- `order_book.py` defines an `OrderBookSnapshot` data model.
+- OKX order-book snapshots can be parsed into stable local records with
+  spread, quote-depth, and depth-imbalance fields.
+- Order-book snapshots can be saved to and loaded from CSV cache files.
+- `order_book.py --symbols ... --out ...` appends current order-book snapshots
+  with CSV merge behavior by timestamp.
+- `add_order_book_features` returns `OrderBookFeatureBar` values that preserve
+  all existing `FeatureBar` fields and add:
+  - `best_bid`
+  - `best_ask`
+  - `order_book_spread_pct`
+  - `bid_depth_quote`
+  - `ask_depth_quote`
+  - `depth_imbalance`
+- `load_market(..., include_order_book=True)` attaches cached order-book
+  features when a matching `<symbol>_order_book.csv` file exists.
 
 ## Current Limits
 
@@ -53,10 +70,11 @@ sources are OKX funding-rate history, open-interest history, and trade flow.
   until it passes rolling-window validation.
 - Open-interest features are not consumed by a strategy yet.
 - Trade-flow features are not consumed by a strategy yet.
+- Order-book features are not consumed by a strategy or live filter yet.
 
 ## Next Step
 
-- Add order book data source.
 - Add an open-interest strategy/filter and validate it independently.
 - Add a trade-flow strategy/filter and validate it independently.
+- Add an order-book liquidity/spread filter for execution safety.
 - Run funding-module rolling-window validation before enabling it by default.

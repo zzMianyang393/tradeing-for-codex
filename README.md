@@ -102,6 +102,7 @@ python okx_downloader.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP SOL-USDT-SWAP --d
 python funding_rate.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --days 90 --out data
 python open_interest.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --days 30 --out data --period 15m
 python trade_flow.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --out data
+python order_book.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --out data --depth 20
 ```
 
 The downloader writes files in the same format as the existing local CSVs.
@@ -115,6 +116,9 @@ open-interest fields.
 Trade-flow support is available in `trade_flow.py`; use
 `load_market(data_dir, timeframe, include_trade_flow=True)` to attach cached
 active buy/sell quote-volume fields.
+Order-book snapshot support is available in `order_book.py`; use
+`load_market(data_dir, timeframe, include_order_book=True)` to attach cached
+spread/depth/imbalance fields.
 
 ## Dashboard
 
