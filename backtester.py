@@ -329,6 +329,8 @@ class Backtester:
                             continue
                     positions[sig.symbol] = pos
                     opened_symbols.add(sig.symbol)
+                    if self.risk_manager is not None:
+                        self.risk_manager._track_open(sig.symbol, pos.margin)
                     entry_fee = pos.notional * self.config.taker_fee
                     equity -= entry_fee
                     free_margin_limit -= pos.margin

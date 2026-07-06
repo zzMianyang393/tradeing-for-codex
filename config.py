@@ -232,13 +232,3 @@ class BacktestConfig:
             "FIL-USDT-SWAP": SymbolRisk(12),
         }
     )
-    # RiskManager configuration
-    rm_max_single_position_pct: float = 0.40
-    rm_max_total_position_pct: float = 0.80
-    rm_max_daily_loss_pct: float = 15.0
-    rm_max_weekly_loss_pct: float = 30.0
-    rm_consecutive_loss_pause: int = 4
-    rm_consecutive_loss_pause_bars: int = 288
-    rm_volatility_halt_threshold: float = 0.06
-    rm_min_liquidation_distance_pct: float = 0.05
-    rm_enabled: bool = True

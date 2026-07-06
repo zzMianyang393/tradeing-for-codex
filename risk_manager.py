@@ -45,6 +45,8 @@ class RiskManager:
         self._pauses_count: int = 0
         self._rejections_count: int = 0
         self._open_margins: dict[str, float] = {}
+        self._last_daily_reset_step: int = 0
+        self._last_weekly_reset_step: int = 0
 
     # ------------------------------------------------------------------
     # Internal position tracking (called by the backtester)
@@ -85,6 +87,8 @@ class RiskManager:
         self._pauses_count = 0
         self._rejections_count = 0
         self._open_margins.clear()
+        self._last_daily_reset_step = 0
+        self._last_weekly_reset_step = 0
 
     def check_order(
         self,
@@ -96,6 +100,8 @@ class RiskManager:
         current_step: int,
         bars: list[FeatureBar],
         idx: int,
+        current_positions_margin: float = 0.0,
+        current_positions_count: int = 0,
     ) -> RiskDecision:
         """Evaluate all risk rules for a proposed order.
 
@@ -128,7 +134,8 @@ class RiskManager:
 
         # 3. Total-position limit
         if equity > 0:
-            total_pct = (self._total_margin_used + margin) / equity
+            used_margin = current_positions_margin if current_positions_margin > 0 else self._total_margin_used
+            total_pct = (used_margin + margin) / equity
             if total_pct > self.config.rm_max_total_position_pct:
                 self._rejections_count += 1
                 return RiskDecision(
@@ -198,6 +205,17 @@ class RiskManager:
         """Update risk state after a position is closed."""
         if symbol:
             self._open_margins.pop(symbol, None)
+
+        # Reset daily PnL every 96 steps (~1 day for 15m bars)
+        if current_step - self._last_daily_reset_step >= 96:
+            self._daily_pnl = 0.0
+            self._last_daily_reset_step = current_step
+
+        # Reset weekly PnL every 672 steps (~1 week for 15m bars)
+        if current_step - self._last_weekly_reset_step >= 672:
+            self._weekly_pnl = 0.0
+            self._last_weekly_reset_step = current_step
+
         self._daily_pnl += pnl
         self._weekly_pnl += pnl
         if pnl < 0:
