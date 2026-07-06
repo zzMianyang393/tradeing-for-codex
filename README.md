@@ -55,6 +55,7 @@ python runner.py --okx-smoke-order --confirm-okx-smoke-order --okx-symbol BTC-US
 python runner.py --okx-submit-signal --confirm-okx-submit-signal --db reports\dry_run_state.db --okx-symbol BTC-USDT-SWAP --okx-signal-direction long --okx-signal-price 50000 --okx-signal-notional 10 --okx-signal-margin 1 --okx-signal-leverage 10
 python runner.py --okx-sync-orders --db reports\dry_run_state.db
 python runner.py --okx-close-position --confirm-okx-close-position --db reports\dry_run_state.db --position-id <local_position_id> --okx-close-price 50100
+python runner.py --okx-snapshot --db reports\dry_run_state.db
 ```
 
 Current runner scope:
@@ -81,6 +82,9 @@ Current runner scope:
 - `--okx-close-position` submits a simulated close order for an existing local
   open position after local/exchange reconciliation. A later `--okx-sync-orders`
   run turns a filled close order into a closed position and trade record.
+- `--okx-snapshot` writes a read-only OKX simulated runtime snapshot into
+  SQLite account history and prints account, pending-order, position, and trade
+  summary metrics as JSON.
 
 ## Download more data
 

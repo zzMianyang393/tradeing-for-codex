@@ -105,6 +105,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--okx-submit-signal", action="store_true", help="Submit one risk-checked signal to OKX simulated trading")
     mode.add_argument("--okx-sync-orders", action="store_true", help="Sync local live orders from OKX simulated trading")
     mode.add_argument("--okx-close-position", action="store_true", help="Submit an OKX simulated close order for a local position")
+    mode.add_argument("--okx-snapshot", action="store_true", help="Write an OKX simulated runtime account snapshot")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
@@ -158,6 +159,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.okx_close_position:
         payload, code = _okx_close_position_payload(args)
+        _print_json(payload)
+        return code
+
+    if args.okx_snapshot:
+        payload, code = _okx_snapshot_payload(args.db)
         _print_json(payload)
         return code
 
@@ -550,6 +556,55 @@ def _okx_close_position_payload(args: argparse.Namespace) -> tuple[dict, int]:
         "order_id": local_order_id,
         "exchange_order_id": order.order_id,
         "status": order.status,
+    }, 0
+
+
+def _okx_snapshot_payload(db_path: Path) -> tuple[dict, int]:
+    exchange, error = _okx_exchange_from_env()
+    if error:
+        error["okx_snapshot"] = False
+        return error, 2
+
+    db = StateDB(db_path)
+    try:
+        try:
+            account = exchange.get_account_balance()
+            exchange_positions = exchange.get_positions()
+        except ExchangeError as exc:
+            return {"okx_snapshot": False, "error": str(exc)}, 1
+
+        local_positions = db.get_open_positions()
+        active_orders = db.get_active_exchange_orders()
+        trade_summary = db.trade_summary()
+        risk_status = {
+            "source": "okx_snapshot",
+            "pending_orders": len(active_orders),
+            "local_open_positions": len(local_positions),
+            "exchange_open_positions": len(exchange_positions),
+            "trade_summary": trade_summary,
+        }
+        db.snapshot_account(
+            equity=account.equity,
+            available_margin=account.available_margin,
+            used_margin=account.used_margin,
+            unrealized_pnl=sum(position.get("unrealized_pnl", 0.0) for position in exchange_positions),
+            open_positions=len(local_positions),
+            risk_status=json.dumps(risk_status, ensure_ascii=False),
+        )
+    finally:
+        db.close()
+
+    return {
+        "okx_snapshot": True,
+        "account": {
+            "equity": account.equity,
+            "available_margin": account.available_margin,
+            "used_margin": account.used_margin,
+        },
+        "local_open_positions": len(local_positions),
+        "exchange_open_positions": len(exchange_positions),
+        "pending_orders": len(active_orders),
+        "trade_summary": trade_summary,
     }, 0
 
 

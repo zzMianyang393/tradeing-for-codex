@@ -761,6 +761,66 @@ class TestRunnerCli(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_okx_snapshot_returns_error_when_credentials_are_missing(self):
+        output = io.StringIO()
+        env = {
+            "OKX_API_KEY": "",
+            "OKX_API_SECRET": "",
+            "OKX_API_PASSPHRASE": "",
+        }
+
+        with patch.dict(os.environ, env, clear=False), contextlib.redirect_stdout(output):
+            code = main(["--okx-snapshot"])
+
+        self.assertEqual(2, code)
+        payload = json.loads(output.getvalue())
+        self.assertFalse(payload["okx_snapshot"])
+        self.assertIn("OKX_API_KEY", payload["error"])
+
+    def test_okx_snapshot_writes_account_snapshot_and_outputs_runtime_report(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                db.save_position("BTC-USDT-SWAP", "long", 50000.0, 0.0002, 10.0, 1.0, 10.0)
+                order_id = db.save_order("BTC-USDT-SWAP", "long", 0.0002, price=50000.0)
+                db.update_order_status(order_id, "live", exchange_order_id="okx-live-1")
+            finally:
+                db.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_account_balance.return_value.equity = 1000.0
+            fake_exchange.get_account_balance.return_value.available_margin = 990.0
+            fake_exchange.get_account_balance.return_value.used_margin = 10.0
+            fake_exchange.get_positions.return_value = [{"symbol": "BTC-USDT-SWAP", "direction": "long"}]
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+                with contextlib.redirect_stdout(output):
+                    code = main(["--okx-snapshot", "--db", str(db_path)])
+
+            self.assertEqual(0, code)
+            payload = json.loads(output.getvalue())
+            self.assertTrue(payload["okx_snapshot"])
+            self.assertEqual(1000.0, payload["account"]["equity"])
+            self.assertEqual(1, payload["local_open_positions"])
+            self.assertEqual(1, payload["exchange_open_positions"])
+            self.assertEqual(1, payload["pending_orders"])
+            db = StateDB(db_path)
+            try:
+                history = db.get_account_history()
+                self.assertEqual(1, len(history))
+                self.assertEqual(1000.0, history[0]["equity"])
+                risk_status = json.loads(history[0]["risk_status"])
+                self.assertEqual("okx_snapshot", risk_status["source"])
+                self.assertEqual(1, risk_status["pending_orders"])
+            finally:
+                db.close()
+
 
 if __name__ == "__main__":
     unittest.main()
