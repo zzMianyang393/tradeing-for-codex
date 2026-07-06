@@ -102,6 +102,9 @@ python okx_downloader.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP SOL-USDT-SWAP --d
 ```
 
 The downloader writes files in the same format as the existing local CSVs.
+Funding-rate support is available in `funding_rate.py` for OKX funding history
+parsing, CSV caching, and attaching funding fields to `FeatureBar` streams for
+future strategy signals.
 
 ## Outputs
 
