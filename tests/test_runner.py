@@ -3,10 +3,11 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from config import BacktestConfig
 from exchange import DryRunExchange
@@ -170,6 +171,50 @@ class TestRunnerCli(unittest.TestCase):
                 self.assertEqual(3, len(db.get_account_history()))
             finally:
                 db.close()
+
+    def test_okx_check_uses_env_credentials_and_outputs_read_only_status(self):
+        fake_exchange = MagicMock()
+        fake_exchange.get_account_balance.return_value.equity = 100.5
+        fake_exchange.get_account_balance.return_value.available_margin = 80.0
+        fake_exchange.get_account_balance.return_value.used_margin = 20.5
+        fake_exchange.get_ticker.return_value.symbol = "BTC-USDT-SWAP"
+        fake_exchange.get_ticker.return_value.last = 50100.0
+        fake_exchange.get_ticker.return_value.bid = 50099.0
+        fake_exchange.get_ticker.return_value.ask = 50101.0
+        fake_exchange.get_positions.return_value = [{"symbol": "BTC-USDT-SWAP", "direction": "long"}]
+        env = {
+            "OKX_API_KEY": "key",
+            "OKX_API_SECRET": "secret",
+            "OKX_API_PASSPHRASE": "passphrase",
+        }
+        output = io.StringIO()
+
+        with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange) as cls:
+            with contextlib.redirect_stdout(output):
+                code = main(["--okx-check", "--okx-symbol", "BTC-USDT-SWAP"])
+
+        self.assertEqual(0, code)
+        cls.assert_called_once_with("key", "secret", "passphrase", sandbox=True)
+        payload = json.loads(output.getvalue())
+        self.assertTrue(payload["okx_check"])
+        self.assertEqual("BTC-USDT-SWAP", payload["ticker"]["symbol"])
+        self.assertEqual(100.5, payload["account"]["equity"])
+        self.assertEqual(1, payload["open_positions"])
+
+    def test_okx_check_returns_error_when_credentials_are_missing(self):
+        output = io.StringIO()
+        env = {
+            "OKX_API_KEY": "",
+            "OKX_API_SECRET": "",
+            "OKX_API_PASSPHRASE": "",
+        }
+
+        with patch.dict(os.environ, env, clear=False), contextlib.redirect_stdout(output):
+            code = main(["--okx-check"])
+
+        self.assertEqual(2, code)
+        payload = json.loads(output.getvalue())
+        self.assertIn("OKX_API_KEY", payload["error"])
 
 
 if __name__ == "__main__":

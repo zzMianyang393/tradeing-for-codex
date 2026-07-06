@@ -42,6 +42,16 @@ python runner.py --reconcile --db reports\dry_run_state.db
 python runner.py --loop --iterations 3 --interval 0 --db reports\dry_run_state.db --equity 25
 ```
 
+To verify OKX simulated-trading connectivity without placing orders, set read
+only simulated API credentials and run:
+
+```bash
+set OKX_API_KEY=your_key
+set OKX_API_SECRET=your_secret
+set OKX_API_PASSPHRASE=your_passphrase
+python runner.py --okx-check --okx-symbol BTC-USDT-SWAP
+```
+
 Current runner scope:
 
 - `--once` performs one dry-run cycle, writes an account snapshot, manages local
@@ -51,6 +61,8 @@ Current runner scope:
   summary as JSON.
 - `--reconcile` compares local SQLite positions with the dry-run exchange state.
 - `--loop` repeats empty dry-run cycles for a finite number of iterations.
+- `--okx-check` reads OKX simulated account balance, ticker, and positions via
+  the sandbox header; it is read-only and does not submit orders.
 
 ## Download more data
 

@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from config import BacktestConfig
-from exchange import DryRunExchange
+from exchange import DryRunExchange, OKXExchange
 from executor import ExecutionRequest, Executor
 from risk_manager import RiskManager
 from state_db import StateDB
@@ -93,10 +94,12 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--once", action="store_true", help="Run one dry-run cycle with no generated signals")
     mode.add_argument("--loop", action="store_true", help="Run repeated dry-run cycles")
     mode.add_argument("--reconcile", action="store_true", help="Reconcile local positions against dry-run exchange state")
+    mode.add_argument("--okx-check", action="store_true", help="Check OKX simulated account, ticker, and positions")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
     parser.add_argument("--interval", type=float, default=0.0)
+    parser.add_argument("--okx-symbol", default="BTC-USDT-SWAP")
     args = parser.parse_args(argv)
 
     if args.status:
@@ -106,6 +109,11 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             db.close()
         return 0
+
+    if args.okx_check:
+        payload, code = _okx_check_payload(args.okx_symbol)
+        _print_json(payload)
+        return code
 
     config, exchange, risk_manager, db, executor = _build_components(args.db)
     try:
@@ -171,6 +179,49 @@ def _status_payload(db: StateDB) -> dict:
         "open_positions": len(open_positions),
         "positions": open_positions,
         "trade_summary": db.trade_summary(),
+    }
+
+
+def _okx_check_payload(symbol: str) -> tuple[dict, int]:
+    credentials = _okx_credentials_from_env()
+    missing = [name for name, value in credentials.items() if not value]
+    if missing:
+        return {"okx_check": False, "error": f"Missing OKX credentials: {', '.join(missing)}"}, 2
+
+    exchange = OKXExchange(
+        credentials["OKX_API_KEY"],
+        credentials["OKX_API_SECRET"],
+        credentials["OKX_API_PASSPHRASE"],
+        sandbox=True,
+    )
+    account = exchange.get_account_balance()
+    ticker = exchange.get_ticker(symbol)
+    positions = exchange.get_positions()
+    return {
+        "okx_check": True,
+        "sandbox": True,
+        "symbol": symbol,
+        "account": {
+            "equity": account.equity,
+            "available_margin": account.available_margin,
+            "used_margin": account.used_margin,
+        },
+        "ticker": {
+            "symbol": ticker.symbol,
+            "last": ticker.last,
+            "bid": ticker.bid,
+            "ask": ticker.ask,
+        },
+        "open_positions": len(positions),
+        "positions": positions,
+    }, 0
+
+
+def _okx_credentials_from_env() -> dict[str, str]:
+    return {
+        "OKX_API_KEY": os.environ.get("OKX_API_KEY", ""),
+        "OKX_API_SECRET": os.environ.get("OKX_API_SECRET", ""),
+        "OKX_API_PASSPHRASE": os.environ.get("OKX_API_PASSPHRASE", ""),
     }
 
 
