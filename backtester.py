@@ -957,3 +957,46 @@ def config_for_window(config: BacktestConfig, days: int | None, symbols: tuple[s
             },
         )
     return config
+
+
+def save_backtest_to_db(report: dict, db_path: Path | None = None) -> str | None:
+    """Persist a backtest report's trades to SQLite.
+
+    Parameters
+    ----------
+    report : dict
+        The dict returned by ``Backtester.run()`` or ``run_report()``.
+    db_path : Path, optional
+        Where to create/open the database.  Defaults to
+        ``reports/backtest_state.db`` relative to the report's data_dir.
+
+    Returns
+    -------
+    str or None
+        Path to the database file, or None if no trades to save.
+    """
+    from state_db import StateDB
+
+    trades = report.get("trades_detail", [])
+    if not trades:
+        return None
+
+    if db_path is None:
+        data_dir = Path(report.get("data_dir", "data"))
+        db_path = data_dir.parent / "reports" / "backtest_state.db"
+
+    db = StateDB(db_path)
+    try:
+        count = db.save_backtest_trades(trades)
+        # Also snapshot the final account state
+        db.snapshot_account(
+            equity=report.get("end_equity", 0.0),
+            available_margin=0.0,
+            used_margin=0.0,
+            unrealized_pnl=0.0,
+            open_positions=0,
+            risk_status=str(report.get("risk_status", {})),
+        )
+        return str(db_path)
+    finally:
+        db.close()
