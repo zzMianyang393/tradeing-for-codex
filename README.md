@@ -2,6 +2,8 @@
 
 `tradering` is a self-contained crypto perpetual backtesting and signal research program.
 
+**Requires Python ≥ 3.10** (uses `dataclass(slots=True)`).
+
 It uses local OKX 1m CSV data when available, resamples it to 15m bars, then runs a multi-symbol,
 multi-regime strategy from a configurable starting balance.
 
