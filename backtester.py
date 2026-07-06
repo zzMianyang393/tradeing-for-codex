@@ -7,6 +7,7 @@ from pathlib import Path
 
 from config import BacktestConfig, SymbolRisk
 from market import FeatureBar, load_market
+from risk_manager import RiskManager
 from strategy import Signal, attack_signal_for, continuation_signal_for, micro_momentum_signal_for, signal_for
 from validation import audit_report
 
@@ -127,8 +128,13 @@ def select_symbols(
 class Backtester:
     def __init__(self, config: BacktestConfig):
         self.config = config
+        self.risk_manager: RiskManager | None = None
+        if config.rm_enabled:
+            self.risk_manager = RiskManager(config)
 
     def run(self, market: dict[str, list[FeatureBar]], days: int | None = None) -> dict:
+        if self.risk_manager is not None:
+            self.risk_manager.reset()
         if self.config.excluded_symbols:
             excluded = set(self.config.excluded_symbols)
             market = {symbol: bars for symbol, bars in market.items() if symbol not in excluded}
@@ -197,6 +203,8 @@ class Backtester:
                         win=pnl > 0,
                     )
                     trades.append(trade)
+                    if self.risk_manager is not None:
+                        self.risk_manager.on_trade_close(pnl, step)
                     if (
                         not trade.win
                         and abs(trade.pnl_pct_equity) >= self.config.direction_loss_pause_pct
@@ -212,6 +220,8 @@ class Backtester:
                         if recent_pnl < 0 or recent_win_rate < 0.50:
                             edge_pause_until = max(edge_pause_until, step + self.config.edge_pause_bars)
                     del positions[symbol]
+                    if self.risk_manager is not None:
+                        self.risk_manager._track_close(symbol)
                     cooldown[symbol] = self._cooldown_bars_for(pos)
                     if not trade.win:
                         cooldown[symbol] = max(cooldown[symbol], self._loss_cooldown_bars_for(pos))
@@ -306,6 +316,17 @@ class Backtester:
                     pos = self._open_position(sig, market[sig.symbol][idx], idx, equity, free_margin_limit)
                     if pos is None:
                         continue
+                    # RiskManager check (after sizing, before commitment)
+                    if self.risk_manager is not None:
+                        cur_margin = sum(p.margin for p in positions.values())
+                        decision = self.risk_manager.check_order(
+                            sig.symbol, pos.direction, pos.notional, pos.margin,
+                            equity, step, market[sig.symbol], idx,
+                            current_positions_margin=cur_margin,
+                            current_positions_count=len(positions),
+                        )
+                        if not decision.allowed:
+                            continue
                     positions[sig.symbol] = pos
                     opened_symbols.add(sig.symbol)
                     entry_fee = pos.notional * self.config.taker_fee
@@ -345,6 +366,8 @@ class Backtester:
                     win=pnl > 0,
                 )
             )
+            if self.risk_manager is not None:
+                self.risk_manager.on_trade_close(pnl, len(timeline) - 1)
 
         wins = sum(1 for trade in trades if trade.win)
         pnl = equity - self.config.start_equity
@@ -388,6 +411,11 @@ class Backtester:
             "by_reason": by_reason,
             "equity_curve": equity_curve,
             "trades_detail": [asdict(trade) for trade in trades],
+            "risk_status": {
+                "pauses_triggered": self.risk_manager._pauses_count if self.risk_manager else 0,
+                "orders_rejected": self.risk_manager._rejections_count if self.risk_manager else 0,
+                "final_status": asdict(self.risk_manager.get_status()) if self.risk_manager else None,
+            },
         }
 
     def _open_position(

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 
@@ -174,6 +176,17 @@ class BacktestConfig:
     attack_enabled_regimes: tuple[str, ...] = ("uptrend", "downtrend", "transition", "range")
     attack_breakout_enabled: bool = True
     attack_exhaustion_enabled: bool = True
+    # --- RiskManager configuration ---
+    rm_enabled: bool = True
+    rm_max_single_position_pct: float = 0.40
+    rm_max_total_position_pct: float = 0.80
+    rm_max_daily_loss_pct: float = 15.0
+    rm_max_weekly_loss_pct: float = 30.0
+    rm_consecutive_loss_pause: int = 4
+    rm_consecutive_loss_pause_bars: int = 288
+    rm_volatility_halt_threshold: float = 0.06
+    rm_min_liquidation_distance_pct: float = 0.05
+
     min_bars: int = 260
     windows_days: tuple[int, ...] = (365, 180, 90, 60, 30, 14, 7)
     validation_target_win_rate: float = 0.66
@@ -219,3 +232,13 @@ class BacktestConfig:
             "FIL-USDT-SWAP": SymbolRisk(12),
         }
     )
+    # RiskManager configuration
+    rm_max_single_position_pct: float = 0.40
+    rm_max_total_position_pct: float = 0.80
+    rm_max_daily_loss_pct: float = 15.0
+    rm_max_weekly_loss_pct: float = 30.0
+    rm_consecutive_loss_pause: int = 4
+    rm_consecutive_loss_pause_bars: int = 288
+    rm_volatility_halt_threshold: float = 0.06
+    rm_min_liquidation_distance_pct: float = 0.05
+    rm_enabled: bool = True
