@@ -1,6 +1,14 @@
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
+import json
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any, Callable
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 
 @dataclass(frozen=True)
@@ -14,6 +22,243 @@ class OrderResult:
     fill_qty: float | None = None
     fee: float = 0.0
     reason: str = ""
+
+
+@dataclass(frozen=True)
+class AccountInfo:
+    equity: float
+    available_margin: float
+    used_margin: float
+    raw: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class Ticker:
+    symbol: str
+    last: float
+    bid: float | None = None
+    ask: float | None = None
+    raw: dict[str, Any] | None = None
+
+
+class ExchangeError(RuntimeError):
+    pass
+
+
+Transport = Callable[[str, str, dict[str, str], str | None], Any]
+
+
+class OKXExchange:
+    """Minimal OKX REST wrapper for simulated trading and integration tests."""
+
+    def __init__(
+        self,
+        api_key: str,
+        secret: str,
+        passphrase: str,
+        sandbox: bool = True,
+        base_url: str = "https://www.okx.com",
+        transport: Transport | None = None,
+    ) -> None:
+        self.api_key = api_key
+        self.secret = secret
+        self.passphrase = passphrase
+        self.sandbox = sandbox
+        self.base_url = base_url.rstrip("/")
+        self.transport = transport
+
+    def get_account_balance(self) -> AccountInfo:
+        payload = self._request("GET", "/api/v5/account/balance")
+        data = self._first_data(payload)
+        details = data.get("details") or []
+        equity = self._float(data.get("totalEq"))
+        available_margin = 0.0
+        used_margin = 0.0
+        for detail in details:
+            available_margin += self._float(detail.get("availEq") or detail.get("availBal"))
+            used_margin += self._float(detail.get("imr"))
+        return AccountInfo(
+            equity=equity,
+            available_margin=available_margin,
+            used_margin=used_margin,
+            raw=data,
+        )
+
+    def get_positions(self) -> list[dict]:
+        payload = self._request("GET", "/api/v5/account/positions")
+        positions = []
+        for item in payload.get("data", []):
+            direction = self._direction_from_position(item)
+            if not direction:
+                continue
+            positions.append(
+                {
+                    "symbol": item.get("instId", ""),
+                    "direction": direction,
+                    "qty": abs(self._float(item.get("pos"))),
+                    "entry_price": self._float(item.get("avgPx")),
+                    "unrealized_pnl": self._float(item.get("upl")),
+                }
+            )
+        return positions
+
+    def get_ticker(self, symbol: str) -> Ticker:
+        payload = self._request("GET", "/api/v5/market/ticker", query={"instId": symbol})
+        data = self._first_data(payload)
+        return Ticker(
+            symbol=data.get("instId", symbol),
+            last=self._float(data.get("last")),
+            bid=self._optional_float(data.get("bidPx")),
+            ask=self._optional_float(data.get("askPx")),
+            raw=data,
+        )
+
+    def place_order(
+        self,
+        symbol: str,
+        direction: str,
+        qty: float,
+        order_type: str = "market",
+        price: float | None = None,
+        fee: float = 0.0,
+    ) -> OrderResult:
+        side = self._side_from_direction(direction)
+        payload: dict[str, str] = {
+            "instId": symbol,
+            "tdMode": "cross",
+            "side": side,
+            "ordType": order_type,
+            "sz": str(qty),
+        }
+        if price is not None:
+            payload["px"] = str(price)
+
+        response = self._request("POST", "/api/v5/trade/order", body=payload)
+        data = self._first_data(response)
+        code = data.get("sCode", "0")
+        if code != "0":
+            raise ExchangeError(f"OKX order rejected {code}: {data.get('sMsg', '')}")
+
+        return OrderResult(
+            order_id=data.get("ordId", ""),
+            symbol=symbol,
+            direction=direction,
+            qty=qty,
+            status="live",
+            fee=fee,
+            reason=data.get("sMsg", ""),
+        )
+
+    def cancel_order(self, symbol: str, order_id: str) -> dict[str, Any]:
+        payload = {"instId": symbol, "ordId": order_id}
+        return self._request("POST", "/api/v5/trade/cancel-order", body=payload)
+
+    def get_order_status(self, symbol: str, order_id: str) -> dict[str, Any]:
+        return self._request(
+            "GET",
+            "/api/v5/trade/order",
+            query={"instId": symbol, "ordId": order_id},
+        )
+
+    def set_leverage(self, symbol: str, leverage: float, margin_mode: str = "cross") -> dict[str, Any]:
+        payload = {"instId": symbol, "lever": str(leverage), "mgnMode": margin_mode}
+        return self._request("POST", "/api/v5/account/set-leverage", body=payload)
+
+    def set_position_mode(self, mode: str = "long_short_mode") -> dict[str, Any]:
+        return self._request("POST", "/api/v5/account/set-position-mode", body={"posMode": mode})
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        body: dict[str, Any] | None = None,
+        query: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        method = method.upper()
+        request_path = path
+        if query:
+            request_path = f"{path}?{urlencode(query)}"
+        body_text = json.dumps(body, separators=(",", ":")) if body is not None else None
+        timestamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        headers = self._headers(timestamp, method, request_path, body_text or "")
+        url = f"{self.base_url}{request_path}"
+
+        if self.transport is not None:
+            response = self.transport(method, url, headers, body_text)
+        else:
+            response = self._urlopen(method, url, headers, body_text)
+
+        payload = self._parse_response(response)
+        code = str(payload.get("code", "0"))
+        if code != "0":
+            raise ExchangeError(f"OKX error {code}: {payload.get('msg', '')}")
+        return payload
+
+    def _headers(self, timestamp: str, method: str, path: str, body: str) -> dict[str, str]:
+        headers = {
+            "Content-Type": "application/json",
+            "OK-ACCESS-KEY": self.api_key,
+            "OK-ACCESS-SIGN": self._sign(timestamp, method, path, body),
+            "OK-ACCESS-TIMESTAMP": timestamp,
+            "OK-ACCESS-PASSPHRASE": self.passphrase,
+        }
+        if self.sandbox:
+            headers["x-simulated-trading"] = "1"
+        return headers
+
+    def _sign(self, timestamp: str, method: str, path: str, body: str) -> str:
+        message = f"{timestamp}{method.upper()}{path}{body}".encode("utf-8")
+        digest = hmac.new(self.secret.encode("utf-8"), message, hashlib.sha256).digest()
+        return base64.b64encode(digest).decode("ascii")
+
+    def _urlopen(self, method: str, url: str, headers: dict[str, str], body: str | None) -> str:
+        data = body.encode("utf-8") if body is not None else None
+        request = Request(url, data=data, headers=headers, method=method)
+        with urlopen(request, timeout=10) as response:
+            return response.read().decode("utf-8")
+
+    def _parse_response(self, response: Any) -> dict[str, Any]:
+        if isinstance(response, dict):
+            return response
+        if isinstance(response, bytes):
+            response = response.decode("utf-8")
+        if isinstance(response, str):
+            return json.loads(response)
+        raise ExchangeError(f"Unsupported OKX response type: {type(response)!r}")
+
+    def _first_data(self, payload: dict[str, Any]) -> dict[str, Any]:
+        data = payload.get("data") or []
+        if not data:
+            return {}
+        return data[0]
+
+    def _side_from_direction(self, direction: str) -> str:
+        if direction in ("long", "buy"):
+            return "buy"
+        if direction in ("short", "sell"):
+            return "sell"
+        raise ValueError(f"Unsupported direction: {direction}")
+
+    def _direction_from_position(self, position: dict[str, Any]) -> str:
+        side = position.get("posSide") or position.get("side")
+        if side in ("long", "short"):
+            return side
+        qty = self._float(position.get("pos"))
+        if qty > 0:
+            return "long"
+        if qty < 0:
+            return "short"
+        return ""
+
+    def _float(self, value: Any) -> float:
+        if value in (None, ""):
+            return 0.0
+        return float(value)
+
+    def _optional_float(self, value: Any) -> float | None:
+        if value in (None, ""):
+            return None
+        return float(value)
 
 
 class DryRunExchange:
