@@ -328,6 +328,8 @@ class Backtester:
                         if not decision.allowed:
                             continue
                     positions[sig.symbol] = pos
+                    if self.risk_manager is not None:
+                        self.risk_manager._track_open(sig.symbol, pos.margin)
                     opened_symbols.add(sig.symbol)
                     entry_fee = pos.notional * self.config.taker_fee
                     equity -= entry_fee
@@ -995,7 +997,7 @@ def save_backtest_to_db(report: dict, db_path: Path | None = None) -> str | None
             used_margin=0.0,
             unrealized_pnl=0.0,
             open_positions=0,
-            risk_status=str(report.get("risk_status", {})),
+            risk_status=json.dumps(report.get("risk_status", {}), ensure_ascii=False),
         )
         return str(db_path)
     finally:

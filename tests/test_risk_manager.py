@@ -67,6 +67,25 @@ class TestSinglePositionLimit(unittest.TestCase):
 
 
 class TestTotalPositionLimit(unittest.TestCase):
+    def test_rejected_when_external_current_margin_exceeds(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_total_position_pct=0.80))
+        # Backtester passes the current open-position margin instead of
+        # requiring RiskManager to reconstruct it from private state.
+        d = rm.check_order(
+            "BTC-USDT-SWAP",
+            1,
+            10.0,
+            5.0,
+            10.0,
+            0,
+            _bars(),
+            0,
+            current_positions_margin=7.0,
+            current_positions_count=1,
+        )
+        self.assertFalse(d.allowed)
+        self.assertIn("total position", d.reason)
+
     def test_rejected_when_existing_plus_new_exceeds(self):
         rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_total_position_pct=0.80))
         rm._track_open("ETH-USDT-SWAP", 7.0)

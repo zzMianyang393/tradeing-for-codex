@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from backtester import save_backtest_to_db
 from state_db import StateDB, ReconcileResult
 
 
@@ -246,6 +247,40 @@ class TestDBCreation(_DBMixin, unittest.TestCase):
         # WAL file may or may not exist depending on sync, but DB should work
         summary = self.db.trade_summary()
         self.assertEqual(summary["total"], 0)
+
+
+class TestSaveBacktestToDb(unittest.TestCase):
+    def test_risk_status_snapshot_is_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "backtest.db"
+            report = {
+                "end_equity": 12.5,
+                "risk_status": {"orders_rejected": 2, "final_status": {"is_paused": False}},
+                "trades_detail": [
+                    {
+                        "symbol": "BTC-USDT-SWAP",
+                        "direction": "long",
+                        "entry": 100.0,
+                        "exit": 101.0,
+                        "entry_time": "2026-01-01",
+                        "exit_time": "2026-01-02",
+                        "pnl": 1.0,
+                        "pnl_pct_equity": 10.0,
+                        "reason": "trend_long",
+                        "exit_reason": "take_profit",
+                        "regime": "uptrend",
+                    }
+                ],
+            }
+
+            save_backtest_to_db(report, db_path)
+
+            db = StateDB(db_path)
+            try:
+                history = db.get_account_history()
+            finally:
+                db.close()
+            self.assertIn('"orders_rejected": 2', history[0]["risk_status"])
 
 
 if __name__ == "__main__":

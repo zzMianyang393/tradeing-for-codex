@@ -96,6 +96,8 @@ class RiskManager:
         current_step: int,
         bars: list[FeatureBar],
         idx: int,
+        current_positions_margin: float | None = None,
+        current_positions_count: int | None = None,
     ) -> RiskDecision:
         """Evaluate all risk rules for a proposed order.
 
@@ -128,7 +130,8 @@ class RiskManager:
 
         # 3. Total-position limit
         if equity > 0:
-            total_pct = (self._total_margin_used + margin) / equity
+            existing_margin = self._total_margin_used if current_positions_margin is None else current_positions_margin
+            total_pct = (existing_margin + margin) / equity
             if total_pct > self.config.rm_max_total_position_pct:
                 self._rejections_count += 1
                 return RiskDecision(
