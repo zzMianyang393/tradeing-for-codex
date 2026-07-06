@@ -263,3 +263,29 @@ def micro_momentum_signal_for(symbol: str, bars: list[FeatureBar], idx: int, con
         score = 3.25 + min(0.8, vol_ratio / 5.0) + min(0.5, body_pct / max(atr_pct * 2.0, 0.0001))
         return Signal(symbol, -1, score, "micro_momentum", "micro_momentum_short")
     return None
+
+
+def funding_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Signal | None:
+    if not getattr(config, "enable_funding_module", False):
+        return None
+    if idx < 220:
+        return None
+    bar = bars[idx]
+    funding_rate = getattr(bar, "funding_rate", None)
+    if funding_rate is None:
+        return None
+    funding_ma = float(getattr(bar, "funding_rate_ma", funding_rate) or 0.0)
+    rate = float(funding_rate)
+    threshold = getattr(config, "funding_abs_rate_threshold", 0.0005)
+    min_abs_ma = getattr(config, "funding_min_abs_ma", 0.0002)
+    if abs(rate) < threshold or abs(funding_ma) < min_abs_ma:
+        return None
+
+    crowding_score = min(1.0, abs(rate) / max(threshold * 3.0, 0.0001))
+    trend_penalty = min(0.35, abs(bar.trend_strength) / 10.0)
+    score = 3.3 + crowding_score - trend_penalty
+    if rate < 0 and bar.rsi <= 64:
+        return Signal(symbol, 1, score, "funding", "funding_extreme_long")
+    if rate > 0 and bar.rsi >= 36:
+        return Signal(symbol, -1, score, "funding", "funding_extreme_short")
+    return None

@@ -161,6 +161,14 @@ class BacktestConfig:
     micro_momentum_take_profit_atr: float = 0.8
     micro_momentum_trailing_atr: float = 1.0
     micro_momentum_max_hold_bars: int = 4
+    enable_funding_module: bool = False
+    funding_abs_rate_threshold: float = 0.0005
+    funding_min_abs_ma: float = 0.0002
+    funding_risk_per_trade: float = 0.04
+    funding_stop_atr: float = 2.0
+    funding_take_profit_atr: float = 1.0
+    funding_trailing_atr: float = 1.4
+    funding_max_hold_bars: int = 12
     enable_attack_module: bool = False
     attack_min_score: float = 4.5
     attack_risk_per_trade: float = 0.025

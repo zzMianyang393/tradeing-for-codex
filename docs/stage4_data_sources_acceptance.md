@@ -17,11 +17,15 @@ source is OKX funding-rate history.
   - `funding_rate_ma`
 - `load_market(..., include_funding=True)` attaches cached funding-rate
   features when a matching `<symbol>_funding.csv` file exists.
+- `funding_signal_for` provides an optional, default-off funding-rate strategy
+  signal for extreme funding-rate conditions.
 
 ## Current Limits
 
-- No strategy consumes funding features yet.
+- Funding strategy is available but remains disabled in the default profile
+  until it passes rolling-window validation.
 
 ## Next Step
 
-- Add an independent funding-rate strategy signal and backtest report.
+- Add trades, order book, and open interest data sources.
+- Run funding-module rolling-window validation before enabling it by default.
