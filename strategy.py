@@ -310,3 +310,25 @@ def open_interest_signal_for(symbol: str, bars: list[FeatureBar], idx: int, conf
     if bar.close <= bar.donchian_low * 1.001 and bar.close < bar.ema20 and bar.rsi >= 28:
         return Signal(symbol, -1, score, "open_interest", "open_interest_breakout_short")
     return None
+
+
+def generate_all_signals(
+    symbol: str,
+    bars: list[FeatureBar],
+    idx: int,
+    config=None,
+) -> list[Signal]:
+    """Run all enabled signal generators and return matching signals."""
+    signals: list[Signal] = []
+    for fn in [
+        signal_for,
+        attack_signal_for,
+        continuation_signal_for,
+        micro_momentum_signal_for,
+        funding_signal_for,
+        open_interest_signal_for,
+    ]:
+        sig = fn(symbol, bars, idx, config)
+        if sig is not None:
+            signals.append(sig)
+    return signals

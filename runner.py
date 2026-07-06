@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import time
 from dataclasses import asdict, dataclass, field
@@ -12,8 +13,12 @@ from config import BacktestConfig
 from exchange import DryRunExchange, ExchangeError, OKXExchange
 from executor import ExecutionRequest, Executor
 from health_report import build_health_report
+from market import FeatureBar, load_market
 from risk_manager import RiskManager
 from state_db import StateDB
+from strategy import Signal, generate_all_signals
+
+logger = logging.getLogger("runner")
 
 
 @dataclass(frozen=True)
@@ -61,6 +66,7 @@ class TradingRunner:
         exchange: DryRunExchange | OKXExchange | None = None,
         symbols: list[str] | None = None,
         dry_run: bool = False,
+        data_dir: Path | None = None,
     ) -> None:
         self.config = config
         self.executor = executor
@@ -68,19 +74,240 @@ class TradingRunner:
         self.exchange = exchange if exchange is not None else executor.exchange
         self.symbols = symbols or []
         self.dry_run = dry_run
+        self.data_dir = data_dir
+        self._market: dict[str, list[FeatureBar]] = {}
+        self._step = 0
+
+    def load_market_data(self) -> dict[str, list[FeatureBar]]:
+        """Load or reload market data from the data directory."""
+        if self.data_dir is None:
+            return {}
+        market = load_market(
+            self.data_dir,
+            self.config.timeframe_minutes,
+            include_funding=getattr(self.config, "enable_funding_module", False),
+            include_open_interest=getattr(self.config, "enable_open_interest_module", False),
+            include_trade_flow=getattr(self.config, "enable_trade_flow", False),
+            include_order_book=getattr(self.config, "enable_order_book", False),
+        )
+        # Filter to selected symbols if specified
+        if self.symbols:
+            market = {s: bars for s, bars in market.items() if s in self.symbols}
+        self._market = market
+        return market
+
+    def _select_active_symbols(self, market: dict[str, list[FeatureBar]]) -> list[str]:
+        """Select top symbols for the current cycle."""
+        from backtester import select_symbols
+        if not market:
+            return []
+        # Use the latest timestamp from the data
+        all_ts = set()
+        for bars in market.values():
+            if bars:
+                all_ts.add(bars[-1].ts)
+        if not all_ts:
+            return []
+        end_ts = max(all_ts)
+        limit = self.config.active_symbol_limit
+        if self.symbols:
+            # If user specified symbols, use those (up to limit)
+            return self.symbols[:limit]
+        return select_symbols(market, end_ts, limit=limit, config=self.config)
+
+    def _get_current_prices(self, market: dict[str, list[FeatureBar]], symbols: list[str]) -> dict[str, float]:
+        """Extract latest close prices for active symbols."""
+        prices = {}
+        for symbol in symbols:
+            bars = market.get(symbol)
+            if bars:
+                prices[symbol] = bars[-1].close
+        return prices
+
+    def _generate_signals(
+        self, market: dict[str, list[FeatureBar]], symbols: list[str]
+    ) -> list[Signal]:
+        """Generate all strategy signals for active symbols."""
+        signals: list[Signal] = []
+        min_score = self.config.min_score
+        enabled_regimes = set(self.config.enabled_regimes) if self.config.enabled_regimes else None
+        for symbol in symbols:
+            bars = market.get(symbol)
+            if not bars or len(bars) < 260:
+                continue
+            idx = len(bars) - 1
+            for sig in generate_all_signals(symbol, bars, idx, self.config):
+                if sig.score < min_score:
+                    continue
+                if enabled_regimes and sig.regime not in enabled_regimes:
+                    continue
+                signals.append(sig)
+        # Sort by score descending — best signals first
+        signals.sort(key=lambda s: s.score, reverse=True)
+        return signals
+
+    def _size_and_execute_signal(
+        self, sig: Signal, market: dict[str, list[FeatureBar]], equity: float, current_step: int
+    ) -> ExecutionResult | None:
+        """Size a signal and execute it through the executor."""
+        bars = market.get(sig.symbol)
+        if not bars:
+            return None
+        bar = bars[-1]
+        risk = self.config.leverage_caps.get(sig.symbol)
+        leverage_cap = risk.max_leverage if risk else 10.0
+        leverage = min(leverage_cap, max(2.0, 1.0 / max(bar.atr_pct * 3.4, 0.02)))
+        entry = bar.close
+
+        # Determine stop/take-profit from signal reason
+        stop_atr, take_profit_atr = _stop_tp_for_signal(sig, self.config)
+        risk_per_trade = _risk_per_trade_for_signal(sig, self.config)
+        if equity < self.config.start_equity * self.config.defensive_equity_fraction:
+            risk_per_trade *= self.config.defensive_risk_multiplier
+        if equity > self.config.start_equity * self.config.profit_lock_equity_fraction:
+            risk_per_trade *= self.config.profit_lock_risk_multiplier
+
+        stop_dist = max(bar.atr * stop_atr, entry * 0.0025)
+        symbol_risk_mult = self.config.symbol_risk_multipliers.get(sig.symbol, 1.0)
+        reason_risk_mult = self.config.reason_risk_multipliers.get(sig.reason, 1.0)
+        score_factor = min(1.25, sig.score / 2.6)
+        risk_amount = equity * risk_per_trade * symbol_risk_mult * reason_risk_mult * score_factor
+        notional_by_risk = risk_amount / (stop_dist / entry) if stop_dist > 0 else 0.0
+
+        open_positions = self.state_db.get_open_positions() if self.state_db else []
+        used_margin = sum(p["margin"] for p in open_positions)
+        free_margin = max(0.0, equity * self.config.max_total_margin_fraction - used_margin)
+        margin_cap = min(equity * self.config.max_margin_fraction, free_margin)
+        notional = min(notional_by_risk, margin_cap * leverage)
+
+        min_notional = risk.min_notional if risk else 5.0
+        if notional < min_notional:
+            return None
+
+        margin = notional / leverage
+        stop_loss = entry - sig.direction * stop_dist
+        take_profit = entry + sig.direction * max(bar.atr * take_profit_atr, entry * 0.0022)
+
+        request = ExecutionRequest.from_signal(
+            sig,
+            price=entry,
+            notional=notional,
+            margin=margin,
+            leverage=leverage,
+            stop_loss=stop_loss,
+            take_profit=take_profit,
+        )
+        return self.executor.execute_signal(
+            request,
+            equity=equity,
+            current_step=current_step,
+            bars=bars,
+            idx=len(bars) - 1,
+        )
 
     def run_once(self, run_input: RunInput | None = None) -> RunReport:
-        if run_input is None:
+        """Run one trading cycle: load data, manage positions, generate signals, execute."""
+        if run_input is not None:
+            return self._run_once_with_input(run_input)
+
+        # Real trading cycle
+        market = self._market or self.load_market_data()
+        if not market:
             account = self.exchange.get_account_balance()
-            positions = self.exchange.get_positions()
-            risk_status = {}
-            if getattr(self.executor, "risk_manager", None) is not None:
-                risk_status = asdict(self.executor.risk_manager.get_status())
             return RunReport(
-                open_positions=len(positions),
-                risk_status=risk_status,
                 equity=getattr(account, "equity", 0.0) or getattr(account, "total_equity", 0.0),
+                errors=["No market data loaded. Use --data to specify data directory."],
             )
+
+        active_symbols = self._select_active_symbols(market)
+        current_prices = self._get_current_prices(market, active_symbols)
+
+        # Get account equity
+        account = self.exchange.get_account_balance()
+        equity = getattr(account, "equity", 0.0) or getattr(account, "total_equity", 0.0)
+        if self.state_db:
+            open_positions = self.state_db.get_open_positions()
+            used_margin = sum(p["margin"] for p in open_positions)
+        else:
+            open_positions = []
+            used_margin = 0.0
+
+        # Manage existing positions (stop/trail/time exit)
+        closed = self.executor.manage_positions(
+            current_prices, self._step, bars_by_symbol=market,
+        )
+        for action in closed:
+            logger.info(
+                "Position closed: %s %s reason=%s pnl=%.4f",
+                action.symbol, action.direction, action.reason, action.pnl,
+            )
+
+        # Generate signals
+        signals = self._generate_signals(market, active_symbols)
+
+        # Filter out symbols already in position
+        open_symbols = {p["symbol"] for p in open_positions}
+        signals = [s for s in signals if s.symbol not in open_symbols]
+
+        # Check available slots
+        max_positions = self.config.max_positions
+        available_slots = max(0, max_positions - len(open_positions))
+
+        # Execute top signals
+        executed_orders = 0
+        rejected_orders = 0
+        for sig in signals[:available_slots]:
+            result = self._size_and_execute_signal(sig, market, equity, self._step)
+            if result is None:
+                continue
+            if result.accepted:
+                executed_orders += 1
+                logger.info(
+                    "Signal executed: %s %s score=%.2f reason=%s",
+                    sig.symbol, "long" if sig.direction > 0 else "short",
+                    sig.score, sig.reason,
+                )
+            else:
+                rejected_orders += 1
+                logger.info(
+                    "Signal rejected: %s %s reason=%s risk=%s",
+                    sig.symbol, "long" if sig.direction > 0 else "short",
+                    sig.reason, result.reason,
+                )
+
+        # Sync state
+        sync_consistent = True
+        if self.state_db:
+            sync = self.executor.sync_state(self._step)
+            sync_consistent = sync.consistent
+            open_positions = self.state_db.get_open_positions()
+            used_margin = sum(p["margin"] for p in open_positions)
+            risk_status = asdict(self.executor.risk_manager.get_status())
+            self.state_db.snapshot_account(
+                equity=equity,
+                available_margin=max(0.0, equity - used_margin),
+                used_margin=used_margin,
+                unrealized_pnl=0.0,
+                open_positions=len(open_positions),
+                risk_status=json.dumps(risk_status, ensure_ascii=False),
+            )
+        else:
+            risk_status = {}
+
+        self._step += 1
+        return RunReport(
+            executed_orders=executed_orders,
+            rejected_orders=rejected_orders,
+            closed_positions=len(closed),
+            open_positions=len(open_positions),
+            sync_consistent=sync_consistent,
+            risk_status=risk_status,
+            signals_generated=len(signals),
+            equity=equity,
+        )
+
+    def _run_once_with_input(self, run_input: RunInput) -> RunReport:
+        """Legacy path: run with explicit RunInput (used by --once with manual data)."""
         if self.state_db is None:
             return RunReport(errors=["state_db is required for RunInput execution"])
         closed = self.executor.manage_positions(run_input.current_prices, run_input.current_step)
@@ -124,27 +351,101 @@ class TradingRunner:
         )
 
     def run_loop(self, interval_seconds: int = 900) -> None:
+        """Run repeated trading cycles with real market data."""
+        logger.info("Starting trading loop (interval=%ds)", interval_seconds)
+        # Load market data once at start
+        market = self.load_market_data()
+        if not market:
+            logger.error("No market data loaded. Check --data path.")
+            return
+        logger.info("Loaded %d symbols from %s", len(market), self.data_dir)
+
+        cycle = 0
         while True:
-            self.run_once(
-                RunInput(
-                    equity=0.0,
-                    current_step=0,
-                    current_prices={},
-                    bars_by_symbol={},
+            cycle += 1
+            try:
+                # Reload data for fresh bars
+                market = self.load_market_data()
+                report = self.run_once()
+                logger.info(
+                    "Cycle %d: signals=%d executed=%d rejected=%d closed=%d positions=%d equity=%.4f",
+                    cycle,
+                    report.signals_generated,
+                    report.executed_orders,
+                    report.rejected_orders,
+                    report.closed_positions,
+                    report.open_positions,
+                    report.equity,
                 )
-            )
-            time.sleep(interval_seconds)
+            except Exception:
+                logger.exception("Error in trading cycle %d", cycle)
+            if interval_seconds > 0:
+                time.sleep(interval_seconds)
 
     def stop(self) -> None:
         return None
+
+
+def _stop_tp_for_signal(sig: Signal, config: BacktestConfig) -> tuple[float, float]:
+    """Return (stop_atr, take_profit_atr) for a signal based on its reason prefix."""
+    if sig.reason.startswith("attack_"):
+        return config.attack_stop_atr, config.attack_take_profit_atr
+    if sig.reason.startswith("micro_momentum_"):
+        return config.micro_momentum_stop_atr, config.micro_momentum_take_profit_atr
+    if sig.reason.startswith("funding_"):
+        return config.funding_stop_atr, config.funding_take_profit_atr
+    if sig.reason.startswith("open_interest_"):
+        return config.open_interest_stop_atr, config.open_interest_take_profit_atr
+    if sig.reason.startswith("continuation_"):
+        return config.continuation_stop_atr, config.continuation_take_profit_atr
+    if sig.reason.startswith("range_revert_"):
+        return config.range_stop_atr, config.range_take_profit_atr
+    return config.stop_atr, config.take_profit_atr
+
+
+def _risk_per_trade_for_signal(sig: Signal, config: BacktestConfig) -> float:
+    """Return risk_per_trade for a signal based on its reason prefix."""
+    if sig.reason.startswith("attack_"):
+        return config.attack_risk_per_trade
+    if sig.reason.startswith("micro_momentum_"):
+        return config.micro_momentum_risk_per_trade
+    if sig.reason.startswith("funding_"):
+        return config.funding_risk_per_trade
+    if sig.reason.startswith("open_interest_"):
+        return config.open_interest_risk_per_trade
+    if sig.reason.startswith("continuation_"):
+        return config.continuation_risk_per_trade
+    return config.risk_per_trade
+
+
+def _setup_logging() -> None:
+    """Configure structured logging for console and file."""
+    log_dir = Path("reports")
+    log_dir.mkdir(exist_ok=True)
+    formatter = logging.Formatter(
+        "%(asctime)s %(name)s %(levelname)s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    # Console handler
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(formatter)
+    # File handler
+    file_handler = logging.FileHandler(log_dir / "trades.log", encoding="utf-8")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    root.addHandler(console)
+    root.addHandler(file_handler)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Dry-run trading runner")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--status", action="store_true", help="Print local account/position status as JSON")
-    mode.add_argument("--once", action="store_true", help="Run one dry-run cycle with no generated signals")
-    mode.add_argument("--loop", action="store_true", help="Run repeated dry-run cycles")
+    mode.add_argument("--once", action="store_true", help="Run one trading cycle with signal generation")
+    mode.add_argument("--loop", action="store_true", help="Run repeated trading cycles with signal generation")
     mode.add_argument("--reconcile", action="store_true", help="Reconcile local positions against dry-run exchange state")
     mode.add_argument("--okx-check", action="store_true", help="Check OKX simulated account, ticker, and positions")
     mode.add_argument("--okx-smoke-order", action="store_true", help="Place then cancel one OKX simulated limit order")
@@ -155,9 +456,10 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--okx-monitor-loop", action="store_true", help="Run finite OKX simulated sync/snapshot monitor cycles")
     mode.add_argument("--okx-health-report", action="store_true", help="Print OKX simulated health report as JSON")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
+    parser.add_argument("--data", type=Path, default=Path("data"), help="Data directory for market data")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
-    parser.add_argument("--interval", type=float, default=0.0)
+    parser.add_argument("--interval", type=float, default=900.0)
     parser.add_argument("--okx-symbol", default="BTC-USDT-SWAP")
     parser.add_argument("--exchange", choices=["dry-run", "okx"], default="dry-run")
     parser.add_argument("--confirm-okx-smoke-order", action="store_true")
@@ -250,40 +552,34 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             db.close()
 
-    config, exchange, risk_manager, db, executor = _build_components(args.db)
+    _setup_logging()
+    config, exchange, risk_manager, db, executor = _build_components(args.db, equity=args.equity)
     try:
         if args.once:
-            runner = TradingRunner(config, executor, db)
-            report = runner.run_once(
-                RunInput(
-                    equity=args.equity,
-                    current_step=0,
-                    current_prices={},
-                    bars_by_symbol={},
-                )
-            )
+            runner = TradingRunner(config, executor, db, data_dir=args.data)
+            report = runner.run_once()
             payload = asdict(report)
             payload["equity"] = args.equity
             _print_json(payload)
             return 0
         if args.loop:
-            runner = TradingRunner(config, executor, db)
-            report = None
-            for step in range(args.iterations):
-                report = runner.run_once(
-                    RunInput(
-                        equity=args.equity,
-                        current_step=step,
-                        current_prices={},
-                        bars_by_symbol={},
-                    )
-                )
-                if args.interval > 0 and step < args.iterations - 1:
-                    time.sleep(args.interval)
-            payload = asdict(report) if report is not None else {}
-            payload["equity"] = args.equity
-            payload["iterations"] = args.iterations
-            _print_json(payload)
+            runner = TradingRunner(config, executor, db, data_dir=args.data)
+            # Pre-load market data once
+            runner.load_market_data()
+            if args.iterations and args.iterations > 0:
+                # Finite loop for testing / batch runs
+                report = None
+                for step in range(args.iterations):
+                    report = runner.run_once()
+                    if args.interval > 0 and step < args.iterations - 1:
+                        time.sleep(args.interval)
+                payload = asdict(report) if report is not None else {}
+                payload["equity"] = args.equity
+                payload["iterations"] = args.iterations
+                _print_json(payload)
+            else:
+                # Infinite loop for live trading
+                runner.run_loop(interval_seconds=int(args.interval))
             return 0
         if args.reconcile:
             sync = executor.sync_state(current_step=0)
@@ -294,9 +590,9 @@ def main(argv: list[str] | None = None) -> int:
     return 1
 
 
-def _build_components(db_path: Path) -> tuple[BacktestConfig, DryRunExchange, RiskManager, StateDB, Executor]:
+def _build_components(db_path: Path, equity: float = 10.0) -> tuple[BacktestConfig, DryRunExchange, RiskManager, StateDB, Executor]:
     config = BacktestConfig()
-    exchange = DryRunExchange()
+    exchange = DryRunExchange(equity=equity)
     risk_manager = RiskManager(config)
     db = StateDB(db_path)
     executor = Executor(exchange, risk_manager, db, config)

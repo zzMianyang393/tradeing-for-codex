@@ -193,16 +193,20 @@ class Executor:
             accepted = fill.status in ("live", "pending", "partially_filled")
             return ExecutionResult(accepted, fill.status, fill.reason, order_id=order_id)
 
+        entry_price = fill.fill_price if fill.fill_price is not None else request.price
+        trail = request.stop_loss  # initialize trail at stop loss level
         position_id = self.state_db.save_position(
             request.symbol,
             direction,
-            entry_price=fill.fill_price if fill.fill_price is not None else request.price,
+            entry_price=entry_price,
             qty=fill.fill_qty if fill.fill_qty is not None else request.qty,
             notional=request.notional,
             margin=request.margin,
             leverage=request.leverage,
             stop_loss=request.stop_loss,
             take_profit=request.take_profit,
+            trail=trail,
+            signal_reason=request.signal_reason,
         )
         self.risk_manager._track_open(request.symbol, request.margin)
         return ExecutionResult(
@@ -230,14 +234,25 @@ class Executor:
                 self.risk_manager.pause("position_inconsistency", current_step)
         return result
 
-    def manage_positions(self, current_prices: dict[str, float], current_step: int) -> list[PositionAction]:
+    def manage_positions(
+        self,
+        current_prices: dict[str, float],
+        current_step: int,
+        bars_by_symbol: dict[str, list] | None = None,
+    ) -> list[PositionAction]:
+        bars_by_symbol = bars_by_symbol or {}
         actions: list[PositionAction] = []
         for position in self.state_db.get_open_positions():
             symbol = position["symbol"]
             current_price = current_prices.get(symbol)
             if current_price is None:
                 continue
-            exit_reason = _exit_reason_for_position(position, current_price)
+            bars = bars_by_symbol.get(symbol)
+            exit_reason, new_trail = _exit_reason_for_position(
+                position, current_price, bars, self.config,
+            )
+            if new_trail is not None and new_trail != position.get("trail"):
+                self.state_db.update_position_trail(position["id"], new_trail)
             if exit_reason is None:
                 continue
             direction = position["direction"]
@@ -362,21 +377,101 @@ def _sync_result_from_reconcile(reconciliation: ReconcileResult) -> SyncResult:
     )
 
 
-def _exit_reason_for_position(position: dict, current_price: float) -> str | None:
+def _trailing_params_for_reason(reason: str, config: BacktestConfig) -> tuple[float, int]:
+    """Return (trailing_atr, max_hold_bars) for a signal reason."""
+    if reason.startswith("attack_"):
+        return config.attack_trailing_atr, config.attack_max_hold_bars
+    if reason.startswith("micro_momentum_"):
+        return config.micro_momentum_trailing_atr, config.micro_momentum_max_hold_bars
+    if reason.startswith("funding_"):
+        return config.funding_trailing_atr, config.funding_max_hold_bars
+    if reason.startswith("open_interest_"):
+        return config.open_interest_trailing_atr, config.open_interest_max_hold_bars
+    if reason.startswith("continuation_"):
+        return config.continuation_trailing_atr, config.continuation_max_hold_bars
+    if reason.startswith("range_revert_"):
+        return config.range_trailing_atr, config.range_max_hold_bars
+    return config.trailing_atr, config.max_hold_bars
+
+
+def _exit_reason_for_position(
+    position: dict,
+    current_price: float,
+    bars: list | None,
+    config: BacktestConfig,
+) -> tuple[str | None, float | None]:
+    """Return (exit_reason, new_trail). None exit_reason means stay open."""
     direction = position["direction"]
     stop_loss = position["stop_loss"]
     take_profit = position["take_profit"]
+    trail = position.get("trail") or stop_loss
+    reason = position.get("signal_reason", "")
+    trailing_atr, max_hold_bars = _trailing_params_for_reason(reason, config)
+
+    # Update trailing stop if we have bar data
+    new_trail = trail
+    if bars and len(bars) > 0:
+        bar = bars[-1]
+        atr = getattr(bar, "atr", 0.0) or 0.0
+        entry_price = position["entry_price"]
+        trail_dist = max(atr * trailing_atr, entry_price * 0.002) if atr > 0 else entry_price * 0.002
+        if direction == "long":
+            new_trail = max(trail, bar.close - trail_dist)
+        else:
+            new_trail = min(trail, bar.close + trail_dist) if trail > 0 else bar.close + trail_dist
+
+    # Check stop / trailing stop
     if direction == "long":
+        effective_stop = max(stop_loss or 0, new_trail or 0)
+        if effective_stop > 0 and current_price <= effective_stop:
+            return "stop_or_trail", new_trail
         if take_profit is not None and current_price >= take_profit:
-            return "take_profit"
-        if stop_loss is not None and current_price <= stop_loss:
-            return "stop_loss"
+            return "take_profit", new_trail
+        # Time exit
+        if bars and len(bars) > 0 and max_hold_bars > 0:
+            bar = bars[-1]
+            bars_held = _estimate_bars_held(position, bars)
+            ema20 = getattr(bar, "ema20", 0.0)
+            if bars_held >= max_hold_bars and ema20 > 0 and bar.close < ema20:
+                return "time_exit", new_trail
     else:
+        effective_stop = min(stop_loss or float("inf"), new_trail or float("inf"))
+        if effective_stop < float("inf") and current_price >= effective_stop:
+            return "stop_or_trail", new_trail
         if take_profit is not None and current_price <= take_profit:
-            return "take_profit"
-        if stop_loss is not None and current_price >= stop_loss:
-            return "stop_loss"
-    return None
+            return "take_profit", new_trail
+        # Time exit
+        if bars and len(bars) > 0 and max_hold_bars > 0:
+            bar = bars[-1]
+            bars_held = _estimate_bars_held(position, bars)
+            ema20 = getattr(bar, "ema20", 0.0)
+            if bars_held >= max_hold_bars and ema20 > 0 and bar.close > ema20:
+                return "time_exit", new_trail
+
+    return None, new_trail
+
+
+def _estimate_bars_held(position: dict, bars: list) -> int:
+    """Estimate bars held from opened_at timestamp vs latest bar time."""
+    opened_at = position.get("opened_at", "")
+    if not opened_at or not bars:
+        return 0
+    # Try to match by timestamp string prefix (date part)
+    latest_time = getattr(bars[-1], "time", "")
+    if not latest_time:
+        return 0
+    # If bars have integer timestamps, compute from those
+    latest_ts = getattr(bars[-1], "ts", 0)
+    # Find the bar closest to opened_at
+    # Simple approach: count bars from the end, assuming ~15m per bar
+    # For precision, we'd need to parse opened_at and match against bar times
+    # Use a heuristic: bars list is chronological, estimate position in list
+    opened_prefix = opened_at[:16] if len(opened_at) >= 16 else opened_at
+    for i, bar in enumerate(bars):
+        bar_time = getattr(bar, "time", "")
+        if bar_time and bar_time[:16] >= opened_prefix:
+            return len(bars) - 1 - i
+    return len(bars)  # fallback: assume held since start
 
 
 def _pnl_for_position(position: dict, exit_price: float) -> float:

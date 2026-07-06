@@ -202,11 +202,11 @@ class TestExecutor(unittest.TestCase):
         actions = self.executor.manage_positions({"ETH-USDT-SWAP": 106.0}, current_step=20)
 
         self.assertEqual(1, len(actions))
-        self.assertEqual("stop_loss", actions[0].reason)
+        self.assertEqual("stop_or_trail", actions[0].reason)
         trades = self.db.get_recent_trades()
         self.assertEqual(1, len(trades))
         self.assertEqual("short", trades[0]["direction"])
-        self.assertEqual("stop_loss", trades[0]["exit_reason"])
+        self.assertEqual("stop_or_trail", trades[0]["exit_reason"])
         self.assertLess(trades[0]["pnl"], 0)
 
 

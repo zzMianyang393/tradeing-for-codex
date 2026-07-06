@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS positions (
     unrealized_pnl REAL,
     stop_loss REAL,
     take_profit REAL,
+    trail REAL,
+    signal_reason TEXT,
     opened_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'open'
@@ -236,16 +238,18 @@ class StateDB:
         leverage: float,
         stop_loss: float | None = None,
         take_profit: float | None = None,
+        trail: float | None = None,
+        signal_reason: str = "",
     ) -> str:
         pos_id = _uuid()
         now = _now_utc()
         self._conn.execute(
             "INSERT INTO positions (id, symbol, direction, entry_price, qty, notional, "
-            "margin, leverage, stop_loss, take_profit, opened_at, updated_at, status) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "margin, leverage, stop_loss, take_profit, trail, signal_reason, opened_at, updated_at, status) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 pos_id, symbol, direction, entry_price, qty, notional,
-                margin, leverage, stop_loss, take_profit, now, now, "open",
+                margin, leverage, stop_loss, take_profit, trail, signal_reason, now, now, "open",
             ),
         )
         self._conn.commit()
@@ -255,6 +259,13 @@ class StateDB:
         self._conn.execute(
             "UPDATE positions SET current_price=?, unrealized_pnl=?, updated_at=? WHERE id=?",
             (current_price, unrealized_pnl, _now_utc(), position_id),
+        )
+        self._conn.commit()
+
+    def update_position_trail(self, position_id: str, trail: float) -> None:
+        self._conn.execute(
+            "UPDATE positions SET trail=?, updated_at=? WHERE id=?",
+            (trail, _now_utc(), position_id),
         )
         self._conn.commit()
 

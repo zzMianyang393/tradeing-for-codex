@@ -328,10 +328,24 @@ class OKXExchange:
 class DryRunExchange:
     """Local exchange stub that fills orders immediately at the requested price."""
 
-    def __init__(self) -> None:
+    def __init__(self, equity: float = 10.0) -> None:
         self._next_order_id = 1
         self.orders: list[OrderResult] = []
         self.positions: list[dict] = []
+        self._equity = equity
+
+    def get_account_balance(self) -> AccountInfo:
+        used_margin = sum(p.get("margin", 0.0) for p in self.positions)
+        return AccountInfo(
+            equity=self._equity,
+            available_margin=max(0.0, self._equity - used_margin),
+            used_margin=used_margin,
+        )
+
+    def get_ticker(self, symbol: str) -> Any:
+        """Return a stub ticker. For dry-run, prices come from market data."""
+        from types import SimpleNamespace
+        return SimpleNamespace(symbol=symbol, last=0.0, bid=0.0, ask=0.0)
 
     def place_order(
         self,
