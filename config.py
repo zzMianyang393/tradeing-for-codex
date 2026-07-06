@@ -186,6 +186,7 @@ class BacktestConfig:
     rm_consecutive_loss_pause_bars: int = 288
     rm_volatility_halt_threshold: float = 0.06
     rm_min_liquidation_distance_pct: float = 0.05
+    rm_pause_on_inconsistency: bool = True
 
     min_bars: int = 260
     windows_days: tuple[int, ...] = (365, 180, 90, 60, 30, 14, 7)
@@ -241,4 +242,5 @@ class BacktestConfig:
     rm_consecutive_loss_pause_bars: int = 288
     rm_volatility_halt_threshold: float = 0.06
     rm_min_liquidation_distance_pct: float = 0.05
+    rm_pause_on_inconsistency: bool = True
     rm_enabled: bool = True

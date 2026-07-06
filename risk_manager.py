@@ -70,6 +70,10 @@ class RiskManager:
         self._pause_until_step = current_step + self.config.rm_consecutive_loss_pause_bars
         self._pauses_count += 1
 
+    def pause(self, reason: str, current_step: int) -> None:
+        """Externally pause new orders after execution/state inconsistencies."""
+        self._activate_pause(reason, current_step)
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
