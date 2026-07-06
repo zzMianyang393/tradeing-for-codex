@@ -49,6 +49,31 @@ class MarketLoaderTests(unittest.TestCase):
             self.assertAlmostEqual(0.0001, bars[0].funding_rate)
             self.assertAlmostEqual(-0.0002, bars[-1].funding_rate)
 
+    def test_load_market_can_attach_open_interest_features(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            price_path = data_dir / "BTC_15m.csv"
+            oi_path = data_dir / "BTC-USDT-SWAP_open_interest.csv"
+            with price_path.open("w", encoding="utf-8", newline="") as fh:
+                writer = csv.writer(fh)
+                writer.writerow(["timestamp", "open", "high", "low", "close", "volume"])
+                for i in range(4):
+                    ts = 1_704_067_200_000 + i * 15 * 60_000
+                    writer.writerow([ts, 100, 101, 99, 100, 10])
+            with oi_path.open("w", encoding="utf-8", newline="") as fh:
+                writer = csv.writer(fh)
+                writer.writerow(["symbol", "timestamp_ms", "timestamp_utc", "open_interest", "open_interest_currency"])
+                writer.writerow(["BTC-USDT-SWAP", 1_704_067_200_000, "2024-01-01 00:00:00", "100", "10"])
+                writer.writerow(["BTC-USDT-SWAP", 1_704_067_200_000 + 30 * 60_000, "2024-01-01 00:30:00", "120", "12"])
+
+            market = load_market(data_dir, 15, include_open_interest=True)
+
+            bars = market["BTC-USDT-SWAP"]
+            self.assertTrue(hasattr(bars[0], "open_interest"))
+            self.assertAlmostEqual(100.0, bars[0].open_interest)
+            self.assertAlmostEqual(120.0, bars[-1].open_interest)
+            self.assertAlmostEqual(0.2, bars[-1].open_interest_change_pct)
+
 
 if __name__ == "__main__":
     unittest.main()

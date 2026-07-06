@@ -100,6 +100,7 @@ Current runner scope:
 cd E:\ai-trade\tradering
 python okx_downloader.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP SOL-USDT-SWAP --days 365 --bar 15m --out data
 python funding_rate.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --days 90 --out data
+python open_interest.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --days 30 --out data --period 15m
 ```
 
 The downloader writes files in the same format as the existing local CSVs.
@@ -107,6 +108,9 @@ Funding-rate support is available in `funding_rate.py` for OKX funding history
 parsing, CSV caching, and attaching funding fields to `FeatureBar` streams for
 future strategy signals. Use `load_market(data_dir, timeframe, include_funding=True)`
 to attach cached funding features during market construction.
+Open-interest support is available in `open_interest.py`; use
+`load_market(data_dir, timeframe, include_open_interest=True)` to attach cached
+open-interest fields.
 
 ## Dashboard
 

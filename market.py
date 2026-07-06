@@ -230,7 +230,12 @@ def add_features(bars: list[Bar]) -> list[FeatureBar]:
     return out
 
 
-def load_market(data_dir: Path, timeframe_minutes: int, include_funding: bool = False) -> dict[str, list[FeatureBar]]:
+def load_market(
+    data_dir: Path,
+    timeframe_minutes: int,
+    include_funding: bool = False,
+    include_open_interest: bool = False,
+) -> dict[str, list[FeatureBar]]:
     market: dict[str, list[FeatureBar]] = {}
     for symbol in discover_symbols(data_dir):
         okx_path = data_dir / f"{symbol}_1m.csv"
@@ -257,6 +262,12 @@ def load_market(data_dir: Path, timeframe_minutes: int, include_funding: bool = 
             funding_path = funding_output_path(symbol, data_dir)
             if funding_path.exists():
                 features = add_funding_features(features, load_funding_rates(funding_path))
+        if include_open_interest:
+            from open_interest import add_open_interest_features, load_open_interest, open_interest_output_path
+
+            open_interest_path = open_interest_output_path(symbol, data_dir)
+            if open_interest_path.exists():
+                features = add_open_interest_features(features, load_open_interest(open_interest_path))
         if features:
             market[symbol] = features
     return market
