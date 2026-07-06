@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from config import BacktestConfig
-from exchange import DryRunExchange
+from exchange import DryRunExchange, ExchangeError
 from executor import ExecutionRequest, Executor
 from risk_manager import RiskManager
 from runner import RunInput, TradingRunner, main
@@ -186,6 +186,24 @@ class TestRunnerCli(unittest.TestCase):
         payload = json.loads(output.getvalue())
         self.assertIn("OKX_API_KEY", payload["error"])
 
+    def test_reconcile_okx_returns_json_error_when_exchange_fails(self):
+        fake_exchange = MagicMock()
+        fake_exchange.get_positions.side_effect = ExchangeError("OKX error 500: unavailable")
+        env = {
+            "OKX_API_KEY": "key",
+            "OKX_API_SECRET": "secret",
+            "OKX_API_PASSPHRASE": "passphrase",
+        }
+        output = io.StringIO()
+
+        with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+            with contextlib.redirect_stdout(output):
+                code = main(["--reconcile", "--exchange", "okx"])
+
+        self.assertEqual(1, code)
+        payload = json.loads(output.getvalue())
+        self.assertIn("unavailable", payload["error"])
+
     def test_loop_runs_configured_iterations(self):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "state.db"
@@ -257,6 +275,25 @@ class TestRunnerCli(unittest.TestCase):
         self.assertEqual(2, code)
         payload = json.loads(output.getvalue())
         self.assertIn("OKX_API_KEY", payload["error"])
+
+    def test_okx_check_returns_json_error_when_exchange_fails(self):
+        fake_exchange = MagicMock()
+        fake_exchange.get_account_balance.side_effect = ExchangeError("OKX error 500: unavailable")
+        env = {
+            "OKX_API_KEY": "key",
+            "OKX_API_SECRET": "secret",
+            "OKX_API_PASSPHRASE": "passphrase",
+        }
+        output = io.StringIO()
+
+        with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+            with contextlib.redirect_stdout(output):
+                code = main(["--okx-check"])
+
+        self.assertEqual(1, code)
+        payload = json.loads(output.getvalue())
+        self.assertFalse(payload["okx_check"])
+        self.assertIn("unavailable", payload["error"])
 
 
 if __name__ == "__main__":

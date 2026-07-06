@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from config import BacktestConfig
-from exchange import DryRunExchange, OKXExchange
+from exchange import DryRunExchange, ExchangeError, OKXExchange
 from executor import ExecutionRequest, Executor
 from risk_manager import RiskManager
 from state_db import StateDB
@@ -130,7 +130,11 @@ def main(argv: list[str] | None = None) -> int:
         db = StateDB(args.db)
         try:
             executor = Executor(exchange, risk_manager, db, config)
-            sync = executor.sync_state(current_step=0)
+            try:
+                sync = executor.sync_state(current_step=0)
+            except ExchangeError as exc:
+                _print_json({"error": str(exc)})
+                return 1
             _print_json(asdict(sync))
             return 0
         finally:
@@ -208,9 +212,12 @@ def _okx_check_payload(symbol: str) -> tuple[dict, int]:
     if error:
         error["okx_check"] = False
         return error, 2
-    account = exchange.get_account_balance()
-    ticker = exchange.get_ticker(symbol)
-    positions = exchange.get_positions()
+    try:
+        account = exchange.get_account_balance()
+        ticker = exchange.get_ticker(symbol)
+        positions = exchange.get_positions()
+    except ExchangeError as exc:
+        return {"okx_check": False, "error": str(exc)}, 1
     return {
         "okx_check": True,
         "sandbox": True,
