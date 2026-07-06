@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -90,9 +91,12 @@ def main(argv: list[str] | None = None) -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--status", action="store_true", help="Print local account/position status as JSON")
     mode.add_argument("--once", action="store_true", help="Run one dry-run cycle with no generated signals")
+    mode.add_argument("--loop", action="store_true", help="Run repeated dry-run cycles")
     mode.add_argument("--reconcile", action="store_true", help="Reconcile local positions against dry-run exchange state")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--equity", type=float, default=10.0)
+    parser.add_argument("--iterations", type=int, default=1)
+    parser.add_argument("--interval", type=float, default=0.0)
     args = parser.parse_args(argv)
 
     if args.status:
@@ -117,6 +121,25 @@ def main(argv: list[str] | None = None) -> int:
             )
             payload = asdict(report)
             payload["equity"] = args.equity
+            _print_json(payload)
+            return 0
+        if args.loop:
+            runner = TradingRunner(config, executor, db)
+            report = None
+            for step in range(args.iterations):
+                report = runner.run_once(
+                    RunInput(
+                        equity=args.equity,
+                        current_step=step,
+                        current_prices={},
+                        bars_by_symbol={},
+                    )
+                )
+                if args.interval > 0 and step < args.iterations - 1:
+                    time.sleep(args.interval)
+            payload = asdict(report) if report is not None else {}
+            payload["equity"] = args.equity
+            payload["iterations"] = args.iterations
             _print_json(payload)
             return 0
         if args.reconcile:

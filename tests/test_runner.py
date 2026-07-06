@@ -143,6 +143,34 @@ class TestRunnerCli(unittest.TestCase):
             self.assertFalse(payload["consistent"])
             self.assertEqual(1, len(payload["local_only"]))
 
+    def test_loop_runs_configured_iterations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                code = main([
+                    "--loop",
+                    "--iterations",
+                    "3",
+                    "--interval",
+                    "0",
+                    "--db",
+                    str(db_path),
+                    "--equity",
+                    "25",
+                ])
+
+            self.assertEqual(0, code)
+            payload = json.loads(output.getvalue())
+            self.assertEqual(3, payload["iterations"])
+            self.assertEqual(25.0, payload["equity"])
+            db = StateDB(db_path)
+            try:
+                self.assertEqual(3, len(db.get_account_history()))
+            finally:
+                db.close()
+
 
 if __name__ == "__main__":
     unittest.main()
