@@ -15,13 +15,13 @@ source is OKX funding-rate history.
   - `funding_rate`
   - `funding_realized_rate`
   - `funding_rate_ma`
+- `load_market(..., include_funding=True)` attaches cached funding-rate
+  features when a matching `<symbol>_funding.csv` file exists.
 
 ## Current Limits
 
-- Funding features are not yet connected to `load_market`.
 - No strategy consumes funding features yet.
 
 ## Next Step
 
-- Wire optional funding feature loading into market construction.
 - Add an independent funding-rate strategy signal and backtest report.

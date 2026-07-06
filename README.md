@@ -105,7 +105,8 @@ python funding_rate.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --days 90 --out dat
 The downloader writes files in the same format as the existing local CSVs.
 Funding-rate support is available in `funding_rate.py` for OKX funding history
 parsing, CSV caching, and attaching funding fields to `FeatureBar` streams for
-future strategy signals.
+future strategy signals. Use `load_market(data_dir, timeframe, include_funding=True)`
+to attach cached funding features during market construction.
 
 ## Dashboard
 

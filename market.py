@@ -230,7 +230,7 @@ def add_features(bars: list[Bar]) -> list[FeatureBar]:
     return out
 
 
-def load_market(data_dir: Path, timeframe_minutes: int) -> dict[str, list[FeatureBar]]:
+def load_market(data_dir: Path, timeframe_minutes: int, include_funding: bool = False) -> dict[str, list[FeatureBar]]:
     market: dict[str, list[FeatureBar]] = {}
     for symbol in discover_symbols(data_dir):
         okx_path = data_dir / f"{symbol}_1m.csv"
@@ -251,6 +251,12 @@ def load_market(data_dir: Path, timeframe_minutes: int) -> dict[str, list[Featur
         else:
             continue
         features = add_features(bars)
+        if include_funding:
+            from funding_rate import add_funding_features, funding_output_path, load_funding_rates
+
+            funding_path = funding_output_path(symbol, data_dir)
+            if funding_path.exists():
+                features = add_funding_features(features, load_funding_rates(funding_path))
         if features:
             market[symbol] = features
     return market
