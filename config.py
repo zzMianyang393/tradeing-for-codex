@@ -193,6 +193,8 @@ class BacktestConfig:
     rm_consecutive_loss_pause: int = 4
     rm_consecutive_loss_pause_bars: int = 288
     rm_volatility_halt_threshold: float = 0.06
+    rm_max_order_book_spread_pct: float = 0.0
+    rm_min_order_book_depth_quote: float = 0.0
     rm_min_liquidation_distance_pct: float = 0.05
     rm_pause_on_inconsistency: bool = True
 
@@ -249,6 +251,8 @@ class BacktestConfig:
     rm_consecutive_loss_pause: int = 4
     rm_consecutive_loss_pause_bars: int = 288
     rm_volatility_halt_threshold: float = 0.06
+    rm_max_order_book_spread_pct: float = 0.0
+    rm_min_order_book_depth_quote: float = 0.0
     rm_min_liquidation_distance_pct: float = 0.05
     rm_pause_on_inconsistency: bool = True
     rm_enabled: bool = True

@@ -183,6 +183,25 @@ class RiskManager:
                     f"volatility {bar.atr_pct:.4f} > {self.config.rm_volatility_halt_threshold}",
                 )
 
+            max_spread = self.config.rm_max_order_book_spread_pct
+            spread_pct = getattr(bar, "order_book_spread_pct", 0.0)
+            if max_spread > 0 and spread_pct > max_spread:
+                self._rejections_count += 1
+                return RiskDecision(
+                    False,
+                    f"order book spread {spread_pct:.4f} > {max_spread}",
+                )
+
+            min_depth = self.config.rm_min_order_book_depth_quote
+            if min_depth > 0:
+                depth = getattr(bar, "ask_depth_quote", 0.0) if direction > 0 else getattr(bar, "bid_depth_quote", 0.0)
+                if depth > 0 and depth < min_depth:
+                    self._rejections_count += 1
+                    return RiskDecision(
+                        False,
+                        f"order book depth {depth:.4f} < {min_depth}",
+                    )
+
         # 8. Liquidation-distance protection
         if notional > 0 and margin > 0:
             liq_distance = margin / notional

@@ -63,6 +63,10 @@ order-book snapshots.
   - `depth_imbalance`
 - `load_market(..., include_order_book=True)` attaches cached order-book
   features when a matching `<symbol>_order_book.csv` file exists.
+- `RiskManager` can reject new orders when cached order-book spread is too wide
+  or directional quote depth is too thin via:
+  - `rm_max_order_book_spread_pct`
+  - `rm_min_order_book_depth_quote`
 
 ## Current Limits
 
@@ -70,11 +74,13 @@ order-book snapshots.
   until it passes rolling-window validation.
 - Open-interest features are not consumed by a strategy yet.
 - Trade-flow features are not consumed by a strategy yet.
-- Order-book features are not consumed by a strategy or live filter yet.
+- Order-book features are consumed by RiskManager only when the new limits are
+  explicitly configured.
 
 ## Next Step
 
 - Add an open-interest strategy/filter and validate it independently.
 - Add a trade-flow strategy/filter and validate it independently.
-- Add an order-book liquidity/spread filter for execution safety.
+- Validate order-book liquidity/spread limits in simulated execution before
+  setting defaults.
 - Run funding-module rolling-window validation before enabling it by default.

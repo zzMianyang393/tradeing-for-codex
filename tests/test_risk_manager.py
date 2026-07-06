@@ -31,6 +31,21 @@ def _bars(atr_pct=0.02):
     return [bar]
 
 
+def _bars_with_order_book(
+    spread_pct=0.001,
+    bid_depth_quote=10_000.0,
+    ask_depth_quote=10_000.0,
+    atr_pct=0.02,
+):
+    bar = MagicMock()
+    bar.atr_pct = atr_pct
+    bar.close = 100.0
+    bar.order_book_spread_pct = spread_pct
+    bar.bid_depth_quote = bid_depth_quote
+    bar.ask_depth_quote = ask_depth_quote
+    return [bar]
+
+
 class TestNormalOrder(unittest.TestCase):
     def test_small_order_passes(self):
         rm = RiskManager(_cfg())
@@ -194,6 +209,66 @@ class TestVolatilityHalt(unittest.TestCase):
     def test_exactly_at_threshold(self):
         rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_volatility_halt_threshold=0.06))
         d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(atr_pct=0.06), 0)
+        self.assertTrue(d.allowed)
+
+
+class TestOrderBookLiquidityFilter(unittest.TestCase):
+    def test_rejects_when_order_book_spread_is_too_wide(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_order_book_spread_pct=0.003))
+
+        d = rm.check_order(
+            "BTC-USDT-SWAP",
+            1,
+            10.0,
+            1.0,
+            100.0,
+            0,
+            _bars_with_order_book(spread_pct=0.005),
+            0,
+        )
+
+        self.assertFalse(d.allowed)
+        self.assertIn("order book spread", d.reason)
+
+    def test_rejects_when_directional_depth_is_too_thin(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_min_order_book_depth_quote=1_000.0))
+
+        d = rm.check_order(
+            "BTC-USDT-SWAP",
+            1,
+            10.0,
+            1.0,
+            100.0,
+            0,
+            _bars_with_order_book(ask_depth_quote=500.0),
+            0,
+        )
+
+        self.assertFalse(d.allowed)
+        self.assertIn("order book depth", d.reason)
+
+    def test_short_orders_check_bid_depth(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_min_order_book_depth_quote=1_000.0))
+
+        d = rm.check_order(
+            "BTC-USDT-SWAP",
+            -1,
+            10.0,
+            1.0,
+            100.0,
+            0,
+            _bars_with_order_book(bid_depth_quote=500.0),
+            0,
+        )
+
+        self.assertFalse(d.allowed)
+        self.assertIn("order book depth", d.reason)
+
+    def test_missing_order_book_features_do_not_block_by_default(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0))
+
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 100.0, 0, _bars(), 0)
+
         self.assertTrue(d.allowed)
 
 
