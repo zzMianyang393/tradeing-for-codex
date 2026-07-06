@@ -144,6 +144,48 @@ class TestRunnerCli(unittest.TestCase):
             self.assertFalse(payload["consistent"])
             self.assertEqual(1, len(payload["local_only"]))
 
+    def test_reconcile_can_compare_local_positions_with_okx_positions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                db.save_position("BTC-USDT-SWAP", "long", 100.0, 0.1, 10.0, 1.0, 10.0)
+            finally:
+                db.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_positions.return_value = [{"symbol": "BTC-USDT-SWAP", "direction": "long"}]
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange) as cls:
+                with contextlib.redirect_stdout(output):
+                    code = main(["--reconcile", "--exchange", "okx", "--db", str(db_path)])
+
+            self.assertEqual(0, code)
+            cls.assert_called_once_with("key", "secret", "passphrase", sandbox=True)
+            payload = json.loads(output.getvalue())
+            self.assertTrue(payload["consistent"])
+            self.assertEqual(1, len(payload["matches"]))
+
+    def test_reconcile_okx_returns_error_when_credentials_are_missing(self):
+        output = io.StringIO()
+        env = {
+            "OKX_API_KEY": "",
+            "OKX_API_SECRET": "",
+            "OKX_API_PASSPHRASE": "",
+        }
+
+        with patch.dict(os.environ, env, clear=False), contextlib.redirect_stdout(output):
+            code = main(["--reconcile", "--exchange", "okx"])
+
+        self.assertEqual(2, code)
+        payload = json.loads(output.getvalue())
+        self.assertIn("OKX_API_KEY", payload["error"])
+
     def test_loop_runs_configured_iterations(self):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "state.db"

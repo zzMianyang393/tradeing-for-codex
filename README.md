@@ -50,6 +50,7 @@ set OKX_API_KEY=your_key
 set OKX_API_SECRET=your_secret
 set OKX_API_PASSPHRASE=your_passphrase
 python runner.py --okx-check --okx-symbol BTC-USDT-SWAP
+python runner.py --reconcile --exchange okx --db reports\dry_run_state.db
 ```
 
 Current runner scope:
@@ -60,6 +61,8 @@ Current runner scope:
 - `--status` prints the latest local account snapshot, open positions, and trade
   summary as JSON.
 - `--reconcile` compares local SQLite positions with the dry-run exchange state.
+- `--reconcile --exchange okx` compares local SQLite positions with OKX
+  simulated-account positions.
 - `--loop` repeats empty dry-run cycles for a finite number of iterations.
 - `--okx-check` reads OKX simulated account balance, ticker, and positions via
   the sandbox header; it is read-only and does not submit orders.

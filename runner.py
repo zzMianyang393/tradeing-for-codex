@@ -100,6 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--iterations", type=int, default=1)
     parser.add_argument("--interval", type=float, default=0.0)
     parser.add_argument("--okx-symbol", default="BTC-USDT-SWAP")
+    parser.add_argument("--exchange", choices=["dry-run", "okx"], default="dry-run")
     args = parser.parse_args(argv)
 
     if args.status:
@@ -114,6 +115,26 @@ def main(argv: list[str] | None = None) -> int:
         payload, code = _okx_check_payload(args.okx_symbol)
         _print_json(payload)
         return code
+
+    if args.exchange != "dry-run" and not args.reconcile:
+        _print_json({"error": "--exchange okx is currently supported only with --reconcile"})
+        return 2
+
+    if args.reconcile and args.exchange == "okx":
+        exchange, error = _okx_exchange_from_env()
+        if error:
+            _print_json(error)
+            return 2
+        config = BacktestConfig()
+        risk_manager = RiskManager(config)
+        db = StateDB(args.db)
+        try:
+            executor = Executor(exchange, risk_manager, db, config)
+            sync = executor.sync_state(current_step=0)
+            _print_json(asdict(sync))
+            return 0
+        finally:
+            db.close()
 
     config, exchange, risk_manager, db, executor = _build_components(args.db)
     try:
@@ -183,17 +204,10 @@ def _status_payload(db: StateDB) -> dict:
 
 
 def _okx_check_payload(symbol: str) -> tuple[dict, int]:
-    credentials = _okx_credentials_from_env()
-    missing = [name for name, value in credentials.items() if not value]
-    if missing:
-        return {"okx_check": False, "error": f"Missing OKX credentials: {', '.join(missing)}"}, 2
-
-    exchange = OKXExchange(
-        credentials["OKX_API_KEY"],
-        credentials["OKX_API_SECRET"],
-        credentials["OKX_API_PASSPHRASE"],
-        sandbox=True,
-    )
+    exchange, error = _okx_exchange_from_env()
+    if error:
+        error["okx_check"] = False
+        return error, 2
     account = exchange.get_account_balance()
     ticker = exchange.get_ticker(symbol)
     positions = exchange.get_positions()
@@ -215,6 +229,19 @@ def _okx_check_payload(symbol: str) -> tuple[dict, int]:
         "open_positions": len(positions),
         "positions": positions,
     }, 0
+
+
+def _okx_exchange_from_env() -> tuple[OKXExchange | None, dict | None]:
+    credentials = _okx_credentials_from_env()
+    missing = [name for name, value in credentials.items() if not value]
+    if missing:
+        return None, {"error": f"Missing OKX credentials: {', '.join(missing)}"}
+    return OKXExchange(
+        credentials["OKX_API_KEY"],
+        credentials["OKX_API_SECRET"],
+        credentials["OKX_API_PASSPHRASE"],
+        sandbox=True,
+    ), None
 
 
 def _okx_credentials_from_env() -> dict[str, str]:
