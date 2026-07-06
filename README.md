@@ -29,6 +29,29 @@ python run.py --report reports\quantify_latest.json
 The default data path is `data`, which is included in this repository.
 To run another local dataset, pass `--data <path>`.
 
+## Dry-run execution runner
+
+The dry-run runner is the first simulated-execution layer. It uses local SQLite
+state and the in-process `DryRunExchange`; it does not connect to OKX or place
+real orders.
+
+```bash
+python runner.py --once --db reports\dry_run_state.db --equity 25
+python runner.py --status --db reports\dry_run_state.db
+python runner.py --reconcile --db reports\dry_run_state.db
+python runner.py --loop --iterations 3 --interval 0 --db reports\dry_run_state.db --equity 25
+```
+
+Current runner scope:
+
+- `--once` performs one dry-run cycle, writes an account snapshot, manages local
+  open positions, executes provided in-process signal requests, and reconciles
+  state.
+- `--status` prints the latest local account snapshot, open positions, and trade
+  summary as JSON.
+- `--reconcile` compares local SQLite positions with the dry-run exchange state.
+- `--loop` repeats empty dry-run cycles for a finite number of iterations.
+
 ## Download more data
 
 ```bash
