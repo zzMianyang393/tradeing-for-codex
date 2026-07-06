@@ -106,6 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--okx-sync-orders", action="store_true", help="Sync local live orders from OKX simulated trading")
     mode.add_argument("--okx-close-position", action="store_true", help="Submit an OKX simulated close order for a local position")
     mode.add_argument("--okx-snapshot", action="store_true", help="Write an OKX simulated runtime account snapshot")
+    mode.add_argument("--okx-monitor-loop", action="store_true", help="Run finite OKX simulated sync/snapshot monitor cycles")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
@@ -164,6 +165,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.okx_snapshot:
         payload, code = _okx_snapshot_payload(args.db)
+        _print_json(payload)
+        return code
+
+    if args.okx_monitor_loop:
+        payload, code = _okx_monitor_loop_payload(args.db, args.iterations, args.interval)
         _print_json(payload)
         return code
 
@@ -425,7 +431,10 @@ def _okx_sync_orders_payload(db_path: Path) -> tuple[dict, int]:
     if error:
         error["okx_sync_orders"] = False
         return error, 2
+    return _okx_sync_orders_with_exchange(db_path, exchange)
 
+
+def _okx_sync_orders_with_exchange(db_path: Path, exchange: OKXExchange) -> tuple[dict, int]:
     db = StateDB(db_path)
     checked = 0
     updated = 0
@@ -564,7 +573,10 @@ def _okx_snapshot_payload(db_path: Path) -> tuple[dict, int]:
     if error:
         error["okx_snapshot"] = False
         return error, 2
+    return _okx_snapshot_with_exchange(db_path, exchange)
 
+
+def _okx_snapshot_with_exchange(db_path: Path, exchange: OKXExchange) -> tuple[dict, int]:
     db = StateDB(db_path)
     try:
         try:
@@ -605,6 +617,35 @@ def _okx_snapshot_payload(db_path: Path) -> tuple[dict, int]:
         "exchange_open_positions": len(exchange_positions),
         "pending_orders": len(active_orders),
         "trade_summary": trade_summary,
+    }, 0
+
+
+def _okx_monitor_loop_payload(db_path: Path, iterations: int, interval: float) -> tuple[dict, int]:
+    exchange, error = _okx_exchange_from_env()
+    if error:
+        error["okx_monitor_loop"] = False
+        return error, 2
+
+    cycles = []
+    for step in range(iterations):
+        sync_payload, sync_code = _okx_sync_orders_with_exchange(db_path, exchange)
+        if sync_code != 0:
+            sync_payload["okx_monitor_loop"] = False
+            sync_payload["cycle"] = step
+            return sync_payload, sync_code
+        snapshot_payload, snapshot_code = _okx_snapshot_with_exchange(db_path, exchange)
+        if snapshot_code != 0:
+            snapshot_payload["okx_monitor_loop"] = False
+            snapshot_payload["cycle"] = step
+            return snapshot_payload, snapshot_code
+        cycles.append({"cycle": step, "sync": sync_payload, "snapshot": snapshot_payload})
+        if interval > 0 and step < iterations - 1:
+            time.sleep(interval)
+
+    return {
+        "okx_monitor_loop": True,
+        "iterations": iterations,
+        "cycles": cycles,
     }, 0
 
 

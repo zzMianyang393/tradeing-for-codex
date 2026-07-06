@@ -821,6 +821,87 @@ class TestRunnerCli(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_okx_monitor_loop_returns_error_when_credentials_are_missing(self):
+        output = io.StringIO()
+        env = {
+            "OKX_API_KEY": "",
+            "OKX_API_SECRET": "",
+            "OKX_API_PASSPHRASE": "",
+        }
+
+        with patch.dict(os.environ, env, clear=False), contextlib.redirect_stdout(output):
+            code = main(["--okx-monitor-loop"])
+
+        self.assertEqual(2, code)
+        payload = json.loads(output.getvalue())
+        self.assertFalse(payload["okx_monitor_loop"])
+        self.assertIn("OKX_API_KEY", payload["error"])
+
+    def test_okx_monitor_loop_syncs_orders_and_writes_snapshots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                order_id = db.save_order(
+                    "BTC-USDT-SWAP",
+                    "long",
+                    0.0002,
+                    price=50000.0,
+                    meta={"notional": 10.0, "margin": 1.0, "leverage": 10.0},
+                )
+                db.update_order_status(order_id, "live", exchange_order_id="okx-live-1")
+            finally:
+                db.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_order_status.return_value = {
+                "code": "0",
+                "data": [
+                    {
+                        "ordId": "okx-live-1",
+                        "state": "filled",
+                        "avgPx": "50010",
+                        "accFillSz": "0.0002",
+                        "fee": "0.0005",
+                    }
+                ],
+            }
+            fake_exchange.get_account_balance.return_value.equity = 1000.0
+            fake_exchange.get_account_balance.return_value.available_margin = 990.0
+            fake_exchange.get_account_balance.return_value.used_margin = 10.0
+            fake_exchange.get_positions.return_value = [{"symbol": "BTC-USDT-SWAP", "direction": "long"}]
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+                with contextlib.redirect_stdout(output):
+                    code = main([
+                        "--okx-monitor-loop",
+                        "--iterations",
+                        "2",
+                        "--interval",
+                        "0",
+                        "--db",
+                        str(db_path),
+                    ])
+
+            self.assertEqual(0, code)
+            payload = json.loads(output.getvalue())
+            self.assertTrue(payload["okx_monitor_loop"])
+            self.assertEqual(2, payload["iterations"])
+            self.assertEqual(2, len(payload["cycles"]))
+            self.assertEqual(1, payload["cycles"][0]["sync"]["filled_orders"])
+            self.assertEqual(1, payload["cycles"][0]["snapshot"]["local_open_positions"])
+            db = StateDB(db_path)
+            try:
+                self.assertEqual(2, len(db.get_account_history()))
+                self.assertEqual(1, len(db.get_open_positions()))
+            finally:
+                db.close()
+
 
 if __name__ == "__main__":
     unittest.main()

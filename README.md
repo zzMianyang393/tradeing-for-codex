@@ -56,6 +56,7 @@ python runner.py --okx-submit-signal --confirm-okx-submit-signal --db reports\dr
 python runner.py --okx-sync-orders --db reports\dry_run_state.db
 python runner.py --okx-close-position --confirm-okx-close-position --db reports\dry_run_state.db --position-id <local_position_id> --okx-close-price 50100
 python runner.py --okx-snapshot --db reports\dry_run_state.db
+python runner.py --okx-monitor-loop --iterations 3 --interval 5 --db reports\dry_run_state.db
 ```
 
 Current runner scope:
@@ -85,6 +86,8 @@ Current runner scope:
 - `--okx-snapshot` writes a read-only OKX simulated runtime snapshot into
   SQLite account history and prints account, pending-order, position, and trade
   summary metrics as JSON.
+- `--okx-monitor-loop` runs a finite monitor loop that syncs OKX simulated
+  orders and then writes a runtime snapshot each cycle.
 
 ## Download more data
 
