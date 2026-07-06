@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from config import BacktestConfig
-from exchange import DryRunExchange, ExchangeError
+from exchange import DryRunExchange, ExchangeError, OrderResult
 from executor import ExecutionRequest, Executor
 from risk_manager import RiskManager
 from runner import RunInput, TradingRunner, main
@@ -294,6 +294,98 @@ class TestRunnerCli(unittest.TestCase):
         payload = json.loads(output.getvalue())
         self.assertFalse(payload["okx_check"])
         self.assertIn("unavailable", payload["error"])
+
+    def test_okx_smoke_order_requires_explicit_confirmation(self):
+        output = io.StringIO()
+
+        with contextlib.redirect_stdout(output), patch("runner.OKXExchange") as cls:
+            code = main(["--okx-smoke-order"])
+
+        self.assertEqual(2, code)
+        cls.assert_not_called()
+        payload = json.loads(output.getvalue())
+        self.assertIn("--confirm-okx-smoke-order", payload["error"])
+
+    def test_okx_smoke_order_rejects_when_risk_check_fails(self):
+        fake_exchange = MagicMock()
+        fake_exchange.get_account_balance.return_value.equity = 10.0
+        fake_exchange.get_positions.return_value = []
+        env = {
+            "OKX_API_KEY": "key",
+            "OKX_API_SECRET": "secret",
+            "OKX_API_PASSPHRASE": "passphrase",
+        }
+        output = io.StringIO()
+
+        with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+            with contextlib.redirect_stdout(output):
+                code = main([
+                    "--okx-smoke-order",
+                    "--confirm-okx-smoke-order",
+                    "--okx-smoke-notional",
+                    "100",
+                    "--okx-smoke-margin",
+                    "1",
+                ])
+
+        self.assertEqual(2, code)
+        fake_exchange.place_order.assert_not_called()
+        payload = json.loads(output.getvalue())
+        self.assertFalse(payload["okx_smoke_order"])
+        self.assertIn("single position", payload["reason"])
+
+    def test_okx_smoke_order_places_and_cancels_limit_order(self):
+        fake_exchange = MagicMock()
+        fake_exchange.get_account_balance.return_value.equity = 1000.0
+        fake_exchange.get_positions.return_value = []
+        fake_exchange.place_order.return_value = OrderResult(
+            order_id="okx-1",
+            symbol="BTC-USDT-SWAP",
+            direction="long",
+            qty=0.01,
+            status="live",
+        )
+        fake_exchange.cancel_order.return_value = {"code": "0", "data": [{"ordId": "okx-1"}]}
+        env = {
+            "OKX_API_KEY": "key",
+            "OKX_API_SECRET": "secret",
+            "OKX_API_PASSPHRASE": "passphrase",
+        }
+        output = io.StringIO()
+
+        with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange) as cls:
+            with contextlib.redirect_stdout(output):
+                code = main([
+                    "--okx-smoke-order",
+                    "--confirm-okx-smoke-order",
+                    "--okx-symbol",
+                    "BTC-USDT-SWAP",
+                    "--okx-smoke-direction",
+                    "long",
+                    "--okx-smoke-qty",
+                    "0.01",
+                    "--okx-smoke-price",
+                    "50000",
+                    "--okx-smoke-notional",
+                    "10",
+                    "--okx-smoke-margin",
+                    "1",
+                ])
+
+        self.assertEqual(0, code)
+        cls.assert_called_once_with("key", "secret", "passphrase", sandbox=True)
+        fake_exchange.place_order.assert_called_once_with(
+            "BTC-USDT-SWAP",
+            "long",
+            0.01,
+            order_type="limit",
+            price=50000.0,
+        )
+        fake_exchange.cancel_order.assert_called_once_with("BTC-USDT-SWAP", "okx-1")
+        payload = json.loads(output.getvalue())
+        self.assertTrue(payload["okx_smoke_order"])
+        self.assertEqual("okx-1", payload["order_id"])
+        self.assertTrue(payload["cancel_requested"])
 
 
 if __name__ == "__main__":

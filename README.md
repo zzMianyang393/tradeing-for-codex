@@ -51,6 +51,7 @@ set OKX_API_SECRET=your_secret
 set OKX_API_PASSPHRASE=your_passphrase
 python runner.py --okx-check --okx-symbol BTC-USDT-SWAP
 python runner.py --reconcile --exchange okx --db reports\dry_run_state.db
+python runner.py --okx-smoke-order --confirm-okx-smoke-order --okx-symbol BTC-USDT-SWAP --okx-smoke-direction long --okx-smoke-qty 0.001 --okx-smoke-price 1 --okx-smoke-notional 1 --okx-smoke-margin 1
 ```
 
 Current runner scope:
@@ -66,6 +67,9 @@ Current runner scope:
 - `--loop` repeats empty dry-run cycles for a finite number of iterations.
 - `--okx-check` reads OKX simulated account balance, ticker, and positions via
   the sandbox header; it is read-only and does not submit orders.
+- `--okx-smoke-order` places one OKX simulated limit order and immediately
+  requests cancellation. It requires `--confirm-okx-smoke-order` and runs the
+  RiskManager before submitting.
 
 ## Download more data
 

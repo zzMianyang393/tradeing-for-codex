@@ -33,6 +33,11 @@ class RunReport:
     risk_status: dict
 
 
+@dataclass(frozen=True)
+class _RiskBar:
+    atr_pct: float = 0.0
+
+
 class TradingRunner:
     """One-cycle dry-run trading orchestrator.
 
@@ -95,12 +100,19 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--loop", action="store_true", help="Run repeated dry-run cycles")
     mode.add_argument("--reconcile", action="store_true", help="Reconcile local positions against dry-run exchange state")
     mode.add_argument("--okx-check", action="store_true", help="Check OKX simulated account, ticker, and positions")
+    mode.add_argument("--okx-smoke-order", action="store_true", help="Place then cancel one OKX simulated limit order")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
     parser.add_argument("--interval", type=float, default=0.0)
     parser.add_argument("--okx-symbol", default="BTC-USDT-SWAP")
     parser.add_argument("--exchange", choices=["dry-run", "okx"], default="dry-run")
+    parser.add_argument("--confirm-okx-smoke-order", action="store_true")
+    parser.add_argument("--okx-smoke-direction", choices=["long", "short"], default="long")
+    parser.add_argument("--okx-smoke-qty", type=float, default=0.001)
+    parser.add_argument("--okx-smoke-price", type=float, default=1.0)
+    parser.add_argument("--okx-smoke-notional", type=float, default=1.0)
+    parser.add_argument("--okx-smoke-margin", type=float, default=1.0)
     args = parser.parse_args(argv)
 
     if args.status:
@@ -113,6 +125,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.okx_check:
         payload, code = _okx_check_payload(args.okx_symbol)
+        _print_json(payload)
+        return code
+
+    if args.okx_smoke_order:
+        payload, code = _okx_smoke_order_payload(args)
         _print_json(payload)
         return code
 
@@ -235,6 +252,69 @@ def _okx_check_payload(symbol: str) -> tuple[dict, int]:
         },
         "open_positions": len(positions),
         "positions": positions,
+    }, 0
+
+
+def _okx_smoke_order_payload(args: argparse.Namespace) -> tuple[dict, int]:
+    if not args.confirm_okx_smoke_order:
+        return {
+            "okx_smoke_order": False,
+            "error": "Refusing to submit simulated order without --confirm-okx-smoke-order",
+        }, 2
+
+    exchange, error = _okx_exchange_from_env()
+    if error:
+        error["okx_smoke_order"] = False
+        return error, 2
+
+    try:
+        account = exchange.get_account_balance()
+        positions = exchange.get_positions()
+        risk_manager = RiskManager(BacktestConfig())
+        decision = risk_manager.check_order(
+            symbol=args.okx_symbol,
+            direction=1 if args.okx_smoke_direction == "long" else -1,
+            notional=args.okx_smoke_notional,
+            margin=args.okx_smoke_margin,
+            equity=account.equity,
+            current_step=0,
+            bars=[_RiskBar()],
+            idx=0,
+            current_positions_margin=0.0,
+            current_positions_count=len(positions),
+        )
+        if not decision.allowed:
+            return {
+                "okx_smoke_order": False,
+                "risk_allowed": False,
+                "reason": decision.reason,
+            }, 2
+
+        order = exchange.place_order(
+            args.okx_symbol,
+            args.okx_smoke_direction,
+            args.okx_smoke_qty,
+            order_type="limit",
+            price=args.okx_smoke_price,
+        )
+        cancel_response = exchange.cancel_order(args.okx_symbol, order.order_id)
+    except ExchangeError as exc:
+        return {"okx_smoke_order": False, "error": str(exc)}, 1
+
+    return {
+        "okx_smoke_order": True,
+        "sandbox": True,
+        "symbol": args.okx_symbol,
+        "direction": args.okx_smoke_direction,
+        "qty": args.okx_smoke_qty,
+        "price": args.okx_smoke_price,
+        "notional": args.okx_smoke_notional,
+        "margin": args.okx_smoke_margin,
+        "risk_allowed": True,
+        "order_id": order.order_id,
+        "order_status": order.status,
+        "cancel_requested": True,
+        "cancel_response": cancel_response,
     }, 0
 
 
