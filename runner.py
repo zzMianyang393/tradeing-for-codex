@@ -11,6 +11,7 @@ from pathlib import Path
 from config import BacktestConfig
 from exchange import DryRunExchange, ExchangeError, OKXExchange
 from executor import ExecutionRequest, Executor
+from health_report import build_health_report
 from risk_manager import RiskManager
 from state_db import StateDB
 
@@ -107,6 +108,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--okx-close-position", action="store_true", help="Submit an OKX simulated close order for a local position")
     mode.add_argument("--okx-snapshot", action="store_true", help="Write an OKX simulated runtime account snapshot")
     mode.add_argument("--okx-monitor-loop", action="store_true", help="Run finite OKX simulated sync/snapshot monitor cycles")
+    mode.add_argument("--okx-health-report", action="store_true", help="Print OKX simulated health report as JSON")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
@@ -170,6 +172,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.okx_monitor_loop:
         payload, code = _okx_monitor_loop_payload(args.db, args.iterations, args.interval)
+        _print_json(payload)
+        return code
+
+    if args.okx_health_report:
+        payload, code = _okx_health_report_payload(args.db)
         _print_json(payload)
         return code
 
@@ -647,6 +654,39 @@ def _okx_monitor_loop_payload(db_path: Path, iterations: int, interval: float) -
         "iterations": iterations,
         "cycles": cycles,
     }, 0
+
+
+def _okx_health_report_payload(db_path: Path) -> tuple[dict, int]:
+    exchange, error = _okx_exchange_from_env()
+    if error:
+        error["okx_health_report"] = False
+        return error, 2
+
+    db = StateDB(db_path)
+    try:
+        active_orders = db.get_active_exchange_orders()
+        local_positions = db.get_open_positions()
+        try:
+            exchange_positions = exchange.get_positions()
+            reconciliation = db.reconcile_positions(exchange_positions)
+            report = build_health_report(
+                active_orders=active_orders,
+                reconciliation=reconciliation,
+                local_open_positions=len(local_positions),
+                exchange_open_positions=len(exchange_positions),
+            )
+        except ExchangeError as exc:
+            report = build_health_report(
+                active_orders=active_orders,
+                api_error=str(exc),
+                local_open_positions=len(local_positions),
+            )
+    finally:
+        db.close()
+
+    payload = report.to_dict()
+    payload["okx_health_report"] = True
+    return payload, 0 if report.status == "ok" else 1
 
 
 def _open_position_for_filled_order(

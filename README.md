@@ -57,6 +57,7 @@ python runner.py --okx-sync-orders --db reports\dry_run_state.db
 python runner.py --okx-close-position --confirm-okx-close-position --db reports\dry_run_state.db --position-id <local_position_id> --okx-close-price 50100
 python runner.py --okx-snapshot --db reports\dry_run_state.db
 python runner.py --okx-monitor-loop --iterations 3 --interval 5 --db reports\dry_run_state.db
+python runner.py --okx-health-report --db reports\dry_run_state.db
 ```
 
 Current runner scope:
@@ -88,6 +89,9 @@ Current runner scope:
   summary metrics as JSON.
 - `--okx-monitor-loop` runs a finite monitor loop that syncs OKX simulated
   orders and then writes a runtime snapshot each cycle.
+- `--okx-health-report` prints a machine-readable health report. It flags OKX
+  API failures, local/exchange position drift, stale active orders, and risk
+  pauses as `ok`, `warning`, or `critical`.
 
 ## Download more data
 

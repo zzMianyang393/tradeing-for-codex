@@ -902,6 +902,56 @@ class TestRunnerCli(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_okx_health_report_outputs_ok_when_local_and_exchange_state_match(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                db.save_position("BTC-USDT-SWAP", "long", 50000.0, 0.0002, 10.0, 1.0, 10.0)
+            finally:
+                db.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_positions.return_value = [{"symbol": "BTC-USDT-SWAP", "direction": "long"}]
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+                with contextlib.redirect_stdout(output):
+                    code = main(["--okx-health-report", "--db", str(db_path)])
+
+            self.assertEqual(0, code)
+            payload = json.loads(output.getvalue())
+            self.assertTrue(payload["okx_health_report"])
+            self.assertEqual("ok", payload["status"])
+            self.assertEqual([], payload["issues"])
+            self.assertEqual(1, payload["local_open_positions"])
+            self.assertEqual(1, payload["exchange_open_positions"])
+
+    def test_okx_health_report_returns_critical_when_exchange_fails(self):
+        fake_exchange = MagicMock()
+        fake_exchange.get_positions.side_effect = ExchangeError("OKX error 500: unavailable")
+        env = {
+            "OKX_API_KEY": "key",
+            "OKX_API_SECRET": "secret",
+            "OKX_API_PASSPHRASE": "passphrase",
+        }
+        output = io.StringIO()
+
+        with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+            with contextlib.redirect_stdout(output):
+                code = main(["--okx-health-report"])
+
+        self.assertEqual(1, code)
+        payload = json.loads(output.getvalue())
+        self.assertTrue(payload["okx_health_report"])
+        self.assertEqual("critical", payload["status"])
+        self.assertEqual("api_failure", payload["issues"][0]["kind"])
+        self.assertIn("unavailable", payload["issues"][0]["message"])
+
 
 if __name__ == "__main__":
     unittest.main()
