@@ -1,35 +1,14 @@
 from __future__ import annotations
 
 import unittest
-from dataclasses import replace
+from unittest.mock import MagicMock
 
 from config import BacktestConfig
-from market import FeatureBar
-from risk_manager import RiskManager, RiskDecision, RiskStatus
+from risk_manager import RiskDecision, RiskManager, RiskStatus
 
 
-def _bar(
-    close: float = 100.0,
-    atr_pct: float = 0.01,
-    **kwargs,
-) -> FeatureBar:
-    """Minimal FeatureBar factory for tests."""
-    defaults = dict(
-        ts=0, time="2025-01-01 00:00:00",
-        open=close, high=close * 1.01, low=close * 0.99, close=close,
-        volume_quote=1_000_000.0,
-        ema20=close, ema50=close, ema200=close,
-        atr=close * atr_pct, atr_pct=atr_pct,
-        rsi=50.0, bb_mid=close, bb_upper=close * 1.02, bb_lower=close * 0.98,
-        vol_sma=1_000_000.0, donchian_high=close * 1.05, donchian_low=close * 0.95,
-        trend_strength=0.0,
-    )
-    defaults.update(kwargs)
-    return FeatureBar(**defaults)
-
-
-def _cfg(**overrides) -> BacktestConfig:
-    """BacktestConfig with rm_enabled=True and tight limits for testing."""
+def _cfg(**overrides):
+    """BacktestConfig with sensible risk-manager defaults for testing."""
     defaults = dict(
         rm_enabled=True,
         rm_max_single_position_pct=0.40,
@@ -45,266 +24,366 @@ def _cfg(**overrides) -> BacktestConfig:
     return BacktestConfig(**defaults)
 
 
-class RiskManagerBasicTests(unittest.TestCase):
-    """Core check_order logic."""
+def _bars(atr_pct=0.02):
+    bar = MagicMock()
+    bar.atr_pct = atr_pct
+    bar.close = 100.0
+    return [bar]
 
-    def test_normal_order_passes(self):
+
+class TestNormalOrder(unittest.TestCase):
+    def test_small_order_passes(self):
         rm = RiskManager(_cfg())
-        rm.reset()
-        bar = _bar()
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=3.0, margin=1.0, equity=10.0,
-            current_step=100, bars=[bar], idx=0,
-        )
-        self.assertTrue(decision.allowed)
+        # notional=3, equity=10 → 30% < 40%
+        d = rm.check_order("BTC-USDT-SWAP", 1, 3.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+        self.assertEqual(d.reason, "")
 
-    def test_single_position_too_large(self):
+    def test_returns_risk_decision_dataclass(self):
+        rm = RiskManager(_cfg())
+        d = rm.check_order("BTC-USDT-SWAP", 1, 3.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertIsInstance(d, RiskDecision)
+
+
+class TestSinglePositionLimit(unittest.TestCase):
+    def test_rejected_when_exceeding(self):
         rm = RiskManager(_cfg(rm_max_single_position_pct=0.40))
-        rm.reset()
-        bar = _bar()
-        # notional / equity = 5.0 / 10.0 = 50% > 40%
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=5.0, margin=1.0, equity=10.0,
-            current_step=100, bars=[bar], idx=0,
-        )
-        self.assertFalse(decision.allowed)
-        self.assertIn("single position", decision.reason)
+        # notional/equity = 50/100 = 0.50 > 0.40
+        d = rm.check_order("BTC-USDT-SWAP", 1, 50.0, 5.0, 100.0, 0, _bars(), 0)
+        self.assertFalse(d.allowed)
+        self.assertIn("single position", d.reason)
 
-    def test_total_margin_exceeded(self):
-        rm = RiskManager(_cfg(rm_max_total_position_pct=0.80))
-        rm.reset()
-        bar = _bar()
-        # existing margin 7.0 + new margin 2.0 = 9.0 / 10.0 = 90% > 80%
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=6.0, margin=2.0, equity=10.0,
-            current_step=100, bars=[bar], idx=0,
-            current_positions_margin=7.0,
-        )
-        self.assertFalse(decision.allowed)
-        self.assertIn("total margin", decision.reason)
+    def test_accepted_when_within(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=0.40))
+        # notional/equity = 30/100 = 0.30 < 0.40
+        d = rm.check_order("BTC-USDT-SWAP", 1, 30.0, 3.0, 100.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
 
-    def test_daily_loss_exceeded(self):
-        rm = RiskManager(_cfg(rm_max_daily_loss_pct=15.0))
-        rm.reset()
-        bar = _bar()
-        # Accumulate losses: 3 losses of -2.0 each = -6.0 total loss
-        # 6.0 / 10.0 * 100 = 60% > 15%
-        for _ in range(3):
-            rm.on_trade_close(-2.0, 10)
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=3.0, margin=1.0, equity=10.0,
-            current_step=100, bars=[bar], idx=0,
-        )
-        self.assertFalse(decision.allowed)
-        self.assertIn("daily loss", decision.reason)
+    def test_accepted_at_boundary(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=0.40))
+        # exactly at the boundary — notional/equity = 0.40, should be allowed (not >)
+        d = rm.check_order("BTC-USDT-SWAP", 1, 40.0, 4.0, 100.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
 
-    def test_weekly_loss_exceeded(self):
-        rm = RiskManager(_cfg(rm_max_weekly_loss_pct=30.0, rm_max_daily_loss_pct=999.0))
-        rm.reset()
-        bar = _bar()
-        # 4 losses of -1.0 each = -4.0, 4.0/10.0*100 = 40% > 30%
-        for _ in range(4):
-            rm.on_trade_close(-1.0, 10)
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=3.0, margin=1.0, equity=10.0,
-            current_step=100, bars=[bar], idx=0,
-        )
-        self.assertFalse(decision.allowed)
-        self.assertIn("weekly loss", decision.reason)
 
-    def test_consecutive_loss_pause(self):
-        rm = RiskManager(_cfg(rm_consecutive_loss_pause=3, rm_consecutive_loss_pause_bars=100))
-        rm.reset()
-        bar = _bar()
-        # 3 consecutive losses
-        for i in range(3):
-            rm.on_trade_close(-0.5, i)
-        # Should now be paused
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=3.0, margin=1.0, equity=10.0,
-            current_step=100, bars=[bar], idx=0,
-        )
-        self.assertFalse(decision.allowed)
-        self.assertIn("consecutive loss pause", decision.reason)
+class TestTotalPositionLimit(unittest.TestCase):
+    def test_rejected_when_existing_plus_new_exceeds(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_total_position_pct=0.80))
+        rm._track_open("ETH-USDT-SWAP", 7.0)
+        # (7.0 + 5.0) / 10.0 = 1.20 > 0.80
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 5.0, 10.0, 0, _bars(), 0)
+        self.assertFalse(d.allowed)
+        self.assertIn("total position", d.reason)
 
-    def test_volatility_halt(self):
-        rm = RiskManager(_cfg(rm_volatility_halt_threshold=0.06))
-        rm.reset()
-        bar = _bar(atr_pct=0.08)  # 8% > 6%
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=3.0, margin=1.0, equity=10.0,
-            current_step=100, bars=[bar], idx=0,
-        )
-        self.assertFalse(decision.allowed)
-        self.assertIn("volatility", decision.reason)
+    def test_accepted_when_within(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_total_position_pct=0.80))
+        rm._track_open("ETH-USDT-SWAP", 5.0)
+        # (5.0 + 3.0) / 10.0 = 0.80, not > 0.80
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 3.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
 
-    def test_liquidation_distance_protection(self):
+    def test_no_existing_positions(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_total_position_pct=0.80))
+        # 2.0 / 10.0 = 0.20 < 0.80
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 2.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+
+class TestDailyLossLimit(unittest.TestCase):
+    def test_rejected_when_loss_exceeds(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_daily_loss_pct=15.0))
+        rm._daily_pnl = -2.0  # -2/10 = 20% > 15%
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertFalse(d.allowed)
+        self.assertIn("daily loss", d.reason)
+
+    def test_not_checked_when_profit(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_daily_loss_pct=15.0))
+        rm._daily_pnl = 1.0
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+    def test_not_checked_when_zero(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_daily_loss_pct=15.0))
+        rm._daily_pnl = 0.0
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+    def test_accepted_when_within(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_daily_loss_pct=15.0))
+        rm._daily_pnl = -1.0  # -1/10 = 10% < 15%
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+
+class TestWeeklyLossLimit(unittest.TestCase):
+    def test_rejected_when_loss_exceeds(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_weekly_loss_pct=30.0))
+        rm._weekly_pnl = -4.0  # -4/10 = 40% > 30%
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertFalse(d.allowed)
+        self.assertIn("weekly loss", d.reason)
+
+    def test_not_checked_when_profit(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_weekly_loss_pct=30.0))
+        rm._weekly_pnl = 5.0
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+    def test_accepted_when_within(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_max_weekly_loss_pct=30.0))
+        rm._weekly_pnl = -2.0  # -2/10 = 20% < 30%
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+
+class TestConsecutiveLossPause(unittest.TestCase):
+    def test_triggers_pause(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_consecutive_loss_pause=4, rm_consecutive_loss_pause_bars=100))
+        rm._consecutive_losses = 4
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertFalse(d.allowed)
+        self.assertIn("consecutive losses", d.reason)
+        self.assertTrue(rm._is_paused)
+
+    def test_not_triggered_below_threshold(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_consecutive_loss_pause=4))
+        rm._consecutive_losses = 3
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+    def test_increments_pauses_count(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_consecutive_loss_pause=1, rm_consecutive_loss_pause_bars=100))
+        rm._consecutive_losses = 1
+        rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertEqual(rm._pauses_count, 1)
+
+
+class TestVolatilityHalt(unittest.TestCase):
+    def test_triggers_pause_when_exceeding(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_volatility_halt_threshold=0.06))
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(atr_pct=0.08), 0)
+        self.assertFalse(d.allowed)
+        self.assertIn("volatility", d.reason)
+        self.assertTrue(rm._is_paused)
+
+    def test_accepted_when_within(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_volatility_halt_threshold=0.06))
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(atr_pct=0.04), 0)
+        self.assertTrue(d.allowed)
+
+    def test_exactly_at_threshold(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_volatility_halt_threshold=0.06))
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(atr_pct=0.06), 0)
+        self.assertTrue(d.allowed)
+
+
+class TestLiquidationDistance(unittest.TestCase):
+    def test_rejected_when_too_close(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=10.0, rm_min_liquidation_distance_pct=0.05))
+        # margin/notional = 1/100 = 0.01 < 0.05
+        d = rm.check_order("BTC-USDT-SWAP", 1, 100.0, 1.0, 1000.0, 0, _bars(), 0)
+        self.assertFalse(d.allowed)
+        self.assertIn("liquidation distance", d.reason)
+
+    def test_accepted_when_far_enough(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=10.0, rm_min_liquidation_distance_pct=0.05))
+        # margin/notional = 10/100 = 0.10 > 0.05
+        d = rm.check_order("BTC-USDT-SWAP", 1, 100.0, 10.0, 1000.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+    def test_skipped_when_notional_zero(self):
         rm = RiskManager(_cfg(rm_min_liquidation_distance_pct=0.05))
-        rm.reset()
-        bar = _bar(close=100.0)
-        # notional=100, equity=10 → potential loss = 100*0.05/100*100 = 5.0
-        # 5.0 > 10*0.95=9.5? No, 5.0 < 9.5, so it passes.
-        # Make it fail: notional=200, equity=10
-        # loss = 200*0.05 = 10.0 > 9.5 → reject
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=200.0, margin=10.0, equity=10.0,
-            current_step=100, bars=[bar], idx=0,
-        )
-        self.assertFalse(decision.allowed)
-        self.assertIn("liquidation", decision.reason)
+        d = rm.check_order("BTC-USDT-SWAP", 1, 0.0, 0.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
 
 
-class RiskManagerPauseTests(unittest.TestCase):
-    """Pause/resume lifecycle."""
+class TestPauseRejectsAll(unittest.TestCase):
+    def test_paused_rejects(self):
+        rm = RiskManager(_cfg(rm_consecutive_loss_pause_bars=100))
+        rm._is_paused = True
+        rm._pause_reason = "test"
+        rm._pause_until_step = 100
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 50, _bars(), 0)
+        self.assertFalse(d.allowed)
+        self.assertIn("paused", d.reason)
 
-    def test_pause_blocks_all_orders(self):
-        rm = RiskManager(_cfg(rm_consecutive_loss_pause=2, rm_consecutive_loss_pause_bars=50))
-        rm.reset()
-        bar = _bar()
-        # 2 consecutive losses → triggers pause
-        rm.on_trade_close(-1.0, 10)
-        rm.on_trade_close(-1.0, 20)
-        # Step 30 is within pause window (20 + 50 = 70)
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=1.0, margin=0.5, equity=10.0,
-            current_step=30, bars=[bar], idx=0,
-        )
-        self.assertFalse(decision.allowed)
-        self.assertIn("paused", decision.reason)
-
-    def test_pause_expires(self):
-        rm = RiskManager(_cfg(rm_consecutive_loss_pause=2, rm_consecutive_loss_pause_bars=50))
-        rm.reset()
-        bar = _bar()
-        rm.on_trade_close(-1.0, 10)
-        rm.on_trade_close(-1.0, 20)
-        # Step 80 is past the pause window (20 + 50 = 70)
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=1.0, margin=0.5, equity=10.0,
-            current_step=80, bars=[bar], idx=0,
-        )
-        self.assertTrue(decision.allowed)
-
-    def test_pause_gets_extended(self):
-        rm = RiskManager(_cfg(rm_consecutive_loss_pause=2, rm_consecutive_loss_pause_bars=50))
-        rm.reset()
-        bar = _bar()
-        # First pause: triggered at step 20, expires at 70
-        rm.on_trade_close(-1.0, 10)
-        rm.on_trade_close(-1.0, 20)
-        # Win resets consecutive, but if we have another loss later
-        rm.on_trade_close(1.0, 30)  # win resets
-        rm.on_trade_close(-1.0, 40)
-        rm.on_trade_close(-1.0, 50)
-        # New pause: triggered at 50, expires at 100
-        # Step 80 should be blocked
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=1.0, margin=0.5, equity=10.0,
-            current_step=80, bars=[bar], idx=0,
-        )
-        self.assertFalse(decision.allowed)
-
-
-class RiskManagerStateTests(unittest.TestCase):
-    """State tracking and reset."""
-
-    def test_consecutive_losses_reset_on_win(self):
-        rm = RiskManager(_cfg(rm_consecutive_loss_pause=5))
-        rm.reset()
-        rm.on_trade_close(-1.0, 10)
-        rm.on_trade_close(-1.0, 20)
-        rm.on_trade_close(-1.0, 30)
-        self.assertEqual(rm._consecutive_losses, 3)
-        rm.on_trade_close(1.0, 40)  # win resets
-        self.assertEqual(rm._consecutive_losses, 0)
-
-    def test_reset_clears_all_state(self):
-        rm = RiskManager(_cfg())
-        rm.reset()
-        rm.on_trade_close(-1.0, 10)
-        rm.on_trade_close(-1.0, 20)
-        rm._rejections_count = 5
-        rm._pauses_count = 2
-        rm.reset()
-        self.assertEqual(rm._consecutive_losses, 0)
-        self.assertEqual(rm._daily_pnl, [])
-        self.assertEqual(rm._weekly_pnl, [])
-        self.assertEqual(rm._rejections_count, 0)
-        self.assertEqual(rm._pauses_count, 0)
-        self.assertEqual(rm._pause_until_step, -1)
-
-    def test_get_status(self):
-        rm = RiskManager(_cfg())
-        rm.reset()
-        rm.on_trade_close(-2.0, 10)
-        rm.on_trade_close(1.0, 20)
-        status = rm.get_status()
-        self.assertIsInstance(status, RiskStatus)
-        self.assertFalse(status.is_paused)
-        self.assertEqual(status.consecutive_losses, 0)  # last was a win
-        self.assertAlmostEqual(status.weekly_pnl, -1.0)
-
-    def test_rejections_counted(self):
-        rm = RiskManager(_cfg(rm_max_single_position_pct=0.10))
-        rm.reset()
-        bar = _bar()
-        # This should be rejected (notional/equity = 50% > 10%)
-        rm.check_order("X", 1, 5.0, 1.0, 10.0, 100, [bar], 0)
+    def test_paused_counts_rejection(self):
+        rm = RiskManager(_cfg(rm_consecutive_loss_pause_bars=100))
+        rm._is_paused = True
+        rm._pause_reason = "test"
+        rm._pause_until_step = 100
+        rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 50, _bars(), 0)
         self.assertEqual(rm._rejections_count, 1)
-        # This should pass
-        rm.check_order("X", 1, 0.5, 0.1, 10.0, 100, [bar], 0)
-        self.assertEqual(rm._rejections_count, 1)  # not incremented
 
 
-class RiskManagerDisabledTests(unittest.TestCase):
-    """rm_enabled=False should skip all checks."""
+class TestPauseExpiry(unittest.TestCase):
+    def test_pause_clears_at_expiry_step(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_consecutive_loss_pause_bars=100))
+        rm._is_paused = True
+        rm._pause_reason = "test"
+        rm._pause_until_step = 100
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 100, _bars(), 0)
+        self.assertTrue(d.allowed)
+        self.assertFalse(rm._is_paused)
+        self.assertEqual(rm._pause_reason, "")
 
-    def test_disabled_allows_everything(self):
+    def test_still_paused_one_step_before(self):
+        rm = RiskManager(_cfg(rm_consecutive_loss_pause_bars=100))
+        rm._is_paused = True
+        rm._pause_reason = "test"
+        rm._pause_until_step = 100
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 99, _bars(), 0)
+        self.assertFalse(d.allowed)
+
+    def test_can_open_after_resume(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_consecutive_loss_pause_bars=10))
+        rm._is_paused = True
+        rm._pause_reason = "test"
+        rm._pause_until_step = 5
+        # Resume at step 5
+        rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 5, _bars(), 0)
+        self.assertFalse(rm._is_paused)
+        # Should be able to open now
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 5, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+
+class TestRmDisabled(unittest.TestCase):
+    def test_all_checks_skipped(self):
         rm = RiskManager(_cfg(rm_enabled=False))
-        rm.reset()
-        bar = _bar(atr_pct=0.99)  # extreme volatility
-        decision = rm.check_order(
-            symbol="BTC-USDT-SWAP", direction=1,
-            notional=999.0, margin=999.0, equity=1.0,
-            current_step=0, bars=[bar], idx=0,
-        )
-        # RiskManager itself doesn't check rm_enabled — it's the backtester
-        # that decides whether to instantiate it.  But the config flag exists.
-        # This test verifies the flag is readable.
-        self.assertFalse(rm.config.rm_enabled)
+        rm._is_paused = True
+        rm._pause_until_step = 999
+        rm._consecutive_losses = 999
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(atr_pct=0.99), 0)
+        self.assertTrue(d.allowed)
+
+    def test_on_trade_close_still_works(self):
+        rm = RiskManager(_cfg(rm_enabled=False))
+        rm.on_trade_close(-1.0, 10, "BTC-USDT-SWAP", 5.0)
+        self.assertEqual(rm._daily_pnl, -1.0)
+        self.assertEqual(rm._consecutive_losses, 1)
 
 
-class RiskManagerRollingWindowTests(unittest.TestCase):
-    """Rolling PnL windows trim correctly."""
-
-    def test_daily_window_trims(self):
+class TestOnTradeClose(unittest.TestCase):
+    def test_loss_increments_consecutive(self):
         rm = RiskManager(_cfg())
-        rm.reset()
-        # Add 100 losses (more than _DAILY_WINDOW=96)
-        for i in range(100):
-            rm.on_trade_close(-1.0, i)
-        # Only the last 96 should remain
-        self.assertEqual(len(rm._daily_pnl), 96)
-        # Sum should be -96.0
-        self.assertAlmostEqual(sum(rm._daily_pnl), -96.0)
+        rm.on_trade_close(-1.0, 10, "BTC-USDT-SWAP", 5.0)
+        self.assertEqual(rm._consecutive_losses, 1)
+        self.assertEqual(rm._daily_pnl, -1.0)
+        self.assertEqual(rm._weekly_pnl, -1.0)
 
-    def test_weekly_window_trims(self):
+    def test_win_resets_consecutive(self):
         rm = RiskManager(_cfg())
+        rm._consecutive_losses = 3
+        rm.on_trade_close(2.0, 10, "BTC-USDT-SWAP", 5.0)
+        self.assertEqual(rm._consecutive_losses, 0)
+
+    def test_accumulates_pnl(self):
+        rm = RiskManager(_cfg())
+        rm.on_trade_close(-1.0, 10, "A", 1.0)
+        rm.on_trade_close(-0.5, 20, "B", 1.0)
+        rm.on_trade_close(2.0, 30, "C", 1.0)
+        self.assertAlmostEqual(rm._daily_pnl, 0.5)
+        self.assertAlmostEqual(rm._weekly_pnl, 0.5)
+
+    def test_removes_position_from_tracking(self):
+        rm = RiskManager(_cfg())
+        rm._track_open("BTC-USDT-SWAP", 5.0)
+        rm._track_open("ETH-USDT-SWAP", 3.0)
+        self.assertAlmostEqual(rm._total_margin_used, 8.0)
+        rm.on_trade_close(1.0, 10, "BTC-USDT-SWAP", 5.0)
+        self.assertNotIn("BTC-USDT-SWAP", rm._open_margins)
+        self.assertIn("ETH-USDT-SWAP", rm._open_margins)
+        self.assertAlmostEqual(rm._total_margin_used, 3.0)
+
+    def test_pnl_zero_resets_consecutive(self):
+        rm = RiskManager(_cfg())
+        rm._consecutive_losses = 2
+        rm.on_trade_close(0.0, 10, "BTC-USDT-SWAP", 1.0)
+        self.assertEqual(rm._consecutive_losses, 0)
+
+
+class TestReset(unittest.TestCase):
+    def test_clears_all_state(self):
+        rm = RiskManager(_cfg())
+        rm._daily_pnl = -5.0
+        rm._weekly_pnl = -10.0
+        rm._consecutive_losses = 5
+        rm._is_paused = True
+        rm._pause_reason = "test"
+        rm._open_margins["BTC-USDT-SWAP"] = 3.0
+        rm._pauses_count = 2
+        rm._rejections_count = 5
+
         rm.reset()
-        for i in range(700):
-            rm.on_trade_close(-1.0, i)
-        self.assertEqual(len(rm._weekly_pnl), 672)
+
+        self.assertEqual(rm._daily_pnl, 0.0)
+        self.assertEqual(rm._weekly_pnl, 0.0)
+        self.assertEqual(rm._consecutive_losses, 0)
+        self.assertFalse(rm._is_paused)
+        self.assertEqual(rm._pause_reason, "")
+        self.assertEqual(len(rm._open_margins), 0)
+        self.assertEqual(rm._pauses_count, 0)
+        self.assertEqual(rm._rejections_count, 0)
+
+
+class TestGetStatus(unittest.TestCase):
+    def test_reflects_current_state(self):
+        rm = RiskManager(_cfg())
+        rm._daily_pnl = -1.0
+        rm._weekly_pnl = -2.0
+        rm._consecutive_losses = 3
+        rm._track_open("BTC-USDT-SWAP", 5.0)
+
+        status = rm.get_status()
+
+        self.assertIsInstance(status, RiskStatus)
+        self.assertEqual(status.daily_pnl, -1.0)
+        self.assertEqual(status.weekly_pnl, -2.0)
+        self.assertEqual(status.consecutive_losses, 3)
+        self.assertEqual(status.open_positions_count, 1)
+        self.assertAlmostEqual(status.total_margin_used, 5.0)
+        self.assertFalse(status.is_paused)
+
+    def test_pause_status(self):
+        rm = RiskManager(_cfg())
+        rm._is_paused = True
+        rm._pause_reason = "volatility"
+        rm._pause_until_step = 200
+
+        status = rm.get_status()
+        self.assertTrue(status.is_paused)
+        self.assertEqual(status.pause_reason, "volatility")
+        self.assertEqual(status.pause_until_step, 200)
+
+
+class TestEdgeCases(unittest.TestCase):
+    def test_zero_equity_skips_division_checks(self):
+        rm = RiskManager(_cfg())
+        d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 0.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
+
+    def test_rejection_counter_increments(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=0.10))
+        rm.check_order("BTC-USDT-SWAP", 1, 50.0, 5.0, 100.0, 0, _bars(), 0)
+        rm.check_order("BTC-USDT-SWAP", 1, 50.0, 5.0, 100.0, 0, _bars(), 0)
+        self.assertEqual(rm._rejections_count, 2)
+
+    def test_pause_blocks_subsequent_same_step_calls(self):
+        """After a volatility halt at step N, another check at step N is also blocked."""
+        rm = RiskManager(_cfg(rm_max_single_position_pct=1.0, rm_volatility_halt_threshold=0.06))
+        rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(atr_pct=0.08), 0)
+        self.assertTrue(rm._is_paused)
+        d = rm.check_order("ETH-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(atr_pct=0.01), 0)
+        self.assertFalse(d.allowed)
+        self.assertIn("paused", d.reason)
+
+    def test_check_order_short_direction(self):
+        """RiskManager doesn't care about direction; it checks position sizing."""
+        rm = RiskManager(_cfg())
+        d = rm.check_order("BTC-USDT-SWAP", -1, 3.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertTrue(d.allowed)
 
 
 if __name__ == "__main__":
