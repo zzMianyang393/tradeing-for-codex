@@ -99,12 +99,24 @@ Current runner scope:
 ```bash
 cd E:\ai-trade\tradering
 python okx_downloader.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP SOL-USDT-SWAP --days 365 --bar 15m --out data
+python funding_rate.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --days 90 --out data
 ```
 
 The downloader writes files in the same format as the existing local CSVs.
 Funding-rate support is available in `funding_rate.py` for OKX funding history
 parsing, CSV caching, and attaching funding fields to `FeatureBar` streams for
 future strategy signals.
+
+## Dashboard
+
+Render a local HTML dashboard from the SQLite trading state:
+
+```bash
+python dashboard.py --db reports\dry_run_state.db --out reports\dashboard.html
+```
+
+Open `reports\dashboard.html` in a browser to review account snapshots, open
+positions, recent trades, risk events, and health alerts.
 
 ## Outputs
 

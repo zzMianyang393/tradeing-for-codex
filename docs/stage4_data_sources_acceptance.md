@@ -8,6 +8,8 @@ source is OKX funding-rate history.
 - `funding_rate.py` defines a `FundingRate` data model.
 - OKX funding history rows can be parsed into stable local records.
 - Funding rates can be saved to and loaded from CSV cache files.
+- `funding_rate.py --symbols ... --days ... --out ...` downloads funding-rate
+  history with CSV merge/resume behavior and transient error retries.
 - `add_funding_features` returns `FundingFeatureBar` values that preserve all
   existing `FeatureBar` fields and add:
   - `funding_rate`
@@ -16,13 +18,10 @@ source is OKX funding-rate history.
 
 ## Current Limits
 
-- The module exposes page-level OKX fetching, but there is not yet a full
-  multi-day downloader CLI with resume/retry behavior.
 - Funding features are not yet connected to `load_market`.
 - No strategy consumes funding features yet.
 
 ## Next Step
 
-- Add a resumable funding-rate downloader command.
 - Wire optional funding feature loading into market construction.
 - Add an independent funding-rate strategy signal and backtest report.

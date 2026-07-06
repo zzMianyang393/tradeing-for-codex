@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+from dashboard import build_dashboard_payload, render_dashboard_html, write_dashboard
+from state_db import StateDB
+
+
+class TestDashboard(unittest.TestCase):
+    def test_build_dashboard_payload_summarizes_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                db.snapshot_account(equity=101.5, available_margin=90.0, used_margin=11.5, open_positions=1)
+                db.save_position("BTC-USDT-SWAP", "long", 50000.0, 0.001, 50.0, 5.0, 10.0)
+                db.save_trade(
+                    "BTC-USDT-SWAP",
+                    "long",
+                    50000.0,
+                    50100.0,
+                    "2026-07-06 10:00:00",
+                    "2026-07-06 11:00:00",
+                    0.1,
+                    2.0,
+                    signal_reason="range_revert_long",
+                    exit_reason="take_profit",
+                )
+                report_id = db.save_health_report({"status": "critical", "issues": [{"kind": "api_failure"}]})
+                db.save_health_alert(report_id, "critical", "api_failure", "Exchange unavailable", {})
+            finally:
+                db.close()
+
+            payload = build_dashboard_payload(db_path)
+
+        self.assertEqual(101.5, payload["account"]["equity"])
+        self.assertEqual(1, payload["account"]["open_positions"])
+        self.assertEqual("critical", payload["health"]["status"])
+        self.assertEqual(1, len(payload["positions"]))
+        self.assertEqual(1, payload["trade_summary"]["total"])
+        self.assertEqual("api_failure", payload["alerts"][0]["kind"])
+
+    def test_render_dashboard_html_contains_operational_sections(self):
+        payload = {
+            "account": {"equity": 100.0, "available_margin": 80.0, "used_margin": 20.0, "open_positions": 1},
+            "trade_summary": {"total": 2, "win_rate": 0.5, "total_pnl": 1.2},
+            "positions": [{"symbol": "BTC-USDT-SWAP", "direction": "long", "notional": 50.0, "margin": 5.0}],
+            "recent_trades": [{"symbol": "ETH-USDT-SWAP", "direction": "short", "pnl": 0.2, "exit_reason": "take_profit"}],
+            "risk_events": [{"event_type": "reject", "detail": "{\"reason\":\"volatility\"}"}],
+            "alerts": [{"severity": "critical", "kind": "api_failure", "message": "Exchange unavailable"}],
+            "health": {"status": "critical", "issue_count": 1},
+        }
+
+        html = render_dashboard_html(payload)
+
+        self.assertIn("Trading Dashboard", html)
+        self.assertIn("BTC-USDT-SWAP", html)
+        self.assertIn("ETH-USDT-SWAP", html)
+        self.assertIn("api_failure", html)
+
+    def test_write_dashboard_creates_html_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            out_path = Path(tmp) / "dashboard.html"
+            db = StateDB(db_path)
+            try:
+                db.snapshot_account(equity=10.0, available_margin=10.0, used_margin=0.0)
+            finally:
+                db.close()
+
+            written = write_dashboard(db_path, out_path)
+
+            self.assertEqual(out_path, written)
+            self.assertTrue(out_path.exists())
+            self.assertIn("Trading Dashboard", out_path.read_text(encoding="utf-8"))
+
+
+if __name__ == "__main__":
+    unittest.main()

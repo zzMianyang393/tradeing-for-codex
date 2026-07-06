@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import argparse
 import csv
 import json
+import time
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, fields
@@ -13,6 +15,7 @@ from market import FeatureBar
 
 
 OKX_FUNDING_HISTORY_URL = "https://www.okx.com/api/v5/public/funding-rate-history"
+FUNDING_ROWS_PER_DAY = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,6 +99,69 @@ def load_funding_rates(path: Path) -> list[FundingRate]:
     return rates
 
 
+def download_funding_rates(
+    symbol: str,
+    days: int,
+    out_dir: Path,
+    sleep_seconds: float = 0.12,
+    retry_sleep_seconds: float = 1.0,
+    retries: int = 4,
+    limit: int = 100,
+) -> int:
+    path = funding_output_path(symbol, out_dir)
+    rows = {rate.ts: rate for rate in load_funding_rates(path)}
+    target_rows = max(1, days * FUNDING_ROWS_PER_DAY)
+    before = max(rows) if rows else None
+
+    while len(rows) < target_rows:
+        page = _fetch_funding_page_with_retry(
+            symbol,
+            before=before,
+            limit=limit,
+            retries=retries,
+            retry_sleep_seconds=retry_sleep_seconds,
+        )
+        if not page:
+            break
+        parsed = parse_funding_rows(page)
+        if not parsed:
+            break
+        for rate in parsed:
+            rows[rate.ts] = rate
+        oldest = min(rate.ts for rate in parsed)
+        if before is not None and oldest >= before:
+            break
+        before = oldest
+        if len(page) < limit:
+            break
+        if sleep_seconds > 0 and len(rows) < target_rows:
+            time.sleep(sleep_seconds)
+
+    ordered = [rows[ts] for ts in sorted(rows)]
+    save_funding_rates(path, ordered)
+    return len(ordered)
+
+
+def _fetch_funding_page_with_retry(
+    symbol: str,
+    before: int | None,
+    limit: int,
+    retries: int,
+    retry_sleep_seconds: float,
+) -> list[dict[str, Any]]:
+    last_error: Exception | None = None
+    for attempt in range(retries + 1):
+        try:
+            return fetch_funding_page(symbol, before=before, limit=limit)
+        except Exception as exc:
+            last_error = exc
+            if attempt >= retries:
+                break
+            if retry_sleep_seconds > 0:
+                time.sleep(retry_sleep_seconds)
+    raise RuntimeError(f"Failed to fetch funding rates for {symbol}: {last_error}")
+
+
 def add_funding_features(bars: list[FeatureBar], rates: list[FundingRate], ma_window: int = 7) -> list[FundingFeatureBar]:
     ordered_rates = sorted(rates, key=lambda item: item.ts)
     out: list[FundingFeatureBar] = []
@@ -129,3 +195,32 @@ def funding_output_path(symbol: str, out_dir: Path) -> Path:
 
 def _format_utc(ts: int) -> str:
     return datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Download OKX funding-rate history into CSV cache files.")
+    parser.add_argument("--symbols", nargs="+", required=True)
+    parser.add_argument("--days", type=int, default=30)
+    parser.add_argument("--out", type=Path, default=Path("data"))
+    parser.add_argument("--sleep", type=float, default=0.12)
+    parser.add_argument("--retry-sleep", type=float, default=1.0)
+    parser.add_argument("--retries", type=int, default=4)
+    parser.add_argument("--limit", type=int, default=100)
+    args = parser.parse_args(argv)
+
+    for symbol in args.symbols:
+        count = download_funding_rates(
+            symbol,
+            days=args.days,
+            out_dir=args.out,
+            sleep_seconds=args.sleep,
+            retry_sleep_seconds=args.retry_sleep,
+            retries=args.retries,
+            limit=args.limit,
+        )
+        print(f"{symbol}: wrote {count} funding rows to {funding_output_path(symbol, args.out)}", flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
