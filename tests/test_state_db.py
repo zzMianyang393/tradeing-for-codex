@@ -96,6 +96,14 @@ class TestPositions(_DBMixin, unittest.TestCase):
         self.assertEqual(positions[0]["current_price"], 51000.0)
         self.assertEqual(positions[0]["unrealized_pnl"], 1.0)
 
+    def test_get_position_by_id(self):
+        pid = self.db.save_position("BTC-USDT-SWAP", "long", 50000.0, 0.001, 50.0, 5.0, 10.0)
+
+        position = self.db.get_position(pid)
+
+        self.assertEqual(pid, position["id"])
+        self.assertEqual("BTC-USDT-SWAP", position["symbol"])
+
 
 # ── Trades ──────────────────────────────────────────────────────────────
 

@@ -250,6 +250,10 @@ class StateDB:
         rows = self._conn.execute("SELECT * FROM positions WHERE status='open'").fetchall()
         return [dict(r) for r in rows]
 
+    def get_position(self, position_id: str) -> dict | None:
+        row = self._conn.execute("SELECT * FROM positions WHERE id=?", (position_id,)).fetchone()
+        return dict(row) if row else None
+
     # ------------------------------------------------------------------
     # Trades
     # ------------------------------------------------------------------

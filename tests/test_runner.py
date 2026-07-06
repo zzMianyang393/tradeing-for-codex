@@ -616,6 +616,151 @@ class TestRunnerCli(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_okx_close_position_requires_explicit_confirmation(self):
+        output = io.StringIO()
+
+        with contextlib.redirect_stdout(output), patch("runner.OKXExchange") as cls:
+            code = main(["--okx-close-position", "--position-id", "pos-1"])
+
+        self.assertEqual(2, code)
+        cls.assert_not_called()
+        payload = json.loads(output.getvalue())
+        self.assertIn("--confirm-okx-close-position", payload["error"])
+
+    def test_okx_close_position_places_opposite_order_and_records_db(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                position_id = db.save_position(
+                    "BTC-USDT-SWAP",
+                    "long",
+                    entry_price=50000.0,
+                    qty=0.0002,
+                    notional=10.0,
+                    margin=1.0,
+                    leverage=10.0,
+                )
+            finally:
+                db.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_positions.return_value = [{"symbol": "BTC-USDT-SWAP", "direction": "long"}]
+            fake_exchange.place_order.return_value = OrderResult(
+                order_id="okx-close-1",
+                symbol="BTC-USDT-SWAP",
+                direction="short",
+                qty=0.0002,
+                status="live",
+            )
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+                with contextlib.redirect_stdout(output):
+                    code = main([
+                        "--okx-close-position",
+                        "--confirm-okx-close-position",
+                        "--db",
+                        str(db_path),
+                        "--position-id",
+                        position_id,
+                        "--okx-close-price",
+                        "50100",
+                    ])
+
+            self.assertEqual(0, code)
+            fake_exchange.place_order.assert_called_once_with(
+                "BTC-USDT-SWAP",
+                "short",
+                0.0002,
+                order_type="market",
+                price=50100.0,
+                fee=0.0005,
+            )
+            payload = json.loads(output.getvalue())
+            self.assertTrue(payload["okx_close_position"])
+            self.assertEqual(position_id, payload["position_id"])
+            self.assertIsNotNone(payload["order_id"])
+            self.assertEqual("okx-close-1", payload["exchange_order_id"])
+            db = StateDB(db_path)
+            try:
+                order = db.get_order(payload["order_id"])
+                self.assertEqual("live", order["status"])
+                self.assertEqual("close", json.loads(order["meta"])["action"])
+                self.assertEqual(position_id, json.loads(order["meta"])["position_id"])
+            finally:
+                db.close()
+
+    def test_okx_sync_orders_closes_position_and_records_trade_for_filled_close_order(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                position_id = db.save_position(
+                    "BTC-USDT-SWAP",
+                    "long",
+                    entry_price=50000.0,
+                    qty=0.0002,
+                    notional=10.0,
+                    margin=1.0,
+                    leverage=10.0,
+                )
+                order_id = db.save_order(
+                    "BTC-USDT-SWAP",
+                    "short",
+                    0.0002,
+                    price=50100.0,
+                    meta={
+                        "action": "close",
+                        "position_id": position_id,
+                        "exit_reason": "manual_okx_close",
+                    },
+                )
+                db.update_order_status(order_id, "live", exchange_order_id="okx-close-1")
+            finally:
+                db.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_order_status.return_value = {
+                "code": "0",
+                "data": [
+                    {
+                        "ordId": "okx-close-1",
+                        "state": "filled",
+                        "avgPx": "50100",
+                        "accFillSz": "0.0002",
+                        "fee": "0.0005",
+                    }
+                ],
+            }
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+                with contextlib.redirect_stdout(output):
+                    code = main(["--okx-sync-orders", "--db", str(db_path)])
+
+            self.assertEqual(0, code)
+            payload = json.loads(output.getvalue())
+            self.assertEqual(1, payload["closed_positions"])
+            self.assertEqual(1, payload["saved_trades"])
+            db = StateDB(db_path)
+            try:
+                self.assertEqual([], db.get_open_positions())
+                trades = db.get_recent_trades()
+                self.assertEqual(1, len(trades))
+                self.assertEqual("manual_okx_close", trades[0]["exit_reason"])
+                self.assertGreater(trades[0]["pnl"], 0)
+            finally:
+                db.close()
+
 
 if __name__ == "__main__":
     unittest.main()

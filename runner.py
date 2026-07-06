@@ -104,6 +104,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--okx-smoke-order", action="store_true", help="Place then cancel one OKX simulated limit order")
     mode.add_argument("--okx-submit-signal", action="store_true", help="Submit one risk-checked signal to OKX simulated trading")
     mode.add_argument("--okx-sync-orders", action="store_true", help="Sync local live orders from OKX simulated trading")
+    mode.add_argument("--okx-close-position", action="store_true", help="Submit an OKX simulated close order for a local position")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
@@ -122,6 +123,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--okx-signal-notional", type=float, default=1.0)
     parser.add_argument("--okx-signal-margin", type=float, default=1.0)
     parser.add_argument("--okx-signal-leverage", type=float, default=1.0)
+    parser.add_argument("--confirm-okx-close-position", action="store_true")
+    parser.add_argument("--position-id", default="")
+    parser.add_argument("--okx-close-price", type=float, default=0.0)
     args = parser.parse_args(argv)
 
     if args.status:
@@ -149,6 +153,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.okx_sync_orders:
         payload, code = _okx_sync_orders_payload(args.db)
+        _print_json(payload)
+        return code
+
+    if args.okx_close_position:
+        payload, code = _okx_close_position_payload(args)
         _print_json(payload)
         return code
 
@@ -417,6 +426,8 @@ def _okx_sync_orders_payload(db_path: Path) -> tuple[dict, int]:
     filled = 0
     canceled = 0
     opened_positions = 0
+    closed_positions = 0
+    saved_trades = 0
     details = []
     try:
         for order in db.get_active_exchange_orders():
@@ -442,7 +453,13 @@ def _okx_sync_orders_payload(db_path: Path) -> tuple[dict, int]:
             updated += 1
             if status == "filled":
                 filled += 1
-                opened_positions += _open_position_for_filled_order(db, order, fill_price, fill_qty)
+                meta = _json_dict(order.get("meta"))
+                if meta.get("action") == "close":
+                    closed, saved = _close_position_for_filled_order(db, order, meta, fill_price, fee)
+                    closed_positions += closed
+                    saved_trades += saved
+                else:
+                    opened_positions += _open_position_for_filled_order(db, order, fill_price, fill_qty)
             elif status == "canceled":
                 canceled += 1
             details.append(
@@ -463,7 +480,76 @@ def _okx_sync_orders_payload(db_path: Path) -> tuple[dict, int]:
         "filled_orders": filled,
         "canceled_orders": canceled,
         "opened_positions": opened_positions,
+        "closed_positions": closed_positions,
+        "saved_trades": saved_trades,
         "orders": details,
+    }, 0
+
+
+def _okx_close_position_payload(args: argparse.Namespace) -> tuple[dict, int]:
+    if not args.confirm_okx_close_position:
+        return {
+            "okx_close_position": False,
+            "error": "Refusing to submit close order without --confirm-okx-close-position",
+        }, 2
+    if not args.position_id:
+        return {"okx_close_position": False, "error": "Missing --position-id"}, 2
+
+    exchange, error = _okx_exchange_from_env()
+    if error:
+        error["okx_close_position"] = False
+        return error, 2
+
+    db = StateDB(args.db)
+    try:
+        position = db.get_position(args.position_id)
+        if not position or position["status"] != "open":
+            return {"okx_close_position": False, "error": "Position is not open"}, 2
+        exchange_positions = exchange.get_positions()
+        reconciliation = db.reconcile_positions(exchange_positions)
+        if not reconciliation.consistent:
+            return {
+                "okx_close_position": False,
+                "sync_consistent": False,
+                "local_only": reconciliation.local_only,
+                "exchange_only": reconciliation.exchange_only,
+            }, 2
+
+        close_direction = "short" if position["direction"] == "long" else "long"
+        fee = position["notional"] * BacktestConfig().taker_fee
+        order = exchange.place_order(
+            position["symbol"],
+            close_direction,
+            position["qty"],
+            order_type="market",
+            price=args.okx_close_price if args.okx_close_price > 0 else position["entry_price"],
+            fee=fee,
+        )
+        local_order_id = db.save_order(
+            position["symbol"],
+            close_direction,
+            position["qty"],
+            price=args.okx_close_price if args.okx_close_price > 0 else position["entry_price"],
+            signal_reason="manual_okx_close_position",
+            risk_decision="close",
+            meta={
+                "action": "close",
+                "position_id": args.position_id,
+                "exit_reason": "manual_okx_close",
+            },
+        )
+        db.update_order_status(local_order_id, order.status, fee=order.fee, exchange_order_id=order.order_id)
+    except ExchangeError as exc:
+        return {"okx_close_position": False, "error": str(exc)}, 1
+    finally:
+        db.close()
+
+    return {
+        "okx_close_position": True,
+        "position_id": args.position_id,
+        "order_id": local_order_id,
+        "exchange_order_id": order.order_id,
+        "status": order.status,
     }, 0
 
 
@@ -489,6 +575,48 @@ def _open_position_for_filled_order(
         leverage=leverage,
     )
     return 1
+
+
+def _close_position_for_filled_order(
+    db: StateDB,
+    order: dict,
+    meta: dict[str, Any],
+    fill_price: float | None,
+    fee: float,
+) -> tuple[int, int]:
+    position_id = meta.get("position_id")
+    if not position_id or fill_price is None:
+        return 0, 0
+    position = db.get_position(position_id)
+    if not position or position["status"] != "open":
+        return 0, 0
+
+    pnl = _pnl_for_position(position, fill_price) - fee
+    pnl_pct = pnl / position["margin"] * 100.0 if position["margin"] else 0.0
+    db.close_position(position_id)
+    db.save_trade(
+        symbol=position["symbol"],
+        direction=position["direction"],
+        entry_price=position["entry_price"],
+        exit_price=fill_price,
+        entry_time=position["opened_at"],
+        exit_time=position["updated_at"],
+        pnl=round(pnl, 8),
+        pnl_pct=round(pnl_pct, 4),
+        exit_reason=meta.get("exit_reason", "okx_close"),
+        order_id=order["id"],
+    )
+    return 1, 1
+
+
+def _pnl_for_position(position: dict, exit_price: float) -> float:
+    entry_price = position["entry_price"]
+    notional = position["notional"]
+    if entry_price <= 0:
+        return 0.0
+    if position["direction"] == "long":
+        return (exit_price - entry_price) / entry_price * notional
+    return (entry_price - exit_price) / entry_price * notional
 
 
 def _first_okx_data(payload: dict[str, Any]) -> dict[str, Any]:
