@@ -289,3 +289,24 @@ def funding_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=Non
     if rate > 0 and bar.rsi >= 36:
         return Signal(symbol, -1, score, "funding", "funding_extreme_short")
     return None
+
+
+def open_interest_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Signal | None:
+    if not getattr(config, "enable_open_interest_module", False):
+        return None
+    if idx < 220:
+        return None
+    bar = bars[idx]
+    oi_change = float(getattr(bar, "open_interest_change_pct", 0.0) or 0.0)
+    min_change = getattr(config, "open_interest_min_change_pct", 0.08)
+    if oi_change < min_change:
+        return None
+    vol_ratio = bar.volume_quote / bar.vol_sma if bar.vol_sma > 0 else 1.0
+    if vol_ratio < getattr(config, "open_interest_min_volume_ratio", 1.05):
+        return None
+    score = 3.25 + min(0.8, oi_change / max(min_change * 3.0, 0.0001)) + min(0.45, vol_ratio / 6.0)
+    if bar.close >= bar.donchian_high * 0.999 and bar.close > bar.ema20 and bar.rsi <= 72:
+        return Signal(symbol, 1, score, "open_interest", "open_interest_breakout_long")
+    if bar.close <= bar.donchian_low * 1.001 and bar.close < bar.ema20 and bar.rsi >= 28:
+        return Signal(symbol, -1, score, "open_interest", "open_interest_breakout_short")
+    return None

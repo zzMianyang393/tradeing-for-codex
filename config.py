@@ -169,6 +169,14 @@ class BacktestConfig:
     funding_take_profit_atr: float = 1.0
     funding_trailing_atr: float = 1.4
     funding_max_hold_bars: int = 12
+    enable_open_interest_module: bool = False
+    open_interest_min_change_pct: float = 0.08
+    open_interest_min_volume_ratio: float = 1.05
+    open_interest_risk_per_trade: float = 0.04
+    open_interest_stop_atr: float = 1.9
+    open_interest_take_profit_atr: float = 1.2
+    open_interest_trailing_atr: float = 1.5
+    open_interest_max_hold_bars: int = 12
     enable_attack_module: bool = False
     attack_min_score: float = 4.5
     attack_risk_per_trade: float = 0.025

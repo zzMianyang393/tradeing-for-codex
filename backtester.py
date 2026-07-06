@@ -14,6 +14,7 @@ from strategy import (
     continuation_signal_for,
     funding_signal_for,
     micro_momentum_signal_for,
+    open_interest_signal_for,
     signal_for,
 )
 from validation import audit_report
@@ -319,6 +320,15 @@ class Backtester:
                         if step < reason_pause_until.get(funding_sig.reason, -1):
                             continue
                         signals.append(funding_sig)
+                    open_interest_sig = open_interest_signal_for(symbol, market[symbol], idx, self.config)
+                    if open_interest_sig and open_interest_sig.score >= self.config.min_score:
+                        if step < direction_pause_until.get(open_interest_sig.direction, -1):
+                            continue
+                        if step < reason_pause_until.get(open_interest_sig.reason, -1):
+                            continue
+                        if self._blocked_by_reversal_risk(open_interest_sig, market[symbol], idx):
+                            continue
+                        signals.append(open_interest_sig)
                 signals.sort(key=lambda sig: sig.score, reverse=True)
                 opened_symbols: set[str] = set()
                 for sig in signals[:slots]:
@@ -581,6 +591,9 @@ class Backtester:
         elif self._is_funding_reason(pos.reason):
             trailing_atr = self.config.funding_trailing_atr
             max_hold_bars = self.config.funding_max_hold_bars
+        elif self._is_open_interest_reason(pos.reason):
+            trailing_atr = self.config.open_interest_trailing_atr
+            max_hold_bars = self.config.open_interest_max_hold_bars
         elif self._is_continuation_reason(pos.reason):
             trailing_atr = self.config.continuation_trailing_atr
             max_hold_bars = self.config.continuation_max_hold_bars
@@ -659,6 +672,10 @@ class Backtester:
     def _is_funding_reason(reason: str) -> bool:
         return reason.startswith("funding_")
 
+    @staticmethod
+    def _is_open_interest_reason(reason: str) -> bool:
+        return reason.startswith("open_interest_")
+
     def _is_adaptive_trend_signal(self, sig: Signal) -> bool:
         return (
             self.config.enable_adaptive_profiles
@@ -684,6 +701,8 @@ class Backtester:
             return self.config.micro_momentum_stop_atr
         if self._is_funding_reason(sig.reason):
             return self.config.funding_stop_atr
+        if self._is_open_interest_reason(sig.reason):
+            return self.config.open_interest_stop_atr
         if self._is_continuation_reason(sig.reason):
             return self.config.continuation_stop_atr
         if self._is_adaptive_trend_signal(sig):
@@ -699,6 +718,8 @@ class Backtester:
             return self.config.micro_momentum_take_profit_atr
         if self._is_funding_reason(sig.reason):
             return self.config.funding_take_profit_atr
+        if self._is_open_interest_reason(sig.reason):
+            return self.config.open_interest_take_profit_atr
         if self._is_continuation_reason(sig.reason):
             return self.config.continuation_take_profit_atr
         if self._is_adaptive_trend_signal(sig):
@@ -721,6 +742,8 @@ class Backtester:
             return self.config.micro_momentum_risk_per_trade
         if self._is_funding_reason(sig.reason):
             return self.config.funding_risk_per_trade
+        if self._is_open_interest_reason(sig.reason):
+            return self.config.open_interest_risk_per_trade
         if self._is_continuation_reason(sig.reason):
             return self.config.continuation_risk_per_trade
         if self._is_adaptive_trend_signal(sig):
@@ -777,7 +800,12 @@ class Backtester:
 
 
 def run_report(data_dir: Path, report_path: Path, config: BacktestConfig) -> dict:
-    market = load_market(data_dir, config.timeframe_minutes, include_funding=config.enable_funding_module)
+    market = load_market(
+        data_dir,
+        config.timeframe_minutes,
+        include_funding=config.enable_funding_module,
+        include_open_interest=config.enable_open_interest_module,
+    )
     if config.allowed_symbols:
         market = {s: bars for s, bars in market.items() if s in config.allowed_symbols}
     if config.excluded_symbols:

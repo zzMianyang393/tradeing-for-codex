@@ -67,20 +67,24 @@ order-book snapshots.
   or directional quote depth is too thin via:
   - `rm_max_order_book_spread_pct`
   - `rm_min_order_book_depth_quote`
+- `open_interest_signal_for` provides an optional, default-off strategy signal
+  for rising-open-interest breakouts and breakdowns.
 
 ## Current Limits
 
 - Funding strategy is available but remains disabled in the default profile
   until it passes rolling-window validation.
-- Open-interest features are not consumed by a strategy yet.
+- Open-interest strategy is available but remains disabled in the default
+  profile until it passes rolling-window validation.
 - Trade-flow features are not consumed by a strategy yet.
 - Order-book features are consumed by RiskManager only when the new limits are
   explicitly configured.
 
 ## Next Step
 
-- Add an open-interest strategy/filter and validate it independently.
 - Add a trade-flow strategy/filter and validate it independently.
 - Validate order-book liquidity/spread limits in simulated execution before
   setting defaults.
+- Run open-interest-module rolling-window validation before enabling it by
+  default.
 - Run funding-module rolling-window validation before enabling it by default.
