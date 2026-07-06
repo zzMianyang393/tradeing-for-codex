@@ -57,6 +57,20 @@ class TestOrders(_DBMixin, unittest.TestCase):
         order = self.db.get_order(oid)
         self.assertIn("score", order["meta"])
 
+    def test_get_active_exchange_orders(self):
+        live_id = self.db.save_order("BTC-USDT-SWAP", "long", 0.1)
+        self.db.update_order_status(live_id, "live", exchange_order_id="okx-live")
+        filled_id = self.db.save_order("ETH-USDT-SWAP", "short", 0.2)
+        self.db.update_order_status(filled_id, "filled", exchange_order_id="okx-filled")
+        local_id = self.db.save_order("SOL-USDT-SWAP", "long", 1.0)
+        self.db.update_order_status(local_id, "live")
+
+        orders = self.db.get_active_exchange_orders()
+
+        self.assertEqual(1, len(orders))
+        self.assertEqual(live_id, orders[0]["id"])
+        self.assertEqual("okx-live", orders[0]["exchange_order_id"])
+
 
 # ── Positions ───────────────────────────────────────────────────────────
 

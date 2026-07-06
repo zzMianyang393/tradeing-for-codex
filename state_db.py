@@ -195,6 +195,13 @@ class StateDB:
         row = self._conn.execute("SELECT * FROM orders WHERE id=?", (order_id,)).fetchone()
         return dict(row) if row else None
 
+    def get_active_exchange_orders(self) -> list[dict]:
+        rows = self._conn.execute(
+            "SELECT * FROM orders WHERE exchange_order_id IS NOT NULL "
+            "AND status IN ('live', 'pending', 'partially_filled') ORDER BY created_at"
+        ).fetchall()
+        return [dict(row) for row in rows]
+
     # ------------------------------------------------------------------
     # Positions
     # ------------------------------------------------------------------

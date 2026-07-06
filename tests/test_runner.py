@@ -498,6 +498,124 @@ class TestRunnerCli(unittest.TestCase):
             finally:
                 db.close()
 
+    def test_okx_sync_orders_returns_error_when_credentials_are_missing(self):
+        output = io.StringIO()
+        env = {
+            "OKX_API_KEY": "",
+            "OKX_API_SECRET": "",
+            "OKX_API_PASSPHRASE": "",
+        }
+
+        with patch.dict(os.environ, env, clear=False), contextlib.redirect_stdout(output):
+            code = main(["--okx-sync-orders"])
+
+        self.assertEqual(2, code)
+        payload = json.loads(output.getvalue())
+        self.assertIn("OKX_API_KEY", payload["error"])
+
+    def test_okx_sync_orders_updates_live_order_to_filled_and_opens_position(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                order_id = db.save_order(
+                    "BTC-USDT-SWAP",
+                    "long",
+                    0.0002,
+                    price=50000.0,
+                    meta={"notional": 10.0, "margin": 1.0, "leverage": 10.0},
+                )
+                db.update_order_status(order_id, "live", exchange_order_id="okx-live-1")
+            finally:
+                db.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_order_status.return_value = {
+                "code": "0",
+                "data": [
+                    {
+                        "ordId": "okx-live-1",
+                        "state": "filled",
+                        "avgPx": "50010",
+                        "accFillSz": "0.0002",
+                        "fee": "0.0005",
+                    }
+                ],
+            }
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange) as cls:
+                with contextlib.redirect_stdout(output):
+                    code = main(["--okx-sync-orders", "--db", str(db_path)])
+
+            self.assertEqual(0, code)
+            cls.assert_called_once_with("key", "secret", "passphrase", sandbox=True)
+            fake_exchange.get_order_status.assert_called_once_with("BTC-USDT-SWAP", "okx-live-1")
+            payload = json.loads(output.getvalue())
+            self.assertEqual(1, payload["checked_orders"])
+            self.assertEqual(1, payload["filled_orders"])
+            self.assertEqual(1, payload["opened_positions"])
+            db = StateDB(db_path)
+            try:
+                order = db.get_order(order_id)
+                self.assertEqual("filled", order["status"])
+                self.assertEqual(50010.0, order["fill_price"])
+                positions = db.get_open_positions()
+                self.assertEqual(1, len(positions))
+                self.assertEqual("BTC-USDT-SWAP", positions[0]["symbol"])
+                self.assertEqual("long", positions[0]["direction"])
+                self.assertEqual(10.0, positions[0]["notional"])
+                self.assertEqual(1.0, positions[0]["margin"])
+            finally:
+                db.close()
+
+    def test_okx_sync_orders_keeps_live_order_without_opening_position(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                order_id = db.save_order(
+                    "BTC-USDT-SWAP",
+                    "long",
+                    0.0002,
+                    price=50000.0,
+                    meta={"notional": 10.0, "margin": 1.0, "leverage": 10.0},
+                )
+                db.update_order_status(order_id, "live", exchange_order_id="okx-live-1")
+            finally:
+                db.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_order_status.return_value = {
+                "code": "0",
+                "data": [{"ordId": "okx-live-1", "state": "live"}],
+            }
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+                with contextlib.redirect_stdout(output):
+                    code = main(["--okx-sync-orders", "--db", str(db_path)])
+
+            self.assertEqual(0, code)
+            payload = json.loads(output.getvalue())
+            self.assertEqual(1, payload["checked_orders"])
+            self.assertEqual(0, payload["filled_orders"])
+            db = StateDB(db_path)
+            try:
+                order = db.get_order(order_id)
+                self.assertEqual("live", order["status"])
+                self.assertEqual([], db.get_open_positions())
+            finally:
+                db.close()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -5,6 +5,7 @@ import json
 import os
 import time
 from dataclasses import asdict, dataclass, field
+from typing import Any
 from pathlib import Path
 
 from config import BacktestConfig
@@ -102,6 +103,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--okx-check", action="store_true", help="Check OKX simulated account, ticker, and positions")
     mode.add_argument("--okx-smoke-order", action="store_true", help="Place then cancel one OKX simulated limit order")
     mode.add_argument("--okx-submit-signal", action="store_true", help="Submit one risk-checked signal to OKX simulated trading")
+    mode.add_argument("--okx-sync-orders", action="store_true", help="Sync local live orders from OKX simulated trading")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
@@ -142,6 +144,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.okx_submit_signal:
         payload, code = _okx_submit_signal_payload(args)
+        _print_json(payload)
+        return code
+
+    if args.okx_sync_orders:
+        payload, code = _okx_sync_orders_payload(args.db)
         _print_json(payload)
         return code
 
@@ -396,6 +403,118 @@ def _okx_submit_signal_payload(args: argparse.Namespace) -> tuple[dict, int]:
         }, 0 if result.accepted else 2
     finally:
         db.close()
+
+
+def _okx_sync_orders_payload(db_path: Path) -> tuple[dict, int]:
+    exchange, error = _okx_exchange_from_env()
+    if error:
+        error["okx_sync_orders"] = False
+        return error, 2
+
+    db = StateDB(db_path)
+    checked = 0
+    updated = 0
+    filled = 0
+    canceled = 0
+    opened_positions = 0
+    details = []
+    try:
+        for order in db.get_active_exchange_orders():
+            checked += 1
+            exchange_order_id = order["exchange_order_id"]
+            try:
+                payload = exchange.get_order_status(order["symbol"], exchange_order_id)
+            except ExchangeError as exc:
+                return {"okx_sync_orders": False, "error": str(exc), "checked_orders": checked}, 1
+            data = _first_okx_data(payload)
+            status = _okx_order_state(data)
+            fill_price = _optional_float(data.get("avgPx"))
+            fill_qty = _optional_float(data.get("accFillSz"))
+            fee = abs(_optional_float(data.get("fee")) or 0.0)
+            db.update_order_status(
+                order["id"],
+                status,
+                fill_price=fill_price,
+                fill_qty=fill_qty,
+                fee=fee,
+                exchange_order_id=exchange_order_id,
+            )
+            updated += 1
+            if status == "filled":
+                filled += 1
+                opened_positions += _open_position_for_filled_order(db, order, fill_price, fill_qty)
+            elif status == "canceled":
+                canceled += 1
+            details.append(
+                {
+                    "order_id": order["id"],
+                    "exchange_order_id": exchange_order_id,
+                    "symbol": order["symbol"],
+                    "status": status,
+                }
+            )
+    finally:
+        db.close()
+
+    return {
+        "okx_sync_orders": True,
+        "checked_orders": checked,
+        "updated_orders": updated,
+        "filled_orders": filled,
+        "canceled_orders": canceled,
+        "opened_positions": opened_positions,
+        "orders": details,
+    }, 0
+
+
+def _open_position_for_filled_order(
+    db: StateDB,
+    order: dict,
+    fill_price: float | None,
+    fill_qty: float | None,
+) -> int:
+    if fill_price is None or fill_qty is None or fill_qty <= 0:
+        return 0
+    meta = _json_dict(order.get("meta"))
+    notional = float(meta.get("notional") or (fill_price * fill_qty))
+    margin = float(meta.get("margin") or notional)
+    leverage = float(meta.get("leverage") or (notional / margin if margin else 1.0))
+    db.save_position(
+        order["symbol"],
+        order["direction"],
+        entry_price=fill_price,
+        qty=fill_qty,
+        notional=notional,
+        margin=margin,
+        leverage=leverage,
+    )
+    return 1
+
+
+def _first_okx_data(payload: dict[str, Any]) -> dict[str, Any]:
+    data = payload.get("data") or []
+    return data[0] if data else {}
+
+
+def _okx_order_state(data: dict[str, Any]) -> str:
+    state = data.get("state") or ""
+    if state in ("filled", "canceled", "partially_filled", "live"):
+        return state
+    return "live"
+
+
+def _optional_float(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    return float(value)
+
+
+def _json_dict(value: Any) -> dict[str, Any]:
+    if not value:
+        return {}
+    if isinstance(value, dict):
+        return value
+    return json.loads(value)
 
 
 def _okx_exchange_from_env() -> tuple[OKXExchange | None, dict | None]:
