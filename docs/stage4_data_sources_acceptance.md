@@ -1,7 +1,7 @@
 # Stage 4 Data Sources Acceptance
 
 Stage 4 expands research inputs beyond OHLCV K lines. The first implemented
-sources are OKX funding-rate history and open-interest history.
+sources are OKX funding-rate history, open-interest history, and trade flow.
 
 ## Implemented
 
@@ -32,15 +32,31 @@ sources are OKX funding-rate history and open-interest history.
   - `open_interest_ma`
 - `load_market(..., include_open_interest=True)` attaches cached open-interest
   features when a matching `<symbol>_open_interest.csv` file exists.
+- `trade_flow.py` defines a `TradeTick` data model.
+- OKX historical trade rows can be parsed into stable local records with
+  active buy/sell side and quote volume.
+- Trade ticks can be saved to and loaded from CSV cache files.
+- `trade_flow.py --symbols ... --out ...` downloads historical trade rows with
+  CSV merge behavior.
+- `add_trade_flow_features` returns `TradeFlowFeatureBar` values that preserve
+  all existing `FeatureBar` fields and add:
+  - `active_buy_quote`
+  - `active_sell_quote`
+  - `active_buy_ratio`
+  - `trade_flow_imbalance`
+- `load_market(..., include_trade_flow=True)` attaches cached trade-flow
+  features when a matching `<symbol>_trades.csv` file exists.
 
 ## Current Limits
 
 - Funding strategy is available but remains disabled in the default profile
   until it passes rolling-window validation.
 - Open-interest features are not consumed by a strategy yet.
+- Trade-flow features are not consumed by a strategy yet.
 
 ## Next Step
 
-- Add trades and order book data sources.
+- Add order book data source.
 - Add an open-interest strategy/filter and validate it independently.
+- Add a trade-flow strategy/filter and validate it independently.
 - Run funding-module rolling-window validation before enabling it by default.

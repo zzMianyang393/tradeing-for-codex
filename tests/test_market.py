@@ -74,6 +74,32 @@ class MarketLoaderTests(unittest.TestCase):
             self.assertAlmostEqual(120.0, bars[-1].open_interest)
             self.assertAlmostEqual(0.2, bars[-1].open_interest_change_pct)
 
+    def test_load_market_can_attach_trade_flow_features(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            price_path = data_dir / "BTC_15m.csv"
+            trades_path = data_dir / "BTC-USDT-SWAP_trades.csv"
+            with price_path.open("w", encoding="utf-8", newline="") as fh:
+                writer = csv.writer(fh)
+                writer.writerow(["timestamp", "open", "high", "low", "close", "volume"])
+                for i in range(4):
+                    ts = 1_704_067_200_000 + i * 15 * 60_000
+                    writer.writerow([ts, 100, 101, 99, 100, 10])
+            with trades_path.open("w", encoding="utf-8", newline="") as fh:
+                writer = csv.writer(fh)
+                writer.writerow(["symbol", "trade_id", "timestamp_ms", "timestamp_utc", "side", "price", "size", "quote_volume"])
+                writer.writerow(["BTC-USDT-SWAP", "1", 1_704_067_200_000, "2024-01-01 00:00:00", "buy", "100", "2", "200"])
+                writer.writerow(["BTC-USDT-SWAP", "2", 1_704_067_200_000 + 10 * 60_000, "2024-01-01 00:10:00", "sell", "100", "1", "100"])
+
+            market = load_market(data_dir, 15, include_trade_flow=True)
+
+            bars = market["BTC-USDT-SWAP"]
+            self.assertTrue(hasattr(bars[0], "active_buy_quote"))
+            self.assertAlmostEqual(200.0, bars[0].active_buy_quote)
+            self.assertAlmostEqual(100.0, bars[0].active_sell_quote)
+            self.assertAlmostEqual(2.0 / 3.0, bars[0].active_buy_ratio)
+            self.assertAlmostEqual(1.0 / 3.0, bars[0].trade_flow_imbalance)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -235,6 +235,7 @@ def load_market(
     timeframe_minutes: int,
     include_funding: bool = False,
     include_open_interest: bool = False,
+    include_trade_flow: bool = False,
 ) -> dict[str, list[FeatureBar]]:
     market: dict[str, list[FeatureBar]] = {}
     for symbol in discover_symbols(data_dir):
@@ -268,6 +269,12 @@ def load_market(
             open_interest_path = open_interest_output_path(symbol, data_dir)
             if open_interest_path.exists():
                 features = add_open_interest_features(features, load_open_interest(open_interest_path))
+        if include_trade_flow:
+            from trade_flow import add_trade_flow_features, load_trade_ticks, trade_ticks_output_path
+
+            trade_ticks_path = trade_ticks_output_path(symbol, data_dir)
+            if trade_ticks_path.exists():
+                features = add_trade_flow_features(features, load_trade_ticks(trade_ticks_path))
         if features:
             market[symbol] = features
     return market
