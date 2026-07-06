@@ -22,7 +22,20 @@ def build_dashboard_payload(db_path: Path) -> dict[str, Any]:
                 "available_margin": latest.get("available_margin", 0.0),
                 "used_margin": latest.get("used_margin", 0.0),
                 "open_positions": latest.get("open_positions", len(db.get_open_positions())),
+                "daily_pnl": latest.get("daily_pnl"),
+                "weekly_pnl": latest.get("weekly_pnl"),
+                "risk_status": latest.get("risk_status"),
             },
+            "equity_series": [
+                {
+                    "ts": row.get("ts", ""),
+                    "equity": row.get("equity", 0.0),
+                    "available_margin": row.get("available_margin", 0.0),
+                    "used_margin": row.get("used_margin", 0.0),
+                    "open_positions": row.get("open_positions", 0),
+                }
+                for row in history[-120:]
+            ],
             "trade_summary": db.trade_summary(),
             "positions": db.get_open_positions(),
             "recent_trades": db.get_recent_trades(12),
@@ -46,6 +59,7 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
     alerts = payload.get("alerts", [])
     health = payload.get("health", {})
     status = str(health.get("status", "unknown"))
+    dashboard_json = safe_json(payload)
 
     return f"""<!doctype html>
 <html lang="en">
@@ -62,7 +76,7 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
       --border: #29292d;
       --text: #f4f4f5;
       --muted: #a1a1aa;
-      --primary: #5e6ad2;
+      --primary: #7c8cff;
       --success: #27b074;
       --warning: #f36d40;
     }}
@@ -107,15 +121,61 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
       overflow: hidden;
       border: 1px solid var(--border);
       border-radius: 8px;
-      background:
-        radial-gradient(800px circle at 20% -10%, rgba(94, 106, 210, 0.12), transparent 35%),
-        var(--surface);
+      background: var(--surface);
       box-shadow: 0 16px 50px rgba(0, 0, 0, 0.25);
     }}
     .card-inner {{ padding: 16px; }}
+    .section-head {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }}
     .metric-label {{ color: var(--muted); font-size: 12px; }}
     .metric-value {{ margin-top: 8px; font-size: 26px; font-weight: 700; }}
     .metric-sub {{ margin-top: 4px; color: var(--muted); font-size: 12px; }}
+    .toolbar {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }}
+    .segmented {{
+      display: inline-flex;
+      min-height: 36px;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }}
+    button {{
+      min-height: 28px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }}
+    button.active {{ background: var(--surface-2); color: var(--text); }}
+    input {{
+      width: min(360px, 100%);
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+    }}
+    .chart-wrap {{ width: 100%; min-height: 260px; }}
+    canvas {{ display: block; width: 100%; height: 240px; }}
     table {{ width: 100%; border-collapse: collapse; table-layout: fixed; }}
     th, td {{
       padding: 11px 10px;
@@ -145,6 +205,7 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
     .alert {{ color: var(--warning); }}
     .positive {{ color: var(--success); }}
     .negative {{ color: var(--warning); }}
+    [data-view][hidden] {{ display: none; }}
     @media (max-width: 960px) {{
       .shell {{ padding: 16px; }}
       header {{ align-items: flex-start; flex-direction: column; }}
@@ -158,7 +219,7 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
       <div>
         <h1>Trading Dashboard</h1>
       </div>
-      <div class="status">Health: {e(status)} · {e(health.get("issue_count", 0))} issues</div>
+      <div class="status">Health: {e(status)} &middot; {e(health.get("issue_count", 0))} issues</div>
     </header>
 
     <section class="grid metrics">
@@ -168,18 +229,95 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
       {metric_card("Open Positions", account.get("open_positions", 0), "Local account view")}
     </section>
 
+    {chart_card()}
+
+    <section class="toolbar">
+      <div class="segmented" role="tablist" aria-label="Dashboard views">
+        <button type="button" class="active" data-view-button="positions">Positions</button>
+        <button type="button" data-view-button="trades">Trades</button>
+        <button type="button" data-view-button="alerts">Alerts</button>
+      </div>
+      <input id="table-search" type="search" placeholder="Filter visible rows" autocomplete="off">
+    </section>
+
     <section class="grid main">
-      <div class="stack">
+      <div class="stack" data-view="positions">
         {table_card("Open Positions", ["Symbol", "Side", "Notional", "Margin"], [_position_row(p) for p in positions])}
+      </div>
+      <div class="stack" data-view="trades" hidden>
         {table_card("Recent Trades", ["Symbol", "Side", "PnL", "Exit"], [_trade_row(t) for t in trades])}
       </div>
-      <div class="stack">
+      <div class="stack" data-view="alerts" hidden>
         {summary_card(trade_summary)}
         {table_card("Health Alerts", ["Severity", "Kind", "Message"], [_alert_row(a) for a in alerts])}
         {table_card("Risk Events", ["Type", "Detail"], [_risk_row(r) for r in risk_events])}
       </div>
     </section>
   </div>
+  <script id="dashboard-data" type="application/json">{dashboard_json}</script>
+  <script>
+    const dashboardData = JSON.parse(document.getElementById("dashboard-data").textContent);
+    const search = document.getElementById("table-search");
+
+    function setView(name) {{
+      document.querySelectorAll("[data-view]").forEach((section) => {{
+        section.hidden = section.dataset.view !== name;
+      }});
+      document.querySelectorAll("[data-view-button]").forEach((button) => {{
+        button.classList.toggle("active", button.dataset.viewButton === name);
+      }});
+      filterVisibleRows();
+    }}
+
+    function filterVisibleRows() {{
+      const query = (search.value || "").toLowerCase();
+      document.querySelectorAll("[data-view]:not([hidden]) tbody tr").forEach((row) => {{
+        row.hidden = query.length > 0 && !row.textContent.toLowerCase().includes(query);
+      }});
+    }}
+
+    function drawEquityChart() {{
+      const canvas = document.getElementById("equity-chart");
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      const ctx = canvas.getContext("2d");
+      ctx.scale(ratio, ratio);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      const points = (dashboardData.equity_series || []).filter((point) => Number.isFinite(Number(point.equity)));
+      if (points.length === 0) return;
+      const values = points.map((point) => Number(point.equity));
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const span = Math.max(0.0001, max - min);
+      const pad = 18;
+      ctx.strokeStyle = "#29292d";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, rect.height - pad);
+      ctx.lineTo(rect.width - pad, rect.height - pad);
+      ctx.stroke();
+      ctx.strokeStyle = "#7c8cff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      values.forEach((value, index) => {{
+        const x = pad + (points.length === 1 ? 0 : index * (rect.width - pad * 2) / (points.length - 1));
+        const y = rect.height - pad - ((value - min) / span) * (rect.height - pad * 2);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }});
+      ctx.stroke();
+    }}
+
+    document.querySelectorAll("[data-view-button]").forEach((button) => {{
+      button.addEventListener("click", () => setView(button.dataset.viewButton));
+    }});
+    search.addEventListener("input", filterVisibleRows);
+    window.addEventListener("resize", drawEquityChart);
+    drawEquityChart();
+  </script>
 </body>
 </html>
 """
@@ -204,8 +342,20 @@ def summary_card(summary: dict[str, Any]) -> str:
     return f"""<article class="card"><div class="card-inner">
       <h2>Trade Summary</h2>
       <div class="metric-value">{e(summary.get("total", 0))} trades</div>
-      <div class="metric-sub">Win rate {pct(summary.get("win_rate", 0.0))} · Total PnL {money(summary.get("total_pnl", 0.0))}</div>
+      <div class="metric-sub">Win rate {pct(summary.get("win_rate", 0.0))} &middot; Total PnL {money(summary.get("total_pnl", 0.0))}</div>
     </div></article>"""
+
+
+def chart_card() -> str:
+    return """<section class="grid">
+      <article class="card"><div class="card-inner">
+        <div class="section-head">
+          <h2>Equity Curve</h2>
+          <span class="pill">Local SQLite state</span>
+        </div>
+        <div class="chart-wrap"><canvas id="equity-chart" aria-label="Equity curve"></canvas></div>
+      </div></article>
+    </section>"""
 
 
 def table_card(title: str, headers: list[str], rows: list[list[Any]]) -> str:
@@ -253,6 +403,10 @@ def _risk_row(event: dict[str, Any]) -> list[str]:
 
 def e(value: Any) -> str:
     return html.escape(str(value))
+
+
+def safe_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
 
 def money(value: Any) -> str:

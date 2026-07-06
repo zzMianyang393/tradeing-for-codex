@@ -117,7 +117,9 @@ python dashboard.py --db reports\dry_run_state.db --out reports\dashboard.html
 ```
 
 Open `reports\dashboard.html` in a browser to review account snapshots, open
-positions, recent trades, risk events, and health alerts.
+positions, recent trades, risk events, and health alerts. The page includes a
+local equity curve, view switching, and table filtering without requiring a
+server.
 
 ## Outputs
 

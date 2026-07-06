@@ -15,6 +15,7 @@ class TestDashboard(unittest.TestCase):
             db = StateDB(db_path)
             try:
                 db.snapshot_account(equity=101.5, available_margin=90.0, used_margin=11.5, open_positions=1)
+                db.snapshot_account(equity=103.0, available_margin=91.0, used_margin=12.0, open_positions=1)
                 db.save_position("BTC-USDT-SWAP", "long", 50000.0, 0.001, 50.0, 5.0, 10.0)
                 db.save_trade(
                     "BTC-USDT-SWAP",
@@ -35,8 +36,10 @@ class TestDashboard(unittest.TestCase):
 
             payload = build_dashboard_payload(db_path)
 
-        self.assertEqual(101.5, payload["account"]["equity"])
+        self.assertEqual(103.0, payload["account"]["equity"])
         self.assertEqual(1, payload["account"]["open_positions"])
+        self.assertEqual(2, len(payload["equity_series"]))
+        self.assertEqual(103.0, payload["equity_series"][-1]["equity"])
         self.assertEqual("critical", payload["health"]["status"])
         self.assertEqual(1, len(payload["positions"]))
         self.assertEqual(1, payload["trade_summary"]["total"])
@@ -51,6 +54,10 @@ class TestDashboard(unittest.TestCase):
             "risk_events": [{"event_type": "reject", "detail": "{\"reason\":\"volatility\"}"}],
             "alerts": [{"severity": "critical", "kind": "api_failure", "message": "Exchange unavailable"}],
             "health": {"status": "critical", "issue_count": 1},
+            "equity_series": [
+                {"ts": "2026-07-06 10:00:00", "equity": 100.0},
+                {"ts": "2026-07-06 11:00:00", "equity": 101.2},
+            ],
         }
 
         html = render_dashboard_html(payload)
@@ -59,6 +66,28 @@ class TestDashboard(unittest.TestCase):
         self.assertIn("BTC-USDT-SWAP", html)
         self.assertIn("ETH-USDT-SWAP", html)
         self.assertIn("api_failure", html)
+        self.assertIn("id=\"dashboard-data\"", html)
+        self.assertIn("id=\"equity-chart\"", html)
+        self.assertIn("id=\"table-search\"", html)
+        self.assertIn("data-view-button=\"positions\"", html)
+        self.assertIn("function setView", html)
+
+    def test_render_dashboard_json_payload_escapes_script_closers(self):
+        payload = {
+            "account": {},
+            "trade_summary": {},
+            "positions": [],
+            "recent_trades": [],
+            "risk_events": [],
+            "alerts": [{"severity": "critical", "kind": "xss", "message": "</script><script>alert(1)</script>"}],
+            "health": {},
+            "equity_series": [],
+        }
+
+        html = render_dashboard_html(payload)
+
+        self.assertIn("id=\"dashboard-data\"", html)
+        self.assertNotIn("</script><script>alert(1)</script>", html)
 
     def test_write_dashboard_creates_html_file(self):
         with tempfile.TemporaryDirectory() as tmp:
