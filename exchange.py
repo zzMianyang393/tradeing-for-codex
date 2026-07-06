@@ -4,45 +4,109 @@ import base64
 import hashlib
 import hmac
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
-@dataclass(frozen=True)
+@dataclass
 class OrderResult:
-    order_id: str
-    symbol: str
-    direction: str
-    qty: float
-    status: str
+    order_id: str = ""
+    symbol: str = ""
+    direction: str = ""
+    qty: float = 0.0
+    status: str = ""
     fill_price: float | None = None
     fill_qty: float | None = None
     fee: float = 0.0
     reason: str = ""
+    success: bool = False
+    client_order_id: str = ""
+    error_code: str = ""
+    error_message: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.success and self.status in ("filled", "live", "pending", "partially_filled"):
+            self.success = True
 
 
-@dataclass(frozen=True)
+@dataclass
 class AccountInfo:
-    equity: float
-    available_margin: float
-    used_margin: float
-    raw: dict[str, Any]
+    equity: float = 0.0
+    available_margin: float = 0.0
+    used_margin: float = 0.0
+    raw: dict[str, Any] = field(default_factory=dict)
+    total_equity: float = 0.0
+    available_balance: float = 0.0
+    unrealized_pnl: float = 0.0
+    currency: str = "USDT"
+
+    def __post_init__(self) -> None:
+        if self.total_equity and not self.equity:
+            self.equity = self.total_equity
+        if self.equity and not self.total_equity:
+            self.total_equity = self.equity
+        if self.available_balance and not self.available_margin:
+            self.available_margin = self.available_balance
+        if self.available_margin and not self.available_balance:
+            self.available_balance = self.available_margin
 
 
-@dataclass(frozen=True)
+@dataclass
+class PositionInfo:
+    symbol: str = ""
+    direction: str = ""
+    entry_price: float = 0.0
+    current_price: float = 0.0
+    qty: float = 0.0
+    notional: float = 0.0
+    margin: float = 0.0
+    leverage: float = 1.0
+    unrealized_pnl: float = 0.0
+    liquidation_price: float = 0.0
+    margin_mode: str = "cross"
+
+
+@dataclass
 class Ticker:
-    symbol: str
-    last: float
+    symbol: str = ""
+    last: float = 0.0
     bid: float | None = None
     ask: float | None = None
     raw: dict[str, Any] | None = None
+    high_24h: float = 0.0
+    low_24h: float = 0.0
+    volume_24h: float = 0.0
+    timestamp: int = 0
+
+
+@dataclass
+class OrderStatus:
+    order_id: str = ""
+    symbol: str = ""
+    status: str = ""
+    side: str = ""
+    order_type: str = ""
+    price: float = 0.0
+    qty: float = 0.0
+    filled_qty: float = 0.0
+    filled_price: float = 0.0
+    fee: float = 0.0
+    created_at: str = ""
+    updated_at: str = ""
 
 
 class ExchangeError(RuntimeError):
     pass
+
+
+class OKXAPIError(ExchangeError):
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.message = message
+        super().__init__(f"OKX API error {code}: {message}")
 
 
 Transport = Callable[[str, str, dict[str, str], str | None], Any]
@@ -206,7 +270,7 @@ class OKXExchange:
             headers["x-simulated-trading"] = "1"
         return headers
 
-    def _sign(self, timestamp: str, method: str, path: str, body: str) -> str:
+    def _sign(self, timestamp: str, method: str, path: str, body: str = "") -> str:
         message = f"{timestamp}{method.upper()}{path}{body}".encode("utf-8")
         digest = hmac.new(self.secret.encode("utf-8"), message, hashlib.sha256).digest()
         return base64.b64encode(digest).decode("ascii")

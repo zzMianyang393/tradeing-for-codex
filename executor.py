@@ -54,23 +54,47 @@ class ExecutionRequest:
         )
 
 
-@dataclass(frozen=True)
+@dataclass
 class ExecutionResult:
-    accepted: bool
-    status: str
+    accepted: bool = False
+    status: str = ""
     reason: str = ""
     order_id: str | None = None
     position_id: str | None = None
     fill_price: float | None = None
     fill_qty: float | None = None
+    success: bool | None = None
+    symbol: str = ""
+    direction: str = ""
+    notional: float = 0.0
+    margin: float = 0.0
+    error: str = ""
+    risk_decision: str = ""
+
+    def __post_init__(self) -> None:
+        if self.success is None:
+            self.success = self.accepted
+        else:
+            self.accepted = self.success
+        if self.error and not self.reason:
+            self.reason = self.error
 
 
-@dataclass(frozen=True)
+@dataclass
 class SyncResult:
-    consistent: bool
-    local_only: list[dict]
-    exchange_only: list[dict]
-    matches: list[dict]
+    consistent: bool = True
+    local_only: list[dict] | None = None
+    exchange_only: list[dict] | None = None
+    matches: list[dict] | None = None
+    details: str = ""
+
+    @property
+    def local_only_count(self) -> int:
+        return len(self.local_only or [])
+
+    @property
+    def exchange_only_count(self) -> int:
+        return len(self.exchange_only or [])
 
 
 @dataclass(frozen=True)
@@ -92,20 +116,27 @@ class Executor:
         risk_manager: RiskManager,
         state_db: StateDB,
         config: BacktestConfig,
+        dry_run: bool = False,
     ) -> None:
         self.exchange = exchange
         self.risk_manager = risk_manager
         self.state_db = state_db
         self.config = config
+        self.dry_run = dry_run
 
     def execute_signal(
         self,
-        request: ExecutionRequest,
-        equity: float,
-        current_step: int,
-        bars: list[FeatureBar],
-        idx: int,
+        request: ExecutionRequest | Signal,
+        equity: float | None = None,
+        current_step: int = 0,
+        bars: list[FeatureBar] | None = None,
+        idx: int = 0,
     ) -> ExecutionResult:
+        if not isinstance(request, ExecutionRequest):
+            return self._execute_signal_object(request, bars or [], idx)
+        if equity is None:
+            equity = 0.0
+        bars = bars or []
         current_margin = sum(position["margin"] for position in self.state_db.get_open_positions())
         decision = self.risk_manager.check_order(
             request.symbol,
@@ -183,7 +214,7 @@ class Executor:
             fill_qty=fill.fill_qty,
         )
 
-    def sync_state(self, current_step: int) -> SyncResult:
+    def sync_state(self, current_step: int = 0) -> SyncResult:
         reconciliation = self.state_db.reconcile_positions(self.exchange.get_positions())
         result = _sync_result_from_reconcile(reconciliation)
         if not result.consistent:
@@ -242,6 +273,80 @@ class Executor:
                 )
             )
         return actions
+
+    def _execute_signal_object(self, signal: Signal, bars: list[FeatureBar], idx: int) -> ExecutionResult:
+        symbol = signal.symbol
+        try:
+            ticker = self.exchange.get_ticker(symbol)
+            current_price = ticker.last
+            account = self.exchange.get_account_balance()
+            equity = getattr(account, "equity", 0.0) or getattr(account, "total_equity", 0.0)
+        except Exception as exc:
+            return ExecutionResult(False, "error", error=str(exc), symbol=symbol)
+
+        leverage = 1.0
+        risk = self.config.leverage_caps.get(symbol)
+        if risk is not None:
+            leverage = min(float(risk.max_leverage), 10.0)
+        notional = equity * self.config.risk_per_trade * leverage
+        margin = notional / leverage if leverage else notional
+        decision = self.risk_manager.check_order(
+            symbol,
+            signal.direction,
+            notional,
+            margin,
+            equity,
+            idx,
+            bars,
+            idx,
+        )
+        if not decision.allowed:
+            return ExecutionResult(
+                False,
+                "rejected",
+                error=f"Risk rejected: {decision.reason}",
+                symbol=symbol,
+                risk_decision=decision.reason,
+            )
+
+        direction = "long" if signal.direction > 0 else "short"
+        if self.dry_run:
+            return ExecutionResult(
+                True,
+                "dry_run",
+                symbol=symbol,
+                direction=direction,
+                notional=notional,
+                margin=margin,
+                fill_price=current_price,
+                risk_decision=decision.reason,
+            )
+
+        qty = notional / current_price if current_price > 0 else 0.0
+        fill = self.exchange.place_order(symbol, direction, qty, order_type="market", price=current_price)
+        order_id = ""
+        if self.state_db is not None:
+            order_id = self.state_db.save_order(
+                symbol,
+                direction,
+                qty,
+                price=current_price,
+                signal_reason=getattr(signal, "reason", ""),
+                risk_decision=decision.reason,
+            )
+        accepted = bool(getattr(fill, "success", False) or getattr(fill, "status", "") in ("filled", "live", "pending"))
+        return ExecutionResult(
+            accepted,
+            getattr(fill, "status", "live" if accepted else "failed"),
+            order_id=getattr(fill, "order_id", "") or order_id,
+            symbol=symbol,
+            direction=direction,
+            notional=notional,
+            margin=margin,
+            fill_price=current_price,
+            error=getattr(fill, "error_message", ""),
+            risk_decision=decision.reason,
+        )
 
 
 def _direction_label(direction: int) -> str:

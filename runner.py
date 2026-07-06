@@ -27,12 +27,18 @@ class RunInput:
 
 @dataclass(frozen=True)
 class RunReport:
-    executed_orders: int
-    rejected_orders: int
-    closed_positions: int
-    open_positions: int
-    sync_consistent: bool
-    risk_status: dict
+    executed_orders: int = 0
+    rejected_orders: int = 0
+    closed_positions: int = 0
+    open_positions: int = 0
+    sync_consistent: bool = True
+    risk_status: dict | str = field(default_factory=dict)
+    timestamp: str = ""
+    equity: float = 0.0
+    signals_generated: int = 0
+    orders_placed: int = 0
+    orders_rejected: int = 0
+    errors: list[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -47,12 +53,36 @@ class TradingRunner:
     same cycle can later be wired to a real exchange adapter.
     """
 
-    def __init__(self, config: BacktestConfig, executor: Executor, state_db: StateDB) -> None:
+    def __init__(
+        self,
+        config: BacktestConfig,
+        executor: Executor,
+        state_db: StateDB | None = None,
+        exchange: DryRunExchange | OKXExchange | None = None,
+        symbols: list[str] | None = None,
+        dry_run: bool = False,
+    ) -> None:
         self.config = config
         self.executor = executor
         self.state_db = state_db
+        self.exchange = exchange if exchange is not None else executor.exchange
+        self.symbols = symbols or []
+        self.dry_run = dry_run
 
-    def run_once(self, run_input: RunInput) -> RunReport:
+    def run_once(self, run_input: RunInput | None = None) -> RunReport:
+        if run_input is None:
+            account = self.exchange.get_account_balance()
+            positions = self.exchange.get_positions()
+            risk_status = {}
+            if getattr(self.executor, "risk_manager", None) is not None:
+                risk_status = asdict(self.executor.risk_manager.get_status())
+            return RunReport(
+                open_positions=len(positions),
+                risk_status=risk_status,
+                equity=getattr(account, "equity", 0.0) or getattr(account, "total_equity", 0.0),
+            )
+        if self.state_db is None:
+            return RunReport(errors=["state_db is required for RunInput execution"])
         closed = self.executor.manage_positions(run_input.current_prices, run_input.current_step)
         executed_orders = 0
         rejected_orders = 0
@@ -92,6 +122,21 @@ class TradingRunner:
             sync_consistent=sync.consistent,
             risk_status=risk_status,
         )
+
+    def run_loop(self, interval_seconds: int = 900) -> None:
+        while True:
+            self.run_once(
+                RunInput(
+                    equity=0.0,
+                    current_step=0,
+                    current_prices={},
+                    bars_by_symbol={},
+                )
+            )
+            time.sleep(interval_seconds)
+
+    def stop(self) -> None:
+        return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -256,6 +301,30 @@ def _build_components(db_path: Path) -> tuple[BacktestConfig, DryRunExchange, Ri
     db = StateDB(db_path)
     executor = Executor(exchange, risk_manager, db, config)
     return config, exchange, risk_manager, db, executor
+
+
+def create_runner(
+    config: BacktestConfig,
+    api_key: str = "",
+    secret: str = "",
+    passphrase: str = "",
+    sandbox: bool = True,
+    dry_run: bool = False,
+    symbols: list[str] | None = None,
+    db_path: str | None = None,
+) -> TradingRunner:
+    exchange = OKXExchange(api_key, secret, passphrase, sandbox=sandbox)
+    risk_manager = RiskManager(config)
+    db = StateDB(Path(db_path)) if db_path else None
+    executor = Executor(exchange, risk_manager, db, config, dry_run=dry_run)
+    return TradingRunner(
+        config=config,
+        executor=executor,
+        state_db=db,
+        exchange=exchange,
+        symbols=symbols or [],
+        dry_run=dry_run,
+    )
 
 
 def _status_payload(db: StateDB) -> dict:
