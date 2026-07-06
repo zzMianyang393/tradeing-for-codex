@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS orders (
     fill_price REAL,
     fill_qty REAL,
     fee REAL,
+    exchange_order_id TEXT,
     signal_reason TEXT,
     risk_decision TEXT,
     meta TEXT
@@ -124,10 +125,19 @@ class StateDB:
         self._conn.execute("PRAGMA foreign_keys=ON")
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(_SCHEMA)
+        self._migrate_schema()
         self._conn.commit()
 
     def close(self) -> None:
         self._conn.close()
+
+    def _migrate_schema(self) -> None:
+        columns = {
+            row["name"]
+            for row in self._conn.execute("PRAGMA table_info(orders)").fetchall()
+        }
+        if "exchange_order_id" not in columns:
+            self._conn.execute("ALTER TABLE orders ADD COLUMN exchange_order_id TEXT")
 
     # ------------------------------------------------------------------
     # Orders
@@ -164,11 +174,20 @@ class StateDB:
         fill_price: float | None = None,
         fill_qty: float | None = None,
         fee: float | None = None,
+        exchange_order_id: str | None = None,
     ) -> None:
         self._conn.execute(
-            "UPDATE orders SET status=?, filled_at=?, fill_price=?, fill_qty=?, fee=? "
+            "UPDATE orders SET status=?, filled_at=?, fill_price=?, fill_qty=?, fee=?, exchange_order_id=? "
             "WHERE id=?",
-            (status, _now_utc() if status == "filled" else None, fill_price, fill_qty, fee, order_id),
+            (
+                status,
+                _now_utc() if status == "filled" else None,
+                fill_price,
+                fill_qty,
+                fee,
+                exchange_order_id,
+                order_id,
+            ),
         )
         self._conn.commit()
 

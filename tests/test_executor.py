@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 from config import BacktestConfig
-from exchange import DryRunExchange
+from exchange import DryRunExchange, OrderResult
 from executor import ExecutionRequest, Executor
 from risk_manager import RiskManager
 from state_db import StateDB
@@ -80,6 +80,37 @@ class TestExecutor(unittest.TestCase):
         events = self.db.get_risk_events()
         self.assertEqual(1, len(events))
         self.assertEqual("reject", events[0]["event_type"])
+
+    def test_execute_signal_accepts_live_order_without_opening_position(self):
+        live_exchange = MagicMock()
+        live_exchange.place_order.return_value = OrderResult(
+            order_id="okx-1",
+            symbol="BTC-USDT-SWAP",
+            direction="long",
+            qty=0.1,
+            status="live",
+            reason="accepted",
+        )
+        executor = Executor(live_exchange, self.risk_manager, self.db, self.config)
+        signal = Signal("BTC-USDT-SWAP", 1, 3.5, "range", "range_revert_long")
+        request = ExecutionRequest.from_signal(
+            signal=signal,
+            price=100.0,
+            notional=10.0,
+            margin=1.0,
+            leverage=10.0,
+        )
+
+        result = executor.execute_signal(request, equity=100.0, current_step=1, bars=_bars(), idx=0)
+
+        self.assertTrue(result.accepted)
+        self.assertEqual("live", result.status)
+        self.assertIsNotNone(result.order_id)
+        self.assertIsNone(result.position_id)
+        order = self.db.get_order(result.order_id)
+        self.assertEqual("live", order["status"])
+        self.assertEqual("okx-1", order["exchange_order_id"])
+        self.assertEqual([], self.db.get_open_positions())
 
     def test_sync_state_consistent_keeps_risk_manager_running(self):
         self.db.save_position("BTC-USDT-SWAP", "long", 100.0, 0.1, 10.0, 1.0, 10.0)

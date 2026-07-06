@@ -101,6 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--reconcile", action="store_true", help="Reconcile local positions against dry-run exchange state")
     mode.add_argument("--okx-check", action="store_true", help="Check OKX simulated account, ticker, and positions")
     mode.add_argument("--okx-smoke-order", action="store_true", help="Place then cancel one OKX simulated limit order")
+    mode.add_argument("--okx-submit-signal", action="store_true", help="Submit one risk-checked signal to OKX simulated trading")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
@@ -113,6 +114,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--okx-smoke-price", type=float, default=1.0)
     parser.add_argument("--okx-smoke-notional", type=float, default=1.0)
     parser.add_argument("--okx-smoke-margin", type=float, default=1.0)
+    parser.add_argument("--confirm-okx-submit-signal", action="store_true")
+    parser.add_argument("--okx-signal-direction", choices=["long", "short"], default="long")
+    parser.add_argument("--okx-signal-price", type=float, default=1.0)
+    parser.add_argument("--okx-signal-notional", type=float, default=1.0)
+    parser.add_argument("--okx-signal-margin", type=float, default=1.0)
+    parser.add_argument("--okx-signal-leverage", type=float, default=1.0)
     args = parser.parse_args(argv)
 
     if args.status:
@@ -130,6 +137,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.okx_smoke_order:
         payload, code = _okx_smoke_order_payload(args)
+        _print_json(payload)
+        return code
+
+    if args.okx_submit_signal:
+        payload, code = _okx_submit_signal_payload(args)
         _print_json(payload)
         return code
 
@@ -316,6 +328,74 @@ def _okx_smoke_order_payload(args: argparse.Namespace) -> tuple[dict, int]:
         "cancel_requested": True,
         "cancel_response": cancel_response,
     }, 0
+
+
+def _okx_submit_signal_payload(args: argparse.Namespace) -> tuple[dict, int]:
+    if not args.confirm_okx_submit_signal:
+        return {
+            "okx_submit_signal": False,
+            "error": "Refusing to submit simulated signal without --confirm-okx-submit-signal",
+        }, 2
+
+    exchange, error = _okx_exchange_from_env()
+    if error:
+        error["okx_submit_signal"] = False
+        return error, 2
+
+    config = BacktestConfig()
+    risk_manager = RiskManager(config)
+    db = StateDB(args.db)
+    try:
+        executor = Executor(exchange, risk_manager, db, config)
+        try:
+            sync = executor.sync_state(current_step=0)
+            if not sync.consistent:
+                return {
+                    "okx_submit_signal": False,
+                    "sync_consistent": False,
+                    "local_only": sync.local_only,
+                    "exchange_only": sync.exchange_only,
+                }, 2
+            account = exchange.get_account_balance()
+            request = ExecutionRequest(
+                symbol=args.okx_symbol,
+                direction=1 if args.okx_signal_direction == "long" else -1,
+                price=args.okx_signal_price,
+                qty=args.okx_signal_notional / args.okx_signal_price if args.okx_signal_price > 0 else 0.0,
+                notional=args.okx_signal_notional,
+                margin=args.okx_signal_margin,
+                leverage=args.okx_signal_leverage,
+                signal_reason="manual_okx_submit_signal",
+                regime="manual",
+            )
+            result = executor.execute_signal(
+                request,
+                equity=account.equity,
+                current_step=0,
+                bars=[_RiskBar()],
+                idx=0,
+            )
+        except ExchangeError as exc:
+            return {"okx_submit_signal": False, "error": str(exc)}, 1
+
+        order = db.get_order(result.order_id) if result.order_id else None
+        return {
+            "okx_submit_signal": result.accepted,
+            "sync_consistent": True,
+            "accepted": result.accepted,
+            "status": result.status,
+            "reason": result.reason,
+            "order_id": result.order_id,
+            "exchange_order_id": order.get("exchange_order_id") if order else None,
+            "position_id": result.position_id,
+            "symbol": args.okx_symbol,
+            "direction": args.okx_signal_direction,
+            "notional": args.okx_signal_notional,
+            "margin": args.okx_signal_margin,
+            "leverage": args.okx_signal_leverage,
+        }, 0 if result.accepted else 2
+    finally:
+        db.close()
 
 
 def _okx_exchange_from_env() -> tuple[OKXExchange | None, dict | None]:

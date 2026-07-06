@@ -156,9 +156,11 @@ class Executor:
             fill_price=fill.fill_price,
             fill_qty=fill.fill_qty,
             fee=fill.fee,
+            exchange_order_id=fill.order_id,
         )
         if fill.status != "filled":
-            return ExecutionResult(False, fill.status, fill.reason, order_id=order_id)
+            accepted = fill.status in ("live", "pending", "partially_filled")
+            return ExecutionResult(accepted, fill.status, fill.reason, order_id=order_id)
 
         position_id = self.state_db.save_position(
             request.symbol,

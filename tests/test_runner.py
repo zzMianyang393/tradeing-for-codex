@@ -387,6 +387,117 @@ class TestRunnerCli(unittest.TestCase):
         self.assertEqual("okx-1", payload["order_id"])
         self.assertTrue(payload["cancel_requested"])
 
+    def test_okx_submit_signal_requires_explicit_confirmation(self):
+        output = io.StringIO()
+
+        with contextlib.redirect_stdout(output), patch("runner.OKXExchange") as cls:
+            code = main(["--okx-submit-signal"])
+
+        self.assertEqual(2, code)
+        cls.assert_not_called()
+        payload = json.loads(output.getvalue())
+        self.assertIn("--confirm-okx-submit-signal", payload["error"])
+
+    def test_okx_submit_signal_rejects_when_reconcile_is_inconsistent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                db.save_position("ETH-USDT-SWAP", "long", 100.0, 0.1, 10.0, 1.0, 10.0)
+            finally:
+                db.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_positions.return_value = []
+            fake_exchange.get_account_balance.return_value.equity = 1000.0
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange):
+                with contextlib.redirect_stdout(output):
+                    code = main([
+                        "--okx-submit-signal",
+                        "--confirm-okx-submit-signal",
+                        "--db",
+                        str(db_path),
+                    ])
+
+            self.assertEqual(2, code)
+            fake_exchange.place_order.assert_not_called()
+            payload = json.loads(output.getvalue())
+            self.assertFalse(payload["okx_submit_signal"])
+            self.assertFalse(payload["sync_consistent"])
+
+    def test_okx_submit_signal_places_risk_approved_order_and_records_db(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            fake_exchange = MagicMock()
+            fake_exchange.get_positions.return_value = []
+            fake_exchange.get_account_balance.return_value.equity = 1000.0
+            fake_exchange.place_order.return_value = OrderResult(
+                order_id="okx-live-1",
+                symbol="BTC-USDT-SWAP",
+                direction="long",
+                qty=0.01,
+                status="live",
+                reason="accepted",
+            )
+            env = {
+                "OKX_API_KEY": "key",
+                "OKX_API_SECRET": "secret",
+                "OKX_API_PASSPHRASE": "passphrase",
+            }
+            output = io.StringIO()
+
+            with patch.dict(os.environ, env, clear=False), patch("runner.OKXExchange", return_value=fake_exchange) as cls:
+                with contextlib.redirect_stdout(output):
+                    code = main([
+                        "--okx-submit-signal",
+                        "--confirm-okx-submit-signal",
+                        "--db",
+                        str(db_path),
+                        "--okx-symbol",
+                        "BTC-USDT-SWAP",
+                        "--okx-signal-direction",
+                        "long",
+                        "--okx-signal-price",
+                        "50000",
+                        "--okx-signal-notional",
+                        "10",
+                        "--okx-signal-margin",
+                        "1",
+                        "--okx-signal-leverage",
+                        "10",
+                    ])
+
+            self.assertEqual(0, code)
+            cls.assert_called_once_with("key", "secret", "passphrase", sandbox=True)
+            fake_exchange.place_order.assert_called_once_with(
+                "BTC-USDT-SWAP",
+                "long",
+                0.0002,
+                order_type="market",
+                price=50000.0,
+                fee=0.0005,
+            )
+            payload = json.loads(output.getvalue())
+            self.assertTrue(payload["okx_submit_signal"])
+            self.assertTrue(payload["accepted"])
+            self.assertEqual("live", payload["status"])
+            self.assertIsNotNone(payload["order_id"])
+            self.assertEqual("okx-live-1", payload["exchange_order_id"])
+            db = StateDB(db_path)
+            try:
+                orders = db.get_order(payload["order_id"])
+                self.assertEqual("live", orders["status"])
+                self.assertEqual("okx-live-1", orders["exchange_order_id"])
+                self.assertEqual([], db.get_open_positions())
+            finally:
+                db.close()
+
 
 if __name__ == "__main__":
     unittest.main()

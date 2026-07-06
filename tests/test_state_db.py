@@ -35,9 +35,17 @@ class TestOrders(_DBMixin, unittest.TestCase):
 
     def test_update_order_status(self):
         oid = self.db.save_order("ETH-USDT-SWAP", "short", 1.0)
-        self.db.update_order_status(oid, "filled", fill_price=3000.0, fill_qty=1.0, fee=0.15)
+        self.db.update_order_status(
+            oid,
+            "filled",
+            fill_price=3000.0,
+            fill_qty=1.0,
+            fee=0.15,
+            exchange_order_id="okx-123",
+        )
         order = self.db.get_order(oid)
         self.assertEqual(order["status"], "filled")
+        self.assertEqual("okx-123", order["exchange_order_id"])
         self.assertEqual(order["fill_price"], 3000.0)
         self.assertIsNotNone(order["filled_at"])
 
