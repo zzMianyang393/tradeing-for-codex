@@ -43,6 +43,7 @@ def slice_market_for_endpoint(
 
 def summarize_results(results: list[dict]) -> dict:
     available = [item for item in results if item.get("available")]
+    reasons = summarize_reasons(available)
     if not available:
         return {
             "windows": len(results),
@@ -52,6 +53,7 @@ def summarize_results(results: list[dict]) -> dict:
             "median_return_pct": 0.0,
             "worst_return_pct": 0.0,
             "max_drawdown_pct": 0.0,
+            "reasons": reasons,
         }
     returns = sorted(float(item["return_pct"]) for item in available)
     mid = len(returns) // 2
@@ -65,6 +67,25 @@ def summarize_results(results: list[dict]) -> dict:
         "median_return_pct": round(median, 4),
         "worst_return_pct": round(min(returns), 4),
         "max_drawdown_pct": round(max(float(item["max_drawdown_pct"]) for item in available), 4),
+        "reasons": reasons,
+    }
+
+
+def summarize_reasons(results: list[dict]) -> dict:
+    reasons: dict[str, dict[str, float]] = {}
+    for result in results:
+        for reason, stats in result.get("by_reason", {}).items():
+            target = reasons.setdefault(reason, {"trades": 0, "wins": 0, "pnl": 0.0})
+            target["trades"] += int(stats.get("trades", 0))
+            target["wins"] += int(stats.get("wins", 0))
+            target["pnl"] += float(stats.get("pnl", 0.0))
+    return {
+        reason: {
+            "trades": int(stats["trades"]),
+            "wins": int(stats["wins"]),
+            "pnl": round(float(stats["pnl"]), 4),
+        }
+        for reason, stats in sorted(reasons.items())
     }
 
 
@@ -147,7 +168,9 @@ def run_rolling_audit(
                         "trades",
                         "win_rate",
                         "target_pass",
+                        "by_reason",
                     )
+                    if key in result
                 }
             entries.append(result)
         report["windows"][str(days)] = {

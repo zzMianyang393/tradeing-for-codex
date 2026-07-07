@@ -46,6 +46,36 @@ class RollingWindowAuditTests(unittest.TestCase):
         self.assertEqual(-5.0, summary["worst_return_pct"])
         self.assertEqual(12.0, summary["max_drawdown_pct"])
 
+    def test_summarize_results_aggregates_reason_stats(self):
+        results = [
+            {
+                "available": True,
+                "pnl": 1.0,
+                "return_pct": 10.0,
+                "max_drawdown_pct": 2.0,
+                "by_reason": {
+                    "funding_extreme_long": {"trades": 2, "wins": 1, "pnl": 0.5},
+                    "range_revert_long": {"trades": 1, "wins": 1, "pnl": 0.5},
+                },
+            },
+            {
+                "available": True,
+                "pnl": -1.0,
+                "return_pct": -5.0,
+                "max_drawdown_pct": 12.0,
+                "by_reason": {
+                    "funding_extreme_long": {"trades": 1, "wins": 0, "pnl": -0.25},
+                },
+            },
+        ]
+
+        summary = summarize_results(results)
+
+        self.assertEqual(3, summary["reasons"]["funding_extreme_long"]["trades"])
+        self.assertEqual(1, summary["reasons"]["funding_extreme_long"]["wins"])
+        self.assertEqual(0.25, summary["reasons"]["funding_extreme_long"]["pnl"])
+        self.assertEqual(1, summary["reasons"]["range_revert_long"]["trades"])
+
     def test_window_config_for_audit_uses_target_profiles(self):
         cfg = BacktestConfig()
 

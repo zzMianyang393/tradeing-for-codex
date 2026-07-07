@@ -84,19 +84,21 @@ order-book snapshots.
   explicitly configured.
 - Optional funding, open-interest, trade-flow, and order-book caches have been
   downloaded for all 29 discovered symbols in the local `data` folder.
-- Module rolling audits with `--max-windows 4` remain below target, so none of
-  these optional modules should be enabled by default yet.
+- Module rolling audits with `--max-windows 4` have been run for funding,
+  open-interest, trade-flow, and order-book data. They remain below target, so
+  none of these optional modules should be enabled by default yet.
+- Rolling audit reports now include reason-level aggregation. The current
+  reports do not show accepted module-specific trade reasons under the present
+  thresholds and cache depth.
 - Current optional caches are still shallow for rolling validation: funding is
   recent history, open-interest is one recent OKX page, trade-flow is recent
   trade ticks, and order-book is point-in-time snapshots.
 
 ## Next Step
 
-- Run trade-flow-module rolling-window validation before enabling it by default.
 - Extend optional cache depth where the exchange API supports pagination, then
   rerun full rolling validation.
+- Tune module signal thresholds only after deeper cache coverage confirms that
+  the missing module-specific reasons are not caused by data sparsity.
 - Validate order-book liquidity/spread limits in simulated execution before
   setting defaults.
-- Run open-interest-module rolling-window validation before enabling it by
-  default.
-- Run funding-module rolling-window validation before enabling it by default.

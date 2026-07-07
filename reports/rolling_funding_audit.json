@@ -186,7 +186,8 @@
         "profit_rate": 0.0,
         "median_return_pct": 0.0,
         "worst_return_pct": 0.0,
-        "max_drawdown_pct": 0.0
+        "max_drawdown_pct": 0.0,
+        "reasons": {}
       },
       "runs": [
         {
@@ -200,7 +201,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -213,7 +215,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -226,7 +229,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -239,7 +243,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         }
       ]
     },
@@ -251,7 +256,19 @@
         "profit_rate": 0.0,
         "median_return_pct": -3.1956,
         "worst_return_pct": -5.7249,
-        "max_drawdown_pct": 5.7249
+        "max_drawdown_pct": 5.7249,
+        "reasons": {
+          "attack_exhaustion_long": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -1.2011
+          },
+          "attack_exhaustion_short": {
+            "trades": 1,
+            "wins": 0,
+            "pnl": -0.3143
+          }
+        }
       },
       "runs": [
         {
@@ -265,7 +282,15 @@
           "max_drawdown_pct": 3.1956,
           "trades": 1,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {
+            "attack_exhaustion_long": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.316,
+              "win_rate": 0.0
+            }
+          }
         },
         {
           "available": true,
@@ -278,7 +303,15 @@
           "max_drawdown_pct": 3.1956,
           "trades": 1,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {
+            "attack_exhaustion_long": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.316,
+              "win_rate": 0.0
+            }
+          }
         },
         {
           "available": true,
@@ -291,7 +324,15 @@
           "max_drawdown_pct": 3.1956,
           "trades": 1,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {
+            "attack_exhaustion_long": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.316,
+              "win_rate": 0.0
+            }
+          }
         },
         {
           "available": true,
@@ -304,7 +345,21 @@
           "max_drawdown_pct": 5.7249,
           "trades": 2,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {
+            "attack_exhaustion_short": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.3143,
+              "win_rate": 0.0
+            },
+            "attack_exhaustion_long": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.2531,
+              "win_rate": 0.0
+            }
+          }
         }
       ]
     },
@@ -316,7 +371,19 @@
         "profit_rate": 0.0,
         "median_return_pct": -2.5127,
         "worst_return_pct": -5.7249,
-        "max_drawdown_pct": 5.7249
+        "max_drawdown_pct": 5.7249,
+        "reasons": {
+          "attack_exhaustion_long": {
+            "trades": 3,
+            "wins": 0,
+            "pnl": -0.7494
+          },
+          "attack_exhaustion_short": {
+            "trades": 1,
+            "wins": 0,
+            "pnl": -0.3143
+          }
+        }
       },
       "runs": [
         {
@@ -330,7 +397,15 @@
           "max_drawdown_pct": 3.1956,
           "trades": 1,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {
+            "attack_exhaustion_long": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.316,
+              "win_rate": 0.0
+            }
+          }
         },
         {
           "available": true,
@@ -343,7 +418,21 @@
           "max_drawdown_pct": 5.7249,
           "trades": 2,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {
+            "attack_exhaustion_short": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.3143,
+              "win_rate": 0.0
+            },
+            "attack_exhaustion_long": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.2531,
+              "win_rate": 0.0
+            }
+          }
         },
         {
           "available": true,
@@ -356,7 +445,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -369,7 +459,15 @@
           "max_drawdown_pct": 1.8297,
           "trades": 1,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {
+            "attack_exhaustion_long": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.1803,
+              "win_rate": 0.0
+            }
+          }
         }
       ]
     },
@@ -381,7 +479,14 @@
         "profit_rate": 0.0,
         "median_return_pct": 0.0,
         "worst_return_pct": -1.8297,
-        "max_drawdown_pct": 1.8297
+        "max_drawdown_pct": 1.8297,
+        "reasons": {
+          "attack_exhaustion_long": {
+            "trades": 1,
+            "wins": 0,
+            "pnl": -0.1803
+          }
+        }
       },
       "runs": [
         {
@@ -395,7 +500,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -408,7 +514,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -421,7 +528,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -434,7 +542,15 @@
           "max_drawdown_pct": 1.8297,
           "trades": 1,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {
+            "attack_exhaustion_long": {
+              "trades": 1,
+              "wins": 0,
+              "pnl": -0.1803,
+              "win_rate": 0.0
+            }
+          }
         }
       ]
     },
@@ -446,7 +562,8 @@
         "profit_rate": 0.0,
         "median_return_pct": 0.0,
         "worst_return_pct": 0.0,
-        "max_drawdown_pct": 0.0
+        "max_drawdown_pct": 0.0,
+        "reasons": {}
       },
       "runs": [
         {
@@ -460,7 +577,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -473,7 +591,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -486,7 +605,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -499,7 +619,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         }
       ]
     },
@@ -511,7 +632,8 @@
         "profit_rate": 0.0,
         "median_return_pct": 0.0,
         "worst_return_pct": 0.0,
-        "max_drawdown_pct": 0.0
+        "max_drawdown_pct": 0.0,
+        "reasons": {}
       },
       "runs": [
         {
@@ -525,7 +647,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -538,7 +661,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -551,7 +675,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         },
         {
           "available": true,
@@ -564,7 +689,8 @@
           "max_drawdown_pct": 0.0,
           "trades": 0,
           "win_rate": 0.0,
-          "target_pass": false
+          "target_pass": false,
+          "by_reason": {}
         }
       ]
     }
