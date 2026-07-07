@@ -361,7 +361,7 @@ def order_book_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=
     spread_quality = min(0.3, 1.0 / max(spread_pct * 1000.0, 0.1))
     score = 3.15 + imbalance_strength + spread_quality
 
-    # Positive imbalance = more bid depth → bullish
+    # Positive imbalance means more bid depth, which is bullish.
     if depth_imbalance > 0 and bar.close >= bar.donchian_high * 0.999 and bar.close > bar.ema20 and bar.rsi <= 72:
         return Signal(symbol, 1, score, "order_book", "order_book_imbalance_long")
     if depth_imbalance < 0 and bar.close <= bar.donchian_low * 1.001 and bar.close < bar.ema20 and bar.rsi >= 28:
