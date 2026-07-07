@@ -218,3 +218,13 @@ python rolling_window_audit.py --module order-book --out reports\rolling_order_b
 Each rolling audit report includes `data_source_coverage`, which shows whether
 the local `data` folder actually contains the optional cache files required by
 that module.
+
+Run the consolidated anti-overfit validation pipeline:
+
+```bash
+python full_validation.py --out reports\full_validation.json
+```
+
+This combines latest-window validation, walk-forward, parameter sensitivity,
+Monte Carlo reshuffling, single-trade contribution checks, and stressed
+drawdown checks into one JSON report.
