@@ -5,6 +5,7 @@ import csv
 import json
 import urllib.parse
 import urllib.request
+import urllib.error
 from dataclasses import dataclass, fields
 from datetime import datetime, timezone
 from pathlib import Path
@@ -46,8 +47,12 @@ def fetch_open_interest_history(
     }
     url = f"{OKX_OPEN_INTEREST_HISTORY_URL}?{urllib.parse.urlencode(params)}"
     request = urllib.request.Request(url, headers={"User-Agent": "tradering-research/1.0"})
-    with urllib.request.urlopen(request, timeout=20) as response:
-        payload = json.loads(response.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"OKX open interest HTTP {exc.code} for {symbol}: {body}") from exc
     if payload.get("code") != "0":
         raise RuntimeError(f"OKX open interest error for {symbol}: {payload}")
     return payload.get("data", [])
@@ -57,17 +62,24 @@ def parse_open_interest_rows(symbol: str, rows: list[dict[str, Any]]) -> list[Op
     parsed: list[OpenInterest] = []
     for row in rows:
         try:
-            ts = int(row["ts"])
+            if isinstance(row, dict):
+                ts = int(row["ts"])
+                open_interest = float(row.get("oi") or 0.0)
+                open_interest_currency = float(row.get("oiCcy") or 0.0)
+            else:
+                ts = int(row[0])
+                open_interest = float(row[1])
+                open_interest_currency = float(row[2])
             parsed.append(
                 OpenInterest(
                     symbol=symbol,
                     ts=ts,
                     time=_format_utc(ts),
-                    open_interest=float(row.get("oi") or 0.0),
-                    open_interest_currency=float(row.get("oiCcy") or 0.0),
+                    open_interest=open_interest,
+                    open_interest_currency=open_interest_currency,
                 )
             )
-        except (KeyError, TypeError, ValueError):
+        except (IndexError, KeyError, TypeError, ValueError):
             continue
     parsed.sort(key=lambda item: item.ts)
     return parsed

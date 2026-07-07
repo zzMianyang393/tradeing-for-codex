@@ -3,13 +3,14 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from market import FeatureBar
 from open_interest import (
     OpenInterest,
     add_open_interest_features,
     download_open_interest,
+    fetch_open_interest_history,
     load_open_interest,
     main,
     parse_open_interest_rows,
@@ -35,6 +36,28 @@ class TestOpenInterest(unittest.TestCase):
         self.assertEqual(1_700_000_000_000, rows[0].ts)
         self.assertAlmostEqual(12345.6, rows[0].open_interest)
         self.assertAlmostEqual(321.5, rows[0].open_interest_currency)
+
+    def test_parse_okx_open_interest_array_rows(self):
+        rows = parse_open_interest_rows(
+            "BTC-USDT-SWAP",
+            [["1700000000000", "12345.6", "321.5"]],
+        )
+
+        self.assertEqual(1, len(rows))
+        self.assertEqual(1_700_000_000_000, rows[0].ts)
+        self.assertAlmostEqual(12345.6, rows[0].open_interest)
+        self.assertAlmostEqual(321.5, rows[0].open_interest_currency)
+
+    def test_fetch_open_interest_history_queries_instrument_id(self):
+        response = MagicMock()
+        response.read.return_value = b'{"code":"0","data":[]}'
+        response.__enter__.return_value = response
+
+        with patch("open_interest.urllib.request.urlopen", return_value=response) as urlopen:
+            fetch_open_interest_history("BTC-USDT-SWAP", period="15m", limit=5)
+
+        request = urlopen.call_args.args[0]
+        self.assertIn("instId=BTC-USDT-SWAP", request.full_url)
 
     def test_save_and_load_open_interest(self):
         items = [
