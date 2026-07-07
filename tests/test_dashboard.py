@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import tempfile
+import threading
 import unittest
+import urllib.request
 from pathlib import Path
 
-from dashboard import build_dashboard_payload, render_dashboard_html, write_dashboard
+from dashboard import build_dashboard_payload, create_dashboard_server, render_dashboard_html, write_dashboard
 from state_db import StateDB
 
 
@@ -104,6 +106,34 @@ class TestDashboard(unittest.TestCase):
             self.assertEqual(out_path, written)
             self.assertTrue(out_path.exists())
             self.assertIn("Trading Dashboard", out_path.read_text(encoding="utf-8"))
+
+    def test_dashboard_server_serves_html_and_json_payload(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                db.snapshot_account(equity=12.5, available_margin=10.0, used_margin=2.5)
+            finally:
+                db.close()
+
+            server = create_dashboard_server(db_path, "127.0.0.1", 0)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                host, port = server.server_address
+                with urllib.request.urlopen(f"http://{host}:{port}/api/dashboard", timeout=5) as response:
+                    payload = response.read().decode("utf-8")
+                    content_type = response.headers["Content-Type"]
+                with urllib.request.urlopen(f"http://{host}:{port}/", timeout=5) as response:
+                    html = response.read().decode("utf-8")
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
+        self.assertIn("application/json", content_type)
+        self.assertIn("\"equity\":12.5", payload)
+        self.assertIn("Trading Dashboard", html)
 
 
 if __name__ == "__main__":

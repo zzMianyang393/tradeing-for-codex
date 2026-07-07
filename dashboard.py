@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
@@ -330,6 +331,47 @@ def write_dashboard(db_path: Path, out_path: Path) -> Path:
     return out_path
 
 
+def create_dashboard_server(db_path: Path, host: str = "127.0.0.1", port: int = 8090) -> ThreadingHTTPServer:
+    class DashboardHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            if self.path in ("/", "/index.html"):
+                self._send_html(render_dashboard_html(build_dashboard_payload(db_path)))
+                return
+            if self.path == "/api/dashboard":
+                self._send_json(build_dashboard_payload(db_path))
+                return
+            self.send_error(404, "Not found")
+
+        def log_message(self, format: str, *args: Any) -> None:
+            return
+
+        def _send_html(self, body: str) -> None:
+            self._send(200, "text/html; charset=utf-8", body.encode("utf-8"))
+
+        def _send_json(self, payload: dict[str, Any]) -> None:
+            self._send(200, "application/json; charset=utf-8", safe_json(payload).encode("utf-8"))
+
+        def _send(self, status: int, content_type: str, body: bytes) -> None:
+            self.send_response(status)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+    return ThreadingHTTPServer((host, port), DashboardHandler)
+
+
+def serve_dashboard(db_path: Path, host: str = "127.0.0.1", port: int = 8090) -> None:
+    server = create_dashboard_server(db_path, host, port)
+    actual_host, actual_port = server.server_address
+    print(f"Serving dashboard at http://{actual_host}:{actual_port}", flush=True)
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()
+
+
 def metric_card(label: str, value: Any, sub: str) -> str:
     return f"""<article class="card"><div class="card-inner">
       <div class="metric-label">{e(label)}</div>
@@ -435,7 +477,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Render a local trading dashboard HTML file.")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
     parser.add_argument("--out", type=Path, default=Path("reports") / "dashboard.html")
+    parser.add_argument("--serve", action="store_true")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8090)
     args = parser.parse_args(argv)
+    if args.serve:
+        serve_dashboard(args.db, host=args.host, port=args.port)
+        return 0
     write_dashboard(args.db, args.out)
     print(f"Wrote dashboard to {args.out}", flush=True)
     return 0

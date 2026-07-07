@@ -126,12 +126,14 @@ Render a local HTML dashboard from the SQLite trading state:
 
 ```bash
 python dashboard.py --db reports\dry_run_state.db --out reports\dashboard.html
+python dashboard.py --serve --db reports\dry_run_state.db --host 127.0.0.1 --port 8090
 ```
 
 Open `reports\dashboard.html` in a browser to review account snapshots, open
 positions, recent trades, risk events, and health alerts. The page includes a
 local equity curve, view switching, and table filtering without requiring a
-server.
+server. The optional local server renders the same dashboard at `/` and exposes
+the latest dashboard payload at `/api/dashboard`.
 
 ## Outputs
 
