@@ -326,7 +326,7 @@ class TestRunnerCli(unittest.TestCase):
                     "--okx-smoke-notional",
                     "100",
                     "--okx-smoke-margin",
-                    "1",
+                    "50",
                 ])
 
         self.assertEqual(2, code)

@@ -67,8 +67,8 @@ class TestExecutor(unittest.TestCase):
             signal=signal,
             price=100.0,
             notional=100.0,
-            margin=1.0,
-            leverage=100.0,
+            margin=50.0,
+            leverage=2.0,
         )
 
         result = self.executor.execute_signal(request, equity=10.0, current_step=1, bars=_bars(), idx=0)

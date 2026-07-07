@@ -61,23 +61,30 @@ class TestNormalOrder(unittest.TestCase):
 
 
 class TestSinglePositionLimit(unittest.TestCase):
+    def test_leveraged_notional_is_allowed_when_margin_is_within_limit(self):
+        rm = RiskManager(_cfg(rm_max_single_position_pct=0.40, rm_min_liquidation_distance_pct=0.0))
+
+        d = rm.check_order("BTC-USDT-SWAP", 1, 50.0, 3.0, 10.0, 0, _bars(), 0)
+
+        self.assertTrue(d.allowed)
+
     def test_rejected_when_exceeding(self):
         rm = RiskManager(_cfg(rm_max_single_position_pct=0.40))
-        # notional/equity = 50/100 = 0.50 > 0.40
-        d = rm.check_order("BTC-USDT-SWAP", 1, 50.0, 5.0, 100.0, 0, _bars(), 0)
+        # margin/equity = 50/100 = 0.50 > 0.40
+        d = rm.check_order("BTC-USDT-SWAP", 1, 50.0, 50.0, 100.0, 0, _bars(), 0)
         self.assertFalse(d.allowed)
         self.assertIn("single position", d.reason)
 
     def test_accepted_when_within(self):
         rm = RiskManager(_cfg(rm_max_single_position_pct=0.40))
-        # notional/equity = 30/100 = 0.30 < 0.40
-        d = rm.check_order("BTC-USDT-SWAP", 1, 30.0, 3.0, 100.0, 0, _bars(), 0)
+        # margin/equity = 30/100 = 0.30 < 0.40
+        d = rm.check_order("BTC-USDT-SWAP", 1, 100.0, 30.0, 100.0, 0, _bars(), 0)
         self.assertTrue(d.allowed)
 
     def test_accepted_at_boundary(self):
         rm = RiskManager(_cfg(rm_max_single_position_pct=0.40))
-        # exactly at the boundary — notional/equity = 0.40, should be allowed (not >)
-        d = rm.check_order("BTC-USDT-SWAP", 1, 40.0, 4.0, 100.0, 0, _bars(), 0)
+        # exactly at the boundary: margin/equity = 0.40, should be allowed (not >)
+        d = rm.check_order("BTC-USDT-SWAP", 1, 100.0, 40.0, 100.0, 0, _bars(), 0)
         self.assertTrue(d.allowed)
 
 
@@ -460,8 +467,8 @@ class TestEdgeCases(unittest.TestCase):
 
     def test_rejection_counter_increments(self):
         rm = RiskManager(_cfg(rm_max_single_position_pct=0.10))
-        rm.check_order("BTC-USDT-SWAP", 1, 50.0, 5.0, 100.0, 0, _bars(), 0)
-        rm.check_order("BTC-USDT-SWAP", 1, 50.0, 5.0, 100.0, 0, _bars(), 0)
+        rm.check_order("BTC-USDT-SWAP", 1, 50.0, 50.0, 100.0, 0, _bars(), 0)
+        rm.check_order("BTC-USDT-SWAP", 1, 50.0, 50.0, 100.0, 0, _bars(), 0)
         self.assertEqual(rm._rejections_count, 2)
 
     def test_pause_blocks_subsequent_same_step_calls(self):

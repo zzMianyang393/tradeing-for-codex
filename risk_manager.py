@@ -122,9 +122,9 @@ class RiskManager:
             self._is_paused = False
             self._pause_reason = ""
 
-        # 2. Single-position limit
+        # 2. Single-position margin limit
         if equity > 0:
-            single_pct = notional / equity
+            single_pct = margin / equity
             if single_pct > self.config.rm_max_single_position_pct:
                 self._rejections_count += 1
                 return RiskDecision(
