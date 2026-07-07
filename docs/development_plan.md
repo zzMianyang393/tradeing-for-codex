@@ -1,6 +1,6 @@
 # 量化交易系统开发路线
 
-> 最后更新: 2026-07-05
+> 最后更新: 2026-07-07
 > 策略: 先完成所有CLI/数据/核心逻辑，HTML页面放最后
 
 ---
@@ -18,14 +18,20 @@
 | 配置 | `config.py` | 100+参数，per-window覆盖 |
 | 参数搜索 | ~50个search脚本 | 各维度参数优化 |
 | K线数据 | `data/` | 29个币种，73个CSV文件，129MB |
+| 风控层 | `risk_manager.py` | 下单前置检查、暂停、风险事件、盘口流动性限制 |
+| 状态持久化 | `state_db.py` | SQLite订单/持仓/账户/交易/风控/健康报告 |
+| 执行层 | `exchange.py` + `executor.py` + `runner.py` | dry-run、OKX模拟盘检查、订单同步、平仓、监控循环 |
+| 扩展数据源 | `funding_rate.py` + `open_interest.py` + `trade_flow.py` + `order_book.py` | 下载、缓存、特征接入、独立模块审计 |
+| 监控与报告 | `health_report.py` + `report_cli.py` | 健康检查、状态报告、风险/交易摘要 |
+| Web仪表盘 | `dashboard.py` | 本地SQLite静态HTML仪表盘，含权益曲线、视图切换、过滤 |
 
 ### ❌ 未完成（按优先级排列）
-1. 风控层（RiskManager）
-2. 状态持久化（SQLite订单/持仓/账户）
-3. 模拟盘执行引擎
-4. 扩展数据源（资金费率、OI、trades）
-5. 监控与报告（CLI）
-6. Web仪表盘（HTML，最后做）
+1. 模拟盘长期连续运行验证（2-4周）和每日复盘闭环。
+2. 执行层异常恢复继续增强：网络异常、部分成交、订单失败重试的长期场景压测。
+3. 扩展数据源深度仍不足：OI/trade-flow/order-book缓存多数仍偏近端或点状。
+4. Optional data-source策略模块滚动审计未达标，不能默认启用。
+5. 监控通知还缺主动外部告警（Telegram/邮件等）。
+6. Web仪表盘目前是静态HTML，缺本地服务和自动刷新接口。
 
 ---
 
