@@ -101,7 +101,7 @@ cd E:\ai-trade\tradering
 python okx_downloader.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP SOL-USDT-SWAP --days 365 --bar 15m --out data
 python funding_rate.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --days 90 --out data
 python open_interest.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --days 30 --out data --period 15m
-python trade_flow.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --out data
+python trade_flow.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --out data --pages 10
 python order_book.py --symbols BTC-USDT-SWAP ETH-USDT-SWAP --out data --depth 20
 ```
 
