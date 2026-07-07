@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+LINK-USDT-SWAP,1783396563453,2026-07-07 03:56:03,7.876,7.877,0.00012695994413755422,666992.3664,564962.8846999999,0.08281914591370024

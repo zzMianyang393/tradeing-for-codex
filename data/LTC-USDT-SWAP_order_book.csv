@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+LTC-USDT-SWAP,1783396564153,2026-07-07 03:56:04,44.06,44.07,0.00022693747872456623,896020.277,875451.297,0.011611239097421714

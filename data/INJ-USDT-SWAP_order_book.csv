@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+INJ-USDT-SWAP,1783396562653,2026-07-07 03:56:02,4.736,4.737,0.0002111263591260074,779653.954,965509.564,-0.10649753337325951

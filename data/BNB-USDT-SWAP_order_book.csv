@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+BNB-USDT-SWAP,1783396555508,2026-07-07 03:55:55,578.3,578.4,0.00017290567995162576,125547370.10000001,134936120.0,-0.03604355076936214

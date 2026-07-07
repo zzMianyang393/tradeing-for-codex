@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+AAVE-USDT-SWAP,1783396550603,2026-07-07 03:55:50,91.72,91.73,0.0001090215317525769,1163587.577,1852084.414,-0.22830627437425438

@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+ADA-USDT-SWAP,1783396551559,2026-07-07 03:55:51,0.1806,0.1807,0.0005535566011624079,8784.66897,9299.35518,-0.028460822974514764

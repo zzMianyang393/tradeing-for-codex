@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+UNI-USDT-SWAP,1783396572558,2026-07-07 03:56:12,3.126,3.127,0.0003198464736925923,318734.983,238672.724,0.1436332113721564

@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+ARB-USDT-SWAP,1783396553156,2026-07-07 03:55:53,0.07807,0.07808,0.00012808197246232626,8970.326631,8548.172149,0.02409764028878734

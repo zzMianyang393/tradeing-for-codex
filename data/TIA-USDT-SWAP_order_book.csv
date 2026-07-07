@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+TIA-USDT-SWAP,1783396570659,2026-07-07 03:56:10,0.3753,0.3754,0.000266418009857437,48455.019199999995,43395.9354,0.055079272959455916

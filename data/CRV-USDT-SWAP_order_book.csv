@@ -1,0 +1,2 @@
+symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
+CRV-USDT-SWAP,1783396557253,2026-07-07 03:55:57,0.2072,0.2073,0.0004825090470447129,270055.911,207096.4271,0.1319483923115665
