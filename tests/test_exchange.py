@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import unittest
+from urllib.error import URLError
 
 from exchange import ExchangeError, OKXExchange, OrderResult
 
@@ -21,6 +22,26 @@ class FakeTransport:
             }
         )
         return self.response
+
+
+class SequenceTransport:
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.calls = []
+
+    def __call__(self, method, url, headers, body):
+        self.calls.append(
+            {
+                "method": method,
+                "url": url,
+                "headers": dict(headers),
+                "body": body,
+            }
+        )
+        response = self.responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
 class TestOKXExchange(unittest.TestCase):
@@ -106,6 +127,67 @@ class TestOKXExchange(unittest.TestCase):
 
         self.assertIn("51000", str(cm.exception))
         self.assertIn("bad request", str(cm.exception))
+
+    def test_request_retries_transient_transport_errors(self):
+        transport = SequenceTransport([
+            URLError("temporary outage"),
+            {
+                "code": "0",
+                "data": [
+                    {
+                        "instId": "BTC-USDT-SWAP",
+                        "last": "50100.5",
+                    }
+                ],
+            },
+        ])
+        exchange = OKXExchange(
+            "key",
+            "secret",
+            "passphrase",
+            transport=transport,
+            max_retries=1,
+            retry_base_delay=0.0,
+        )
+
+        with self.assertLogs("exchange", level="WARNING") as logs:
+            ticker = exchange.get_ticker("BTC-USDT-SWAP")
+
+        self.assertEqual("BTC-USDT-SWAP", ticker.symbol)
+        self.assertEqual(2, len(transport.calls))
+        self.assertIn("temporary outage", logs.output[0])
+
+    def test_market_order_uses_limit_price_guard_when_no_price_is_supplied(self):
+        transport = SequenceTransport([
+            {
+                "code": "0",
+                "data": [
+                    {
+                        "instId": "BTC-USDT-SWAP",
+                        "last": "50000",
+                    }
+                ],
+            },
+            {
+                "code": "0",
+                "data": [
+                    {
+                        "ordId": "okx-1",
+                        "sCode": "0",
+                        "sMsg": "",
+                    }
+                ],
+            },
+        ])
+        exchange = OKXExchange("key", "secret", "passphrase", transport=transport, max_slippage_pct=0.01)
+
+        result = exchange.place_order("BTC-USDT-SWAP", "long", 0.1, order_type="market")
+
+        self.assertEqual("okx-1", result.order_id)
+        self.assertEqual(2, len(transport.calls))
+        payload = json.loads(transport.calls[1]["body"])
+        self.assertEqual("limit", payload["ordType"])
+        self.assertEqual("50500.000000", payload["px"])
 
     def test_get_positions_maps_okx_positions_for_reconciliation(self):
         transport = FakeTransport(

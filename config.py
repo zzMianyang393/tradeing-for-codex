@@ -200,6 +200,15 @@ class BacktestConfig:
     attack_enabled_regimes: tuple[str, ...] = ("uptrend", "downtrend", "transition", "range")
     attack_breakout_enabled: bool = True
     attack_exhaustion_enabled: bool = True
+    enable_order_book_module: bool = False
+    order_book_min_depth_imbalance: float = 0.3
+    order_book_min_spread_pct: float = 0.0
+    order_book_max_spread_pct: float = 0.005
+    order_book_risk_per_trade: float = 0.035
+    order_book_stop_atr: float = 1.6
+    order_book_take_profit_atr: float = 1.0
+    order_book_trailing_atr: float = 1.2
+    order_book_max_hold_bars: int = 8
     # --- RiskManager configuration ---
     rm_enabled: bool = True
     rm_max_single_position_pct: float = 0.40
@@ -259,16 +268,3 @@ class BacktestConfig:
             "FIL-USDT-SWAP": SymbolRisk(12),
         }
     )
-    # RiskManager configuration
-    rm_max_single_position_pct: float = 0.40
-    rm_max_total_position_pct: float = 0.80
-    rm_max_daily_loss_pct: float = 15.0
-    rm_max_weekly_loss_pct: float = 30.0
-    rm_consecutive_loss_pause: int = 4
-    rm_consecutive_loss_pause_bars: int = 288
-    rm_volatility_halt_threshold: float = 0.06
-    rm_max_order_book_spread_pct: float = 0.0
-    rm_min_order_book_depth_quote: float = 0.0
-    rm_min_liquidation_distance_pct: float = 0.05
-    rm_pause_on_inconsistency: bool = True
-    rm_enabled: bool = True

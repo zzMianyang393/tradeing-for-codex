@@ -339,6 +339,36 @@ def trade_flow_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=
     return None
 
 
+def order_book_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Signal | None:
+    if not getattr(config, "enable_order_book_module", False):
+        return None
+    if idx < 220:
+        return None
+    bar = bars[idx]
+    depth_imbalance = float(getattr(bar, "depth_imbalance", 0.0) or 0.0)
+    spread_pct = float(getattr(bar, "order_book_spread_pct", 0.0) or 0.0)
+    min_imbalance = getattr(config, "order_book_min_depth_imbalance", 0.3)
+    max_spread = getattr(config, "order_book_max_spread_pct", 0.005)
+    min_spread = getattr(config, "order_book_min_spread_pct", 0.0)
+
+    if abs(depth_imbalance) < min_imbalance:
+        return None
+    if spread_pct > max_spread or spread_pct < min_spread:
+        return None
+
+    vol_ratio = bar.volume_quote / bar.vol_sma if bar.vol_sma > 0 else 1.0
+    imbalance_strength = min(0.8, abs(depth_imbalance))
+    spread_quality = min(0.3, 1.0 / max(spread_pct * 1000.0, 0.1))
+    score = 3.15 + imbalance_strength + spread_quality
+
+    # Positive imbalance = more bid depth → bullish
+    if depth_imbalance > 0 and bar.close >= bar.donchian_high * 0.999 and bar.close > bar.ema20 and bar.rsi <= 72:
+        return Signal(symbol, 1, score, "order_book", "order_book_imbalance_long")
+    if depth_imbalance < 0 and bar.close <= bar.donchian_low * 1.001 and bar.close < bar.ema20 and bar.rsi >= 28:
+        return Signal(symbol, -1, score, "order_book", "order_book_imbalance_short")
+    return None
+
+
 def generate_all_signals(
     symbol: str,
     bars: list[FeatureBar],
@@ -355,6 +385,7 @@ def generate_all_signals(
         funding_signal_for,
         open_interest_signal_for,
         trade_flow_signal_for,
+        order_book_signal_for,
     ]:
         sig = fn(symbol, bars, idx, config)
         if sig is not None:

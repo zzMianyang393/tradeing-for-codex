@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import time
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -38,6 +39,7 @@ def fetch_open_interest_history(
     symbol: str,
     period: str = "15m",
     limit: int = 100,
+    end: int | None = None,
 ) -> list[dict[str, Any]]:
     params = {
         "instType": "SWAP",
@@ -45,6 +47,8 @@ def fetch_open_interest_history(
         "period": period,
         "limit": str(limit),
     }
+    if end is not None:
+        params["end"] = str(end)
     url = f"{OKX_OPEN_INTEREST_HISTORY_URL}?{urllib.parse.urlencode(params)}"
     request = urllib.request.Request(url, headers={"User-Agent": "tradering-research/1.0"})
     try:
@@ -129,12 +133,43 @@ def download_open_interest(
     out_dir: Path,
     period: str = "15m",
     limit: int = 100,
+    sleep_seconds: float = 0.12,
+    retry_sleep_seconds: float = 1.0,
+    retries: int = 4,
 ) -> int:
     path = open_interest_output_path(symbol, out_dir)
     rows = {item.ts: item for item in load_open_interest(path)}
-    page = fetch_open_interest_history(symbol, period=period, limit=limit)
-    for item in parse_open_interest_rows(symbol, page):
-        rows[item.ts] = item
+    # Calculate target rows based on period granularity
+    period_minutes = _period_to_minutes(period)
+    target_rows = max(1, (days * 24 * 60) // period_minutes) if period_minutes > 0 else days * 96
+    end = min(rows) if rows else None
+
+    while len(rows) < target_rows:
+        page = _fetch_open_interest_page_with_retry(
+            symbol, period=period, limit=limit, end=end,
+            retries=retries, retry_sleep_seconds=retry_sleep_seconds,
+        )
+        if not page:
+            break
+        parsed = parse_open_interest_rows(symbol, page)
+        if not parsed:
+            break
+        new_count = 0
+        for item in parsed:
+            if item.ts not in rows:
+                rows[item.ts] = item
+                new_count += 1
+        if new_count == 0:
+            break
+        oldest = min(item.ts for item in parsed)
+        if end is not None and oldest >= end:
+            break
+        end = oldest
+        if len(page) < limit:
+            break
+        if sleep_seconds > 0 and len(rows) < target_rows:
+            time.sleep(sleep_seconds)
+
     cutoff = _cutoff_ts(rows, days)
     ordered = [
         rows[ts]
@@ -185,6 +220,36 @@ def add_open_interest_features(
 
 def open_interest_output_path(symbol: str, out_dir: Path) -> Path:
     return out_dir / f"{symbol}_open_interest.csv"
+
+
+def _fetch_open_interest_page_with_retry(
+    symbol: str,
+    period: str,
+    limit: int,
+    end: int | None,
+    retries: int,
+    retry_sleep_seconds: float,
+) -> list[dict[str, Any]]:
+    last_error: Exception | None = None
+    for attempt in range(retries + 1):
+        try:
+            return fetch_open_interest_history(symbol, period=period, limit=limit, end=end)
+        except Exception as exc:
+            last_error = exc
+            if attempt >= retries:
+                break
+            if retry_sleep_seconds > 0:
+                time.sleep(retry_sleep_seconds)
+    raise RuntimeError(f"Failed to fetch open interest for {symbol}: {last_error}")
+
+
+def _period_to_minutes(period: str) -> int:
+    mapping = {
+        "5m": 5, "15m": 15, "30m": 30,
+        "1H": 60, "2H": 120, "4H": 240,
+        "6H": 360, "12H": 720, "1D": 1440,
+    }
+    return mapping.get(period, 15)
 
 
 def _cutoff_ts(rows: dict[int, OpenInterest], days: int) -> int | None:

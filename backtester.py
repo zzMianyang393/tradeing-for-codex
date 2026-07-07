@@ -15,6 +15,7 @@ from strategy import (
     funding_signal_for,
     micro_momentum_signal_for,
     open_interest_signal_for,
+    order_book_signal_for,
     signal_for,
     trade_flow_signal_for,
 )
@@ -339,6 +340,15 @@ class Backtester:
                         if self._blocked_by_reversal_risk(trade_flow_sig, market[symbol], idx):
                             continue
                         signals.append(trade_flow_sig)
+                    order_book_sig = order_book_signal_for(symbol, market[symbol], idx, self.config)
+                    if order_book_sig and order_book_sig.score >= self.config.min_score:
+                        if step < direction_pause_until.get(order_book_sig.direction, -1):
+                            continue
+                        if step < reason_pause_until.get(order_book_sig.reason, -1):
+                            continue
+                        if self._blocked_by_reversal_risk(order_book_sig, market[symbol], idx):
+                            continue
+                        signals.append(order_book_sig)
                 signals.sort(key=lambda sig: sig.score, reverse=True)
                 opened_symbols: set[str] = set()
                 for sig in signals[:slots]:
@@ -607,6 +617,9 @@ class Backtester:
         elif self._is_trade_flow_reason(pos.reason):
             trailing_atr = self.config.trade_flow_trailing_atr
             max_hold_bars = self.config.trade_flow_max_hold_bars
+        elif self._is_order_book_reason(pos.reason):
+            trailing_atr = self.config.order_book_trailing_atr
+            max_hold_bars = self.config.order_book_max_hold_bars
         elif self._is_continuation_reason(pos.reason):
             trailing_atr = self.config.continuation_trailing_atr
             max_hold_bars = self.config.continuation_max_hold_bars
@@ -693,6 +706,10 @@ class Backtester:
     def _is_trade_flow_reason(reason: str) -> bool:
         return reason.startswith("trade_flow_")
 
+    @staticmethod
+    def _is_order_book_reason(reason: str) -> bool:
+        return reason.startswith("order_book_")
+
     def _is_adaptive_trend_signal(self, sig: Signal) -> bool:
         return (
             self.config.enable_adaptive_profiles
@@ -722,6 +739,8 @@ class Backtester:
             return self.config.open_interest_stop_atr
         if self._is_trade_flow_reason(sig.reason):
             return self.config.trade_flow_stop_atr
+        if self._is_order_book_reason(sig.reason):
+            return self.config.order_book_stop_atr
         if self._is_continuation_reason(sig.reason):
             return self.config.continuation_stop_atr
         if self._is_adaptive_trend_signal(sig):
@@ -741,6 +760,8 @@ class Backtester:
             return self.config.open_interest_take_profit_atr
         if self._is_trade_flow_reason(sig.reason):
             return self.config.trade_flow_take_profit_atr
+        if self._is_order_book_reason(sig.reason):
+            return self.config.order_book_take_profit_atr
         if self._is_continuation_reason(sig.reason):
             return self.config.continuation_take_profit_atr
         if self._is_adaptive_trend_signal(sig):
@@ -767,6 +788,8 @@ class Backtester:
             return self.config.open_interest_risk_per_trade
         if self._is_trade_flow_reason(sig.reason):
             return self.config.trade_flow_risk_per_trade
+        if self._is_order_book_reason(sig.reason):
+            return self.config.order_book_risk_per_trade
         if self._is_continuation_reason(sig.reason):
             return self.config.continuation_risk_per_trade
         if self._is_adaptive_trend_signal(sig):
@@ -829,6 +852,7 @@ def run_report(data_dir: Path, report_path: Path, config: BacktestConfig) -> dic
         include_funding=config.enable_funding_module,
         include_open_interest=config.enable_open_interest_module,
         include_trade_flow=config.enable_trade_flow_module,
+        include_order_book=config.enable_order_book_module,
     )
     if config.allowed_symbols:
         market = {s: bars for s, bars in market.items() if s in config.allowed_symbols}

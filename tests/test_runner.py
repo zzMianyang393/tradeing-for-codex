@@ -14,7 +14,7 @@ from config import BacktestConfig
 from exchange import DryRunExchange, ExchangeError, OrderResult
 from executor import ExecutionRequest, Executor
 from risk_manager import RiskManager
-from runner import RunInput, TradingRunner, main
+from runner import RunInput, TradingRunner, _risk_per_trade_for_signal, _stop_tp_for_signal, main
 from state_db import StateDB
 from strategy import Signal
 
@@ -89,6 +89,28 @@ class TestTradingRunner(unittest.TestCase):
         self.assertEqual(1, report.closed_positions)
         self.assertEqual(0, report.open_positions)
         self.assertEqual(1, self.db.count_trades())
+
+    def test_runner_signal_sizing_routes_trade_flow_parameters(self):
+        config = BacktestConfig(
+            trade_flow_stop_atr=1.7,
+            trade_flow_take_profit_atr=1.2,
+            trade_flow_risk_per_trade=0.031,
+        )
+        sig = Signal("BTC-USDT-SWAP", 1, 3.5, "trade_flow", "trade_flow_imbalance_long")
+
+        self.assertEqual((1.7, 1.2), _stop_tp_for_signal(sig, config))
+        self.assertEqual(0.031, _risk_per_trade_for_signal(sig, config))
+
+    def test_runner_signal_sizing_routes_order_book_parameters(self):
+        config = BacktestConfig(
+            order_book_stop_atr=1.8,
+            order_book_take_profit_atr=1.1,
+            order_book_risk_per_trade=0.029,
+        )
+        sig = Signal("BTC-USDT-SWAP", 1, 3.5, "order_book", "order_book_imbalance_long")
+
+        self.assertEqual((1.8, 1.1), _stop_tp_for_signal(sig, config))
+        self.assertEqual(0.029, _risk_per_trade_for_signal(sig, config))
 
 
 class TestRunnerCli(unittest.TestCase):

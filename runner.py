@@ -87,8 +87,8 @@ class TradingRunner:
             self.config.timeframe_minutes,
             include_funding=getattr(self.config, "enable_funding_module", False),
             include_open_interest=getattr(self.config, "enable_open_interest_module", False),
-            include_trade_flow=getattr(self.config, "enable_trade_flow", False),
-            include_order_book=getattr(self.config, "enable_order_book", False),
+            include_trade_flow=getattr(self.config, "enable_trade_flow_module", False),
+            include_order_book=getattr(self.config, "enable_order_book_module", False),
         )
         # Filter to selected symbols if specified
         if self.symbols:
@@ -396,6 +396,10 @@ def _stop_tp_for_signal(sig: Signal, config: BacktestConfig) -> tuple[float, flo
         return config.funding_stop_atr, config.funding_take_profit_atr
     if sig.reason.startswith("open_interest_"):
         return config.open_interest_stop_atr, config.open_interest_take_profit_atr
+    if sig.reason.startswith("trade_flow_"):
+        return config.trade_flow_stop_atr, config.trade_flow_take_profit_atr
+    if sig.reason.startswith("order_book_"):
+        return config.order_book_stop_atr, config.order_book_take_profit_atr
     if sig.reason.startswith("continuation_"):
         return config.continuation_stop_atr, config.continuation_take_profit_atr
     if sig.reason.startswith("range_revert_"):
@@ -413,6 +417,10 @@ def _risk_per_trade_for_signal(sig: Signal, config: BacktestConfig) -> float:
         return config.funding_risk_per_trade
     if sig.reason.startswith("open_interest_"):
         return config.open_interest_risk_per_trade
+    if sig.reason.startswith("trade_flow_"):
+        return config.trade_flow_risk_per_trade
+    if sig.reason.startswith("order_book_"):
+        return config.order_book_risk_per_trade
     if sig.reason.startswith("continuation_"):
         return config.continuation_risk_per_trade
     return config.risk_per_trade

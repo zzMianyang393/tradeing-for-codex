@@ -4,11 +4,19 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
+
+logger = logging.getLogger("exchange")
+
+# Transient HTTP status codes that are safe to retry
+_TRANSIENT_HTTP_CODES = {408, 429, 500, 502, 503, 504}
 
 
 @dataclass
@@ -123,6 +131,10 @@ class OKXExchange:
         sandbox: bool = True,
         base_url: str = "https://www.okx.com",
         transport: Transport | None = None,
+        max_retries: int = 3,
+        retry_base_delay: float = 1.0,
+        request_timeout: float = 15.0,
+        max_slippage_pct: float = 0.005,
     ) -> None:
         self.api_key = api_key
         self.secret = secret
@@ -130,6 +142,10 @@ class OKXExchange:
         self.sandbox = sandbox
         self.base_url = base_url.rstrip("/")
         self.transport = transport
+        self.max_retries = max_retries
+        self.retry_base_delay = retry_base_delay
+        self.request_timeout = request_timeout
+        self.max_slippage_pct = max_slippage_pct
 
     def get_account_balance(self) -> AccountInfo:
         payload = self._request("GET", "/api/v5/account/balance")
@@ -194,8 +210,27 @@ class OKXExchange:
             "ordType": order_type,
             "sz": str(qty),
         }
+
+        # Slippage protection: for market orders without a price, use limit order
+        # with a price guard based on the current ticker
         if price is not None:
             payload["px"] = str(price)
+        elif order_type == "market" and self.max_slippage_pct > 0:
+            try:
+                ticker = self.get_ticker(symbol)
+                ref_price = ticker.last
+                if ref_price > 0:
+                    if direction in ("long", "buy"):
+                        limit_price = ref_price * (1.0 + self.max_slippage_pct)
+                    else:
+                        limit_price = ref_price * (1.0 - self.max_slippage_pct)
+                    payload["ordType"] = "limit"
+                    payload["px"] = f"{limit_price:.6f}"
+                    logger.info("Slippage guard: %s market→limit at %.6f (ref=%.6f, slip=%.4f%%)",
+                                symbol, limit_price, ref_price, self.max_slippage_pct * 100)
+            except Exception as exc:
+                logger.warning("Slippage guard ticker fetch failed for %s: %s", symbol, exc)
+                # Fall back to plain market order
 
         response = self._request("POST", "/api/v5/trade/order", body=payload)
         data = self._first_data(response)
@@ -247,16 +282,40 @@ class OKXExchange:
         headers = self._headers(timestamp, method, request_path, body_text or "")
         url = f"{self.base_url}{request_path}"
 
-        if self.transport is not None:
-            response = self.transport(method, url, headers, body_text)
-        else:
-            response = self._urlopen(method, url, headers, body_text)
+        last_error: Exception | None = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                if self.transport is not None:
+                    response = self.transport(method, url, headers, body_text)
+                else:
+                    response = self._urlopen(method, url, headers, body_text)
 
-        payload = self._parse_response(response)
-        code = str(payload.get("code", "0"))
-        if code != "0":
-            raise ExchangeError(f"OKX error {code}: {payload.get('msg', '')}")
-        return payload
+                payload = self._parse_response(response)
+                code = str(payload.get("code", "0"))
+                if code != "0":
+                    raise ExchangeError(f"OKX error {code}: {payload.get('msg', '')}")
+                return payload
+            except (ExchangeError, HTTPError, URLError, TimeoutError, OSError) as exc:
+                last_error = exc
+                is_transient = self._is_transient_error(exc)
+                if not is_transient or attempt >= self.max_retries:
+                    raise
+                delay = self.retry_base_delay * (2 ** attempt)
+                logger.warning("OKX request %s %s attempt %d/%d failed (%s), retrying in %.1fs",
+                               method, path, attempt + 1, self.max_retries, exc, delay)
+                time.sleep(delay)
+        raise last_error  # type: ignore[misc]
+
+    def _is_transient_error(self, exc: Exception) -> bool:
+        """Check if an error is transient and safe to retry."""
+        if isinstance(exc, HTTPError):
+            return exc.code in _TRANSIENT_HTTP_CODES
+        if isinstance(exc, (URLError, TimeoutError, OSError)):
+            return True
+        if isinstance(exc, ExchangeError):
+            msg = str(exc).lower()
+            return "rate limit" in msg or "too many" in msg or "timeout" in msg
+        return False
 
     def _headers(self, timestamp: str, method: str, path: str, body: str) -> dict[str, str]:
         headers = {
@@ -278,7 +337,7 @@ class OKXExchange:
     def _urlopen(self, method: str, url: str, headers: dict[str, str], body: str | None) -> str:
         data = body.encode("utf-8") if body is not None else None
         request = Request(url, data=data, headers=headers, method=method)
-        with urlopen(request, timeout=10) as response:
+        with urlopen(request, timeout=self.request_timeout) as response:
             return response.read().decode("utf-8")
 
     def _parse_response(self, response: Any) -> dict[str, Any]:

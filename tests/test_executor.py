@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -111,6 +113,63 @@ class TestExecutor(unittest.TestCase):
         self.assertEqual("live", order["status"])
         self.assertEqual("okx-1", order["exchange_order_id"])
         self.assertEqual([], self.db.get_open_positions())
+
+    def test_poll_order_fill_returns_terminal_order_state(self):
+        live_exchange = MagicMock()
+        live_exchange.get_order_status.side_effect = [
+            {"data": [{"state": "live", "ordId": "okx-1"}]},
+            {"data": [{"state": "filled", "ordId": "okx-1", "avgPx": "100"}]},
+        ]
+        executor = Executor(live_exchange, self.risk_manager, self.db, self.config)
+
+        result = executor.poll_order_fill(
+            "BTC-USDT-SWAP",
+            "okx-1",
+            max_wait_seconds=1.0,
+            poll_interval=0.0,
+        )
+
+        self.assertEqual("filled", result["state"])
+        self.assertEqual(2, live_exchange.get_order_status.call_count)
+
+    def test_cancel_stale_orders_cancels_old_active_exchange_orders(self):
+        live_exchange = MagicMock()
+        live_exchange.cancel_order.return_value = {"code": "0"}
+        executor = Executor(live_exchange, self.risk_manager, self.db, self.config)
+        order_id = self.db.save_order("BTC-USDT-SWAP", "long", 0.01, price=100.0)
+        self.db.update_order_status(order_id, "live", exchange_order_id="okx-1")
+        conn = sqlite3.connect(str(Path(self._tmp.name) / "state.db"))
+        try:
+            conn.execute("UPDATE orders SET created_at='2000-01-01 00:00:00' WHERE id=?", (order_id,))
+            conn.commit()
+        finally:
+            conn.close()
+
+        cancelled = executor.cancel_stale_orders(max_age_minutes=1.0)
+
+        self.assertEqual(["okx-1"], cancelled)
+        live_exchange.cancel_order.assert_called_once_with("BTC-USDT-SWAP", "okx-1")
+        self.assertEqual("cancelled", self.db.get_order(order_id)["status"])
+
+    def test_cancel_stale_orders_treats_naive_created_at_as_utc(self):
+        live_exchange = MagicMock()
+        executor = Executor(live_exchange, self.risk_manager, self.db, self.config)
+        order_id = self.db.save_order("BTC-USDT-SWAP", "long", 0.01, price=100.0)
+        self.db.update_order_status(order_id, "live", exchange_order_id="okx-1")
+        conn = sqlite3.connect(str(Path(self._tmp.name) / "state.db"))
+        try:
+            conn.execute(
+                "UPDATE orders SET created_at=? WHERE id=?",
+                (datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), order_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        cancelled = executor.cancel_stale_orders(max_age_minutes=30.0)
+
+        self.assertEqual([], cancelled)
+        live_exchange.cancel_order.assert_not_called()
 
     def test_sync_state_consistent_keeps_risk_manager_running(self):
         self.db.save_position("BTC-USDT-SWAP", "long", 100.0, 0.1, 10.0, 1.0, 10.0)

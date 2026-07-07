@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import logging
+import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from config import BacktestConfig
@@ -11,6 +14,8 @@ from strategy import Signal
 
 if TYPE_CHECKING:
     from market import FeatureBar
+
+logger = logging.getLogger("executor")
 
 
 @dataclass(frozen=True)
@@ -363,6 +368,65 @@ class Executor:
             risk_decision=decision.reason,
         )
 
+    def poll_order_fill(
+        self,
+        symbol: str,
+        order_id: str,
+        max_wait_seconds: float = 30.0,
+        poll_interval: float = 2.0,
+    ) -> dict | None:
+        """Poll exchange for order fill status. Returns order info dict or None on timeout."""
+        deadline = time.monotonic() + max_wait_seconds
+        while time.monotonic() < deadline:
+            try:
+                result = self.exchange.get_order_status(symbol, order_id)
+                data = result.get("data", [{}])
+                if data:
+                    status = data[0].get("state", "")
+                    if status in ("filled", "canceled", "failed"):
+                        return data[0]
+                    if status == "partially_filled":
+                        logger.info("Order %s partially filled: %s/%s",
+                                    order_id, data[0].get("accFillSz", 0), data[0].get("sz", 0))
+            except Exception as exc:
+                logger.warning("Poll order %s failed: %s", order_id, exc)
+            time.sleep(poll_interval)
+        logger.warning("Order %s poll timeout after %.0fs", order_id, max_wait_seconds)
+        return None
+
+    def cancel_stale_orders(self, max_age_minutes: float = 30.0) -> list[str]:
+        """Cancel live/pending orders older than max_age_minutes. Returns cancelled order IDs."""
+        cancelled: list[str] = []
+        active_orders = self.state_db.get_active_exchange_orders()
+        now_ts = time.time() * 1000  # ms
+        max_age_ms = max_age_minutes * 60 * 1000
+        for order in active_orders:
+            exchange_order_id = order.get("exchange_order_id", "")
+            symbol = order.get("symbol", "")
+            created_at = order.get("created_at", "")
+            if not exchange_order_id or not symbol:
+                continue
+            # Estimate age from created_at if available
+            try:
+                created_at_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                if created_at_dt.tzinfo is None:
+                    created_at_dt = created_at_dt.replace(tzinfo=timezone.utc)
+                created_ts = created_at_dt.timestamp() * 1000
+                age_ms = now_ts - created_ts
+                if age_ms < max_age_ms:
+                    continue
+            except (ValueError, TypeError):
+                continue
+            try:
+                self.exchange.cancel_order(symbol, exchange_order_id)
+                self.state_db.update_order_status(order["id"], "cancelled")
+                cancelled.append(exchange_order_id)
+                logger.info("Cancelled stale order %s for %s (age=%.0fmin)",
+                            exchange_order_id, symbol, age_ms / 60000)
+            except Exception as exc:
+                logger.warning("Failed to cancel stale order %s: %s", exchange_order_id, exc)
+        return cancelled
+
 
 def _direction_label(direction: int) -> str:
     return "long" if direction > 0 else "short"
@@ -387,6 +451,10 @@ def _trailing_params_for_reason(reason: str, config: BacktestConfig) -> tuple[fl
         return config.funding_trailing_atr, config.funding_max_hold_bars
     if reason.startswith("open_interest_"):
         return config.open_interest_trailing_atr, config.open_interest_max_hold_bars
+    if reason.startswith("trade_flow_"):
+        return config.trade_flow_trailing_atr, config.trade_flow_max_hold_bars
+    if reason.startswith("order_book_"):
+        return config.order_book_trailing_atr, config.order_book_max_hold_bars
     if reason.startswith("continuation_"):
         return config.continuation_trailing_atr, config.continuation_max_hold_bars
     if reason.startswith("range_revert_"):

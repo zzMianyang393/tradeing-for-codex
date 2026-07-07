@@ -4,7 +4,7 @@ import unittest
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from health_report import build_health_report
+from health_report import HealthAlertTracker, HealthIssue, build_health_report
 from state_db import ReconcileResult
 
 
@@ -83,6 +83,20 @@ class TestHealthReport(unittest.TestCase):
         self.assertEqual("warning", report.status)
         self.assertEqual("risk_paused", report.issues[0].kind)
         self.assertEqual("daily loss limit", report.issues[0].context["reason"])
+
+    def test_alert_tracker_suppresses_recent_duplicate_issue_keys(self):
+        tracker = HealthAlertTracker(suppress_minutes=60)
+        issue = HealthIssue("warning", "stale_order", "old order", {"symbol": "BTC-USDT-SWAP"})
+
+        self.assertEqual([issue], tracker.filter_new_issues([issue]))
+        self.assertEqual([], tracker.filter_new_issues([issue]))
+
+    def test_alert_tracker_respects_minimum_severity(self):
+        tracker = HealthAlertTracker(min_severity="critical")
+        warning = HealthIssue("warning", "stale_order", "old order", {})
+        critical = HealthIssue("critical", "api_failure", "exchange down", {})
+
+        self.assertEqual([critical], tracker.filter_new_issues([warning, critical]))
 
 
 if __name__ == "__main__":

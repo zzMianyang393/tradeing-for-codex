@@ -124,6 +124,41 @@ class TestOpenInterest(unittest.TestCase):
                 [item.ts for item in loaded],
             )
 
+    def test_download_open_interest_paginates_from_oldest_timestamp(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp)
+            first_page = [
+                {"ts": "1700001800000", "oi": "120", "oiCcy": "12"},
+                {"ts": "1700000900000", "oi": "110", "oiCcy": "11"},
+            ]
+            second_page = [
+                {"ts": "1700000000000", "oi": "100", "oiCcy": "10"},
+            ]
+
+            with patch("open_interest.fetch_open_interest_history", side_effect=[first_page, second_page]) as fetch:
+                count = download_open_interest(
+                    "BTC-USDT-SWAP",
+                    days=1,
+                    out_dir=out_dir,
+                    period="15m",
+                    limit=2,
+                    sleep_seconds=0.0,
+                )
+
+            self.assertEqual(3, count)
+            self.assertEqual(
+                [
+                    (("BTC-USDT-SWAP",), {"period": "15m", "limit": 2, "end": None}),
+                    (("BTC-USDT-SWAP",), {"period": "15m", "limit": 2, "end": 1_700_000_900_000}),
+                ],
+                [(call.args, call.kwargs) for call in fetch.call_args_list],
+            )
+            loaded = load_open_interest(out_dir / "BTC-USDT-SWAP_open_interest.csv")
+            self.assertEqual(
+                [1_700_000_000_000, 1_700_000_900_000, 1_700_001_800_000],
+                [item.ts for item in loaded],
+            )
+
     def test_main_downloads_requested_symbols(self):
         with tempfile.TemporaryDirectory() as tmp:
             out_dir = Path(tmp)
