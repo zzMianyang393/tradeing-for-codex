@@ -16,6 +16,7 @@ from strategy import (
     micro_momentum_signal_for,
     open_interest_signal_for,
     signal_for,
+    trade_flow_signal_for,
 )
 from validation import audit_report
 
@@ -329,6 +330,15 @@ class Backtester:
                         if self._blocked_by_reversal_risk(open_interest_sig, market[symbol], idx):
                             continue
                         signals.append(open_interest_sig)
+                    trade_flow_sig = trade_flow_signal_for(symbol, market[symbol], idx, self.config)
+                    if trade_flow_sig and trade_flow_sig.score >= self.config.min_score:
+                        if step < direction_pause_until.get(trade_flow_sig.direction, -1):
+                            continue
+                        if step < reason_pause_until.get(trade_flow_sig.reason, -1):
+                            continue
+                        if self._blocked_by_reversal_risk(trade_flow_sig, market[symbol], idx):
+                            continue
+                        signals.append(trade_flow_sig)
                 signals.sort(key=lambda sig: sig.score, reverse=True)
                 opened_symbols: set[str] = set()
                 for sig in signals[:slots]:
@@ -594,6 +604,9 @@ class Backtester:
         elif self._is_open_interest_reason(pos.reason):
             trailing_atr = self.config.open_interest_trailing_atr
             max_hold_bars = self.config.open_interest_max_hold_bars
+        elif self._is_trade_flow_reason(pos.reason):
+            trailing_atr = self.config.trade_flow_trailing_atr
+            max_hold_bars = self.config.trade_flow_max_hold_bars
         elif self._is_continuation_reason(pos.reason):
             trailing_atr = self.config.continuation_trailing_atr
             max_hold_bars = self.config.continuation_max_hold_bars
@@ -676,6 +689,10 @@ class Backtester:
     def _is_open_interest_reason(reason: str) -> bool:
         return reason.startswith("open_interest_")
 
+    @staticmethod
+    def _is_trade_flow_reason(reason: str) -> bool:
+        return reason.startswith("trade_flow_")
+
     def _is_adaptive_trend_signal(self, sig: Signal) -> bool:
         return (
             self.config.enable_adaptive_profiles
@@ -703,6 +720,8 @@ class Backtester:
             return self.config.funding_stop_atr
         if self._is_open_interest_reason(sig.reason):
             return self.config.open_interest_stop_atr
+        if self._is_trade_flow_reason(sig.reason):
+            return self.config.trade_flow_stop_atr
         if self._is_continuation_reason(sig.reason):
             return self.config.continuation_stop_atr
         if self._is_adaptive_trend_signal(sig):
@@ -720,6 +739,8 @@ class Backtester:
             return self.config.funding_take_profit_atr
         if self._is_open_interest_reason(sig.reason):
             return self.config.open_interest_take_profit_atr
+        if self._is_trade_flow_reason(sig.reason):
+            return self.config.trade_flow_take_profit_atr
         if self._is_continuation_reason(sig.reason):
             return self.config.continuation_take_profit_atr
         if self._is_adaptive_trend_signal(sig):
@@ -744,6 +765,8 @@ class Backtester:
             return self.config.funding_risk_per_trade
         if self._is_open_interest_reason(sig.reason):
             return self.config.open_interest_risk_per_trade
+        if self._is_trade_flow_reason(sig.reason):
+            return self.config.trade_flow_risk_per_trade
         if self._is_continuation_reason(sig.reason):
             return self.config.continuation_risk_per_trade
         if self._is_adaptive_trend_signal(sig):
@@ -805,6 +828,7 @@ def run_report(data_dir: Path, report_path: Path, config: BacktestConfig) -> dic
         config.timeframe_minutes,
         include_funding=config.enable_funding_module,
         include_open_interest=config.enable_open_interest_module,
+        include_trade_flow=config.enable_trade_flow_module,
     )
     if config.allowed_symbols:
         market = {s: bars for s, bars in market.items() if s in config.allowed_symbols}

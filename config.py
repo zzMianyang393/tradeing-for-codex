@@ -177,6 +177,14 @@ class BacktestConfig:
     open_interest_take_profit_atr: float = 1.2
     open_interest_trailing_atr: float = 1.5
     open_interest_max_hold_bars: int = 12
+    enable_trade_flow_module: bool = False
+    trade_flow_min_imbalance: float = 0.45
+    trade_flow_min_quote: float = 500_000.0
+    trade_flow_risk_per_trade: float = 0.035
+    trade_flow_stop_atr: float = 1.6
+    trade_flow_take_profit_atr: float = 1.05
+    trade_flow_trailing_atr: float = 1.2
+    trade_flow_max_hold_bars: int = 8
     enable_attack_module: bool = False
     attack_min_score: float = 4.5
     attack_risk_per_trade: float = 0.025

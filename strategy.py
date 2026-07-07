@@ -312,6 +312,33 @@ def open_interest_signal_for(symbol: str, bars: list[FeatureBar], idx: int, conf
     return None
 
 
+def trade_flow_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Signal | None:
+    if not getattr(config, "enable_trade_flow_module", False):
+        return None
+    if idx < 220:
+        return None
+    bar = bars[idx]
+    buy_quote = float(getattr(bar, "active_buy_quote", 0.0) or 0.0)
+    sell_quote = float(getattr(bar, "active_sell_quote", 0.0) or 0.0)
+    total_flow = buy_quote + sell_quote
+    min_quote = getattr(config, "trade_flow_min_quote", 500_000.0)
+    if total_flow < min_quote:
+        return None
+    imbalance = float(getattr(bar, "trade_flow_imbalance", 0.0) or 0.0)
+    min_imbalance = getattr(config, "trade_flow_min_imbalance", 0.45)
+    if abs(imbalance) < min_imbalance:
+        return None
+
+    flow_strength = min(0.75, abs(imbalance))
+    flow_size = min(0.45, total_flow / max(bar.vol_sma * 4.0, 1.0))
+    score = 3.25 + flow_strength + flow_size
+    if imbalance > 0 and bar.close >= bar.donchian_high * 0.999 and bar.close > bar.ema20 and bar.rsi <= 72:
+        return Signal(symbol, 1, score, "trade_flow", "trade_flow_breakout_long")
+    if imbalance < 0 and bar.close <= bar.donchian_low * 1.001 and bar.close < bar.ema20 and bar.rsi >= 28:
+        return Signal(symbol, -1, score, "trade_flow", "trade_flow_breakout_short")
+    return None
+
+
 def generate_all_signals(
     symbol: str,
     bars: list[FeatureBar],
@@ -327,6 +354,7 @@ def generate_all_signals(
         micro_momentum_signal_for,
         funding_signal_for,
         open_interest_signal_for,
+        trade_flow_signal_for,
     ]:
         sig = fn(symbol, bars, idx, config)
         if sig is not None:

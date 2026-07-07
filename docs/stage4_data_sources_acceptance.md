@@ -47,6 +47,8 @@ order-book snapshots.
   - `trade_flow_imbalance`
 - `load_market(..., include_trade_flow=True)` attaches cached trade-flow
   features when a matching `<symbol>_trades.csv` file exists.
+- `trade_flow_signal_for` provides an optional, default-off strategy signal for
+  buy/sell trade-flow imbalance breakouts and breakdowns.
 - `order_book.py` defines an `OrderBookSnapshot` data model.
 - OKX order-book snapshots can be parsed into stable local records with
   spread, quote-depth, and depth-imbalance fields.
@@ -76,13 +78,14 @@ order-book snapshots.
   until it passes rolling-window validation.
 - Open-interest strategy is available but remains disabled in the default
   profile until it passes rolling-window validation.
-- Trade-flow features are not consumed by a strategy yet.
+- Trade-flow strategy is available but remains disabled in the default profile
+  until it passes rolling-window validation.
 - Order-book features are consumed by RiskManager only when the new limits are
   explicitly configured.
 
 ## Next Step
 
-- Add a trade-flow strategy/filter and validate it independently.
+- Run trade-flow-module rolling-window validation before enabling it by default.
 - Validate order-book liquidity/spread limits in simulated execution before
   setting defaults.
 - Run open-interest-module rolling-window validation before enabling it by
