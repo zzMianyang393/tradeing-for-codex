@@ -14,7 +14,15 @@ from config import BacktestConfig
 from exchange import DryRunExchange, ExchangeError, OrderResult
 from executor import ExecutionRequest, Executor
 from risk_manager import RiskManager
-from runner import RunInput, TradingRunner, _risk_per_trade_for_signal, _stop_tp_for_signal, main
+from health_report import HealthAlertTracker
+from runner import (
+    RunInput,
+    TradingRunner,
+    _okx_health_report_with_exchange,
+    _risk_per_trade_for_signal,
+    _stop_tp_for_signal,
+    main,
+)
 from state_db import StateDB
 from strategy import Signal
 
@@ -940,9 +948,11 @@ class TestRunnerCli(unittest.TestCase):
             self.assertEqual(2, len(payload["cycles"]))
             self.assertEqual(1, payload["cycles"][0]["sync"]["filled_orders"])
             self.assertEqual(1, payload["cycles"][0]["snapshot"]["local_open_positions"])
+            self.assertEqual("ok", payload["cycles"][0]["health"]["status"])
             db = StateDB(db_path)
             try:
                 self.assertEqual(2, len(db.get_account_history()))
+                self.assertEqual(2, len(db.get_recent_health_reports()))
                 self.assertEqual(1, len(db.get_open_positions()))
             finally:
                 db.close()
@@ -1049,6 +1059,50 @@ class TestRunnerCli(unittest.TestCase):
             self.assertEqual("warning", payload["status"])
             self.assertEqual("stale_order", payload["issues"][0]["kind"])
             self.assertEqual(1, payload["alerts_saved"])
+
+    def test_okx_health_report_notifies_new_alerts_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "state.db"
+            db = StateDB(db_path)
+            try:
+                order_id = db.save_order("BTC-USDT-SWAP", "long", 0.0002, price=50000.0)
+                db.update_order_status(order_id, "live", exchange_order_id="okx-live-1")
+            finally:
+                db.close()
+            conn = sqlite3.connect(str(db_path))
+            try:
+                conn.execute("UPDATE orders SET created_at='2000-01-01 00:00:00' WHERE id=?", (order_id,))
+                conn.commit()
+            finally:
+                conn.close()
+            fake_exchange = MagicMock()
+            fake_exchange.get_positions.return_value = []
+            notifier = MagicMock()
+            notifier.notify_issues.return_value = [MagicMock(success=True)]
+            tracker = HealthAlertTracker(suppress_minutes=60)
+
+            first_payload, first_code = _okx_health_report_with_exchange(
+                db_path,
+                fake_exchange,
+                stale_order_minutes=5,
+                notifier=notifier,
+                alert_tracker=tracker,
+            )
+            second_payload, second_code = _okx_health_report_with_exchange(
+                db_path,
+                fake_exchange,
+                stale_order_minutes=5,
+                notifier=notifier,
+                alert_tracker=tracker,
+            )
+
+            self.assertEqual(1, first_code)
+            self.assertEqual(1, second_code)
+            self.assertEqual(1, first_payload["notifications_sent"])
+            self.assertEqual(0, second_payload["notifications_sent"])
+            notifier.notify_issues.assert_called_once()
+            notified_issues = notifier.notify_issues.call_args.args[0]
+            self.assertEqual("stale_order", notified_issues[0].kind)
 
 
 if __name__ == "__main__":

@@ -12,8 +12,9 @@ from pathlib import Path
 from config import BacktestConfig
 from exchange import DryRunExchange, ExchangeError, OKXExchange
 from executor import ExecutionRequest, Executor
-from health_report import build_health_report
+from health_report import HealthAlertTracker, HealthReport, build_health_report
 from market import FeatureBar, load_market
+from notifier import NotificationResult, Notifier, create_notifier_from_env
 from portfolio import PortfolioConfig, select_portfolio_signals
 from risk_manager import RiskManager
 from state_db import StateDB
@@ -528,7 +529,7 @@ def main(argv: list[str] | None = None) -> int:
         return code
 
     if args.okx_monitor_loop:
-        payload, code = _okx_monitor_loop_payload(args.db, args.iterations, args.interval)
+        payload, code = _okx_monitor_loop_payload(args.db, args.iterations, args.interval, args.stale_order_minutes)
         _print_json(payload)
         return code
 
@@ -1002,12 +1003,21 @@ def _okx_snapshot_with_exchange(db_path: Path, exchange: OKXExchange) -> tuple[d
     }, 0
 
 
-def _okx_monitor_loop_payload(db_path: Path, iterations: int, interval: float) -> tuple[dict, int]:
+def _okx_monitor_loop_payload(
+    db_path: Path,
+    iterations: int,
+    interval: float,
+    stale_order_minutes: int = 30,
+    notifier: Notifier | None = None,
+    alert_tracker: HealthAlertTracker | None = None,
+) -> tuple[dict, int]:
     exchange, error = _okx_exchange_from_env()
     if error:
         error["okx_monitor_loop"] = False
         return error, 2
 
+    notifier = notifier if notifier is not None else create_notifier_from_env()
+    alert_tracker = alert_tracker if alert_tracker is not None else HealthAlertTracker()
     cycles = []
     for step in range(iterations):
         sync_payload, sync_code = _okx_sync_orders_with_exchange(db_path, exchange)
@@ -1020,7 +1030,14 @@ def _okx_monitor_loop_payload(db_path: Path, iterations: int, interval: float) -
             snapshot_payload["okx_monitor_loop"] = False
             snapshot_payload["cycle"] = step
             return snapshot_payload, snapshot_code
-        cycles.append({"cycle": step, "sync": sync_payload, "snapshot": snapshot_payload})
+        health_payload, _health_code = _okx_health_report_with_exchange(
+            db_path,
+            exchange,
+            stale_order_minutes=stale_order_minutes,
+            notifier=notifier,
+            alert_tracker=alert_tracker,
+        )
+        cycles.append({"cycle": step, "sync": sync_payload, "snapshot": snapshot_payload, "health": health_payload})
         if interval > 0 and step < iterations - 1:
             time.sleep(interval)
 
@@ -1037,6 +1054,22 @@ def _okx_health_report_payload(db_path: Path, stale_order_minutes: int = 30) -> 
         error["okx_health_report"] = False
         return error, 2
 
+    return _okx_health_report_with_exchange(
+        db_path,
+        exchange,
+        stale_order_minutes=stale_order_minutes,
+        notifier=create_notifier_from_env(),
+        alert_tracker=HealthAlertTracker(),
+    )
+
+
+def _okx_health_report_with_exchange(
+    db_path: Path,
+    exchange: OKXExchange,
+    stale_order_minutes: int = 30,
+    notifier: Notifier | None = None,
+    alert_tracker: HealthAlertTracker | None = None,
+) -> tuple[dict, int]:
     db = StateDB(db_path)
     try:
         active_orders = db.get_active_exchange_orders()
@@ -1063,12 +1096,28 @@ def _okx_health_report_payload(db_path: Path, stale_order_minutes: int = 30) -> 
         payload["stale_order_minutes"] = stale_order_minutes
         report_id = db.save_health_report(payload)
         alerts_saved = _save_health_alerts(db, report_id, payload["issues"])
+        notification_results = _notify_health_issues(report, notifier, alert_tracker)
     finally:
         db.close()
 
     payload["health_report_id"] = report_id
     payload["alerts_saved"] = alerts_saved
+    payload["notifications_sent"] = sum(1 for result in notification_results if result.success)
+    payload["notifications_failed"] = sum(1 for result in notification_results if not result.success)
     return payload, 0 if report.status == "ok" else 1
+
+
+def _notify_health_issues(
+    report: HealthReport,
+    notifier: Notifier | None,
+    alert_tracker: HealthAlertTracker | None,
+) -> list[NotificationResult]:
+    if notifier is None or alert_tracker is None:
+        return []
+    new_issues = alert_tracker.filter_new_issues(report.issues)
+    if not new_issues:
+        return []
+    return notifier.notify_issues(new_issues)
 
 
 def _save_health_alerts(db: StateDB, report_id: int, issues: list[dict]) -> int:
