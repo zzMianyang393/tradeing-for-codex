@@ -90,6 +90,28 @@ class TestTradingRunner(unittest.TestCase):
         self.assertEqual(0, report.open_positions)
         self.assertEqual(1, self.db.count_trades())
 
+    def test_generate_signals_uses_portfolio_selection_to_dedupe_symbol(self):
+        bars = [MagicMock() for _ in range(260)]
+        btc_signals = [
+            Signal("BTC-USDT-SWAP", 1, 3.6, "range", "range_revert_long"),
+            Signal("BTC-USDT-SWAP", 1, 4.0, "range", "trade_flow_breakout_long"),
+        ]
+        eth_signals = [
+            Signal("ETH-USDT-SWAP", 1, 3.4, "range", "range_revert_long"),
+        ]
+
+        def signal_side_effect(symbol, _bars, _idx, _config):
+            return btc_signals if symbol == "BTC-USDT-SWAP" else eth_signals
+
+        with patch("runner.generate_all_signals", side_effect=signal_side_effect):
+            selected = self.runner._generate_signals(
+                {"BTC-USDT-SWAP": bars, "ETH-USDT-SWAP": bars},
+                ["BTC-USDT-SWAP", "ETH-USDT-SWAP"],
+            )
+
+        self.assertEqual(["BTC-USDT-SWAP", "ETH-USDT-SWAP"], [signal.symbol for signal in selected])
+        self.assertEqual("trade_flow_breakout_long", selected[0].reason)
+
     def test_runner_signal_sizing_routes_trade_flow_parameters(self):
         config = BacktestConfig(
             trade_flow_stop_atr=1.7,

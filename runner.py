@@ -14,6 +14,7 @@ from exchange import DryRunExchange, ExchangeError, OKXExchange
 from executor import ExecutionRequest, Executor
 from health_report import build_health_report
 from market import FeatureBar, load_market
+from portfolio import PortfolioConfig, select_portfolio_signals
 from risk_manager import RiskManager
 from state_db import StateDB
 from strategy import Signal, generate_all_signals
@@ -143,8 +144,8 @@ class TradingRunner:
                     continue
                 signals.append(sig)
         # Sort by score descending — best signals first
-        signals.sort(key=lambda s: s.score, reverse=True)
-        return signals
+        decisions = select_portfolio_signals(signals, PortfolioConfig(max_signals=self.config.max_positions))
+        return [decision.signal for decision in decisions]
 
     def _size_and_execute_signal(
         self, sig: Signal, market: dict[str, list[FeatureBar]], equity: float, current_step: int
