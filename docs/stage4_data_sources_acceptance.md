@@ -39,6 +39,8 @@ order-book snapshots.
 - Trade ticks can be saved to and loaded from CSV cache files.
 - `trade_flow.py --symbols ... --out ...` downloads historical trade rows with
   CSV merge behavior.
+- `trade_flow.py --pages ...` can walk older historical trade pages by using
+  the oldest returned trade id as the next `before` cursor.
 - `add_trade_flow_features` returns `TradeFlowFeatureBar` values that preserve
   all existing `FeatureBar` fields and add:
   - `active_buy_quote`
@@ -91,8 +93,8 @@ order-book snapshots.
   reports do not show accepted module-specific trade reasons under the present
   thresholds and cache depth.
 - Current optional caches are still shallow for rolling validation: funding is
-  recent history, open-interest is one recent OKX page, trade-flow is recent
-  trade ticks, and order-book is point-in-time snapshots.
+  recent history, open-interest is one recent OKX page, trade-flow now has
+  paginated recent ticks, and order-book is point-in-time snapshots.
 
 ## Next Step
 

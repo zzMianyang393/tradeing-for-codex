@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import time
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, fields
@@ -126,12 +127,27 @@ def download_trade_ticks(
     out_dir: Path,
     before: str | None = None,
     limit: int = 100,
+    pages: int = 1,
+    sleep_seconds: float = 0.12,
 ) -> int:
     path = trade_ticks_output_path(symbol, out_dir)
     ticks = {tick.trade_id: tick for tick in load_trade_ticks(path)}
-    page = fetch_trade_page(symbol, before=before, limit=limit)
-    for tick in parse_trade_rows(symbol, page):
-        ticks[tick.trade_id] = tick
+    cursor = before
+    for page_idx in range(max(1, pages)):
+        page = fetch_trade_page(symbol, before=cursor, limit=limit)
+        parsed = parse_trade_rows(symbol, page)
+        if not parsed:
+            break
+        for tick in parsed:
+            ticks[tick.trade_id] = tick
+        oldest_tick = min(parsed, key=lambda item: item.ts)
+        if cursor is not None and oldest_tick.trade_id == cursor:
+            break
+        cursor = oldest_tick.trade_id
+        if len(page) < limit:
+            break
+        if sleep_seconds > 0 and page_idx + 1 < pages:
+            time.sleep(sleep_seconds)
     ordered = sorted(ticks.values(), key=lambda item: (item.ts, item.trade_id))
     save_trade_ticks(path, ordered)
     return len(ordered)
@@ -186,6 +202,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=Path("data"))
     parser.add_argument("--before")
     parser.add_argument("--limit", type=int, default=100)
+    parser.add_argument("--pages", type=int, default=1)
+    parser.add_argument("--sleep", type=float, default=0.12)
     args = parser.parse_args(argv)
 
     for symbol in args.symbols:
@@ -194,6 +212,8 @@ def main(argv: list[str] | None = None) -> int:
             out_dir=args.out,
             before=args.before,
             limit=args.limit,
+            pages=args.pages,
+            sleep_seconds=args.sleep,
         )
         print(f"{symbol}: wrote {count} trade rows to {trade_ticks_output_path(symbol, args.out)}", flush=True)
     return 0

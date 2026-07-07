@@ -104,6 +104,37 @@ class TestTradeFlow(unittest.TestCase):
             loaded = load_trade_ticks(out_dir / "BTC-USDT-SWAP_trades.csv")
             self.assertEqual(["1", "2", "3"], [tick.trade_id for tick in loaded])
 
+    def test_download_trade_ticks_paginates_from_oldest_trade_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp)
+            first_page = [
+                {"tradeId": "30", "side": "buy", "px": "10", "sz": "1", "ts": "1700000003000"},
+                {"tradeId": "20", "side": "sell", "px": "10", "sz": "1", "ts": "1700000002000"},
+            ]
+            second_page = [
+                {"tradeId": "10", "side": "buy", "px": "10", "sz": "1", "ts": "1700000001000"},
+            ]
+
+            with patch("trade_flow.fetch_trade_page", side_effect=[first_page, second_page]) as fetch:
+                count = download_trade_ticks(
+                    "BTC-USDT-SWAP",
+                    out_dir=out_dir,
+                    limit=2,
+                    pages=2,
+                    sleep_seconds=0.0,
+                )
+
+            self.assertEqual(3, count)
+            self.assertEqual(
+                [
+                    (("BTC-USDT-SWAP",), {"before": None, "limit": 2}),
+                    (("BTC-USDT-SWAP",), {"before": "20", "limit": 2}),
+                ],
+                [(call.args, call.kwargs) for call in fetch.call_args_list],
+            )
+            loaded = load_trade_ticks(out_dir / "BTC-USDT-SWAP_trades.csv")
+            self.assertEqual(["10", "20", "30"], [tick.trade_id for tick in loaded])
+
     def test_main_downloads_requested_symbols(self):
         with tempfile.TemporaryDirectory() as tmp:
             out_dir = Path(tmp)
