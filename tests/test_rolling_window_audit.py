@@ -1,8 +1,18 @@
 import unittest
+import tempfile
 from dataclasses import replace
+from pathlib import Path
+from unittest.mock import patch
 
 from config import BacktestConfig
-from rolling_window_audit import MS_PER_DAY, rolling_endpoints, summarize_results, window_config_for_audit
+from rolling_window_audit import (
+    MS_PER_DAY,
+    data_source_coverage,
+    load_market_for_audit,
+    rolling_endpoints,
+    summarize_results,
+    window_config_for_audit,
+)
 
 
 class RollingWindowAuditTests(unittest.TestCase):
@@ -50,6 +60,44 @@ class RollingWindowAuditTests(unittest.TestCase):
         window_cfg = window_config_for_audit(cfg, 90, ("AAA-USDT-SWAP",))
 
         self.assertEqual(cfg.risk_per_trade, window_cfg.risk_per_trade)
+
+    def test_load_market_for_audit_enables_configured_data_sources(self):
+        cfg = replace(
+            BacktestConfig(),
+            enable_funding_module=True,
+            enable_open_interest_module=True,
+            enable_trade_flow_module=True,
+            rm_max_order_book_spread_pct=0.001,
+        )
+
+        with patch("rolling_window_audit.load_market", return_value={}) as mocked:
+            load_market_for_audit(Path("data"), cfg)
+
+        mocked.assert_called_once_with(
+            Path("data"),
+            cfg.timeframe_minutes,
+            include_funding=True,
+            include_open_interest=True,
+            include_trade_flow=True,
+            include_order_book=True,
+        )
+
+    def test_data_source_coverage_counts_available_optional_caches(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            data_dir = Path(tmp)
+            (data_dir / "BTC_15m.csv").write_text("timestamp,open,high,low,close,volume\n", encoding="utf-8")
+            (data_dir / "ETH_15m.csv").write_text("timestamp,open,high,low,close,volume\n", encoding="utf-8")
+            (data_dir / "BTC-USDT-SWAP_trades.csv").write_text("symbol\n", encoding="utf-8")
+            (data_dir / "ETH-USDT-SWAP_funding.csv").write_text("symbol\n", encoding="utf-8")
+
+            coverage = data_source_coverage(data_dir)
+
+        self.assertEqual(2, coverage["symbols"])
+        self.assertEqual(1, coverage["funding"]["files"])
+        self.assertEqual(0.5, coverage["funding"]["coverage"])
+        self.assertEqual(1, coverage["trade_flow"]["files"])
+        self.assertEqual(["BTC-USDT-SWAP"], coverage["trade_flow"]["symbols"])
+        self.assertEqual(0, coverage["open_interest"]["files"])
 
 
 if __name__ == "__main__":

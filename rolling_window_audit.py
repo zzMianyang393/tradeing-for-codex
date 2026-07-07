@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
+import argparse
 from dataclasses import replace
 from pathlib import Path
 
 from backtester import Backtester, _common_timeline, config_for_window
 from config import BacktestConfig
-from market import FeatureBar, load_market
+from market import FeatureBar, discover_symbols, load_market
 
 
 MS_PER_DAY = 24 * 60 * 60 * 1000
@@ -71,6 +72,40 @@ def window_config_for_audit(config: BacktestConfig, days: int, symbols: tuple[st
     return config_for_window(config, days, symbols)
 
 
+def load_market_for_audit(data_dir: Path, config: BacktestConfig) -> dict[str, list[FeatureBar]]:
+    include_order_book = (
+        config.rm_max_order_book_spread_pct > 0
+        or config.rm_min_order_book_depth_quote > 0
+    )
+    return load_market(
+        data_dir,
+        config.timeframe_minutes,
+        include_funding=config.enable_funding_module,
+        include_open_interest=config.enable_open_interest_module,
+        include_trade_flow=config.enable_trade_flow_module,
+        include_order_book=include_order_book,
+    )
+
+
+def data_source_coverage(data_dir: Path) -> dict:
+    symbols = discover_symbols(data_dir)
+    sources = {
+        "funding": "_funding.csv",
+        "open_interest": "_open_interest.csv",
+        "trade_flow": "_trades.csv",
+        "order_book": "_order_book.csv",
+    }
+    coverage: dict = {"symbols": len(symbols), "symbol_list": symbols}
+    for name, suffix in sources.items():
+        available = [symbol for symbol in symbols if (data_dir / f"{symbol}{suffix}").exists()]
+        coverage[name] = {
+            "files": len(available),
+            "coverage": round(len(available) / len(symbols), 4) if symbols else 0.0,
+            "symbols": available,
+        }
+    return coverage
+
+
 def run_rolling_audit(
     data_dir: Path,
     config: BacktestConfig,
@@ -79,13 +114,14 @@ def run_rolling_audit(
     max_windows: int = 12,
     warmup_days: int = 45,
 ) -> dict:
-    market = load_market(data_dir, config.timeframe_minutes)
+    market = load_market_for_audit(data_dir, config)
     timeline = _common_timeline(market, min_count_fraction=0.50)
     report: dict = {
         "data_dir": str(data_dir),
         "stride_days": stride_days,
         "max_windows": max_windows,
         "warmup_days": warmup_days,
+        "data_source_coverage": data_source_coverage(data_dir),
         "windows": {},
     }
     audit_config = replace(config, enable_long_window_aggressive_profile=False)
@@ -137,9 +173,43 @@ def print_report(report: dict) -> None:
 
 
 def main() -> None:
-    data_dir = Path("data")
-    report = run_rolling_audit(data_dir, BacktestConfig())
-    report_path = Path("reports/rolling_window_audit.json")
+    parser = argparse.ArgumentParser(description="Run rolling-window backtest audits.")
+    parser.add_argument("--data", type=Path, default=Path("data"))
+    parser.add_argument("--out", type=Path, default=Path("reports/rolling_window_audit.json"))
+    parser.add_argument(
+        "--module",
+        choices=("default", "funding", "open-interest", "trade-flow", "order-book"),
+        default="default",
+        help="Enable one optional data-source module for isolated rolling validation.",
+    )
+    parser.add_argument("--stride-days", type=int, default=14)
+    parser.add_argument("--max-windows", type=int, default=12)
+    parser.add_argument("--warmup-days", type=int, default=45)
+    args = parser.parse_args()
+
+    config = BacktestConfig()
+    if args.module == "funding":
+        config = replace(config, enable_funding_module=True)
+    elif args.module == "open-interest":
+        config = replace(config, enable_open_interest_module=True)
+    elif args.module == "trade-flow":
+        config = replace(config, enable_trade_flow_module=True)
+    elif args.module == "order-book":
+        config = replace(
+            config,
+            rm_max_order_book_spread_pct=0.002,
+            rm_min_order_book_depth_quote=100_000.0,
+        )
+
+    report = run_rolling_audit(
+        args.data,
+        config,
+        stride_days=args.stride_days,
+        max_windows=args.max_windows,
+        warmup_days=args.warmup_days,
+    )
+    report["module"] = args.module
+    report_path = args.out
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     print_report(report)
     print(f"report={report_path}", flush=True)

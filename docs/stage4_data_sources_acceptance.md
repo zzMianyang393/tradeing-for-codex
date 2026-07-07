@@ -82,10 +82,14 @@ order-book snapshots.
   until it passes rolling-window validation.
 - Order-book features are consumed by RiskManager only when the new limits are
   explicitly configured.
+- The current checked-in `data` folder has no optional funding, open-interest,
+  trade-flow, or order-book cache files, so module validation first requires
+  downloading those caches.
 
 ## Next Step
 
 - Run trade-flow-module rolling-window validation before enabling it by default.
+- Download optional data-source caches for the selected validation symbols.
 - Validate order-book liquidity/spread limits in simulated execution before
   setting defaults.
 - Run open-interest-module rolling-window validation before enabling it by

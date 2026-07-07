@@ -202,3 +202,17 @@ Conclusion: the current default is much less spectacular than the previous
 windows across 7 to 180 days are mostly profitable. The next optimization target
 is reducing the remaining 7/14 day low-trade-count variance without reintroducing
 365-day special casing.
+
+Optional data-source modules can be validated independently before they are
+enabled in the default profile:
+
+```bash
+python rolling_window_audit.py --module funding --out reports\rolling_funding_audit.json
+python rolling_window_audit.py --module open-interest --out reports\rolling_open_interest_audit.json
+python rolling_window_audit.py --module trade-flow --out reports\rolling_trade_flow_audit.json
+python rolling_window_audit.py --module order-book --out reports\rolling_order_book_audit.json
+```
+
+Each rolling audit report includes `data_source_coverage`, which shows whether
+the local `data` folder actually contains the optional cache files required by
+that module.
