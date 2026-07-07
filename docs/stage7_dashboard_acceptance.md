@@ -19,19 +19,22 @@ for local trading state.
   - account equity and margin metrics
   - open positions
   - recent trades
+  - strategy/signal-reason performance
+  - symbol performance
   - trade summary
   - health alerts
   - risk events
+- When served over HTTP, the page polls `/api/dashboard` every 30 seconds and
+  refreshes when the payload changes.
 
 ## Current Limits
 
 - It reads local SQLite only and does not query live exchange state directly.
 - The local server intentionally uses Python standard library HTTP only; there
   is no Flask/FastAPI dependency.
-- The page can be refreshed against the local server, but it does not yet patch
-  table/chart content in place from the JSON endpoint.
+- The page refreshes on payload changes instead of patching table/chart content
+  in place.
 
 ## Next Step
 
-- Add strategy and symbol performance breakdown panels.
-- Add in-place browser polling from `/api/dashboard` for table/chart updates.
+- Add in-place browser patching from `/api/dashboard` for table/chart updates.

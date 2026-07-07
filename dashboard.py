@@ -17,6 +17,8 @@ def build_dashboard_payload(db_path: Path) -> dict[str, Any]:
         latest = history[-1] if history else {}
         health_reports = db.get_recent_health_reports(1)
         latest_health = health_reports[0] if health_reports else {}
+        recent_trades = db.get_recent_trades(12)
+        performance_trades = db.get_recent_trades(500)
         return {
             "account": {
                 "equity": latest.get("equity", 0.0),
@@ -39,7 +41,9 @@ def build_dashboard_payload(db_path: Path) -> dict[str, Any]:
             ],
             "trade_summary": db.trade_summary(),
             "positions": db.get_open_positions(),
-            "recent_trades": db.get_recent_trades(12),
+            "recent_trades": recent_trades,
+            "symbol_performance": summarize_performance(performance_trades, "symbol", "symbol"),
+            "reason_performance": summarize_performance(performance_trades, "signal_reason", "reason"),
             "risk_events": db.get_risk_events(10),
             "alerts": db.get_recent_health_alerts(10),
             "health": {
@@ -58,6 +62,8 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
     trades = payload.get("recent_trades", [])
     risk_events = payload.get("risk_events", [])
     alerts = payload.get("alerts", [])
+    symbol_performance = payload.get("symbol_performance", [])
+    reason_performance = payload.get("reason_performance", [])
     health = payload.get("health", {})
     status = str(health.get("status", "unknown"))
     dashboard_json = safe_json(payload)
@@ -236,6 +242,7 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
       <div class="segmented" role="tablist" aria-label="Dashboard views">
         <button type="button" class="active" data-view-button="positions">Positions</button>
         <button type="button" data-view-button="trades">Trades</button>
+        <button type="button" data-view-button="performance">Performance</button>
         <button type="button" data-view-button="alerts">Alerts</button>
       </div>
       <input id="table-search" type="search" placeholder="Filter visible rows" autocomplete="off">
@@ -247,6 +254,11 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
       </div>
       <div class="stack" data-view="trades" hidden>
         {table_card("Recent Trades", ["Symbol", "Side", "PnL", "Exit"], [_trade_row(t) for t in trades])}
+      </div>
+      <div class="stack" data-view="performance" hidden>
+        {summary_card(trade_summary)}
+        {table_card("By Symbol", ["Symbol", "Trades", "Win Rate", "PnL"], [_performance_row(p, "symbol") for p in symbol_performance])}
+        {table_card("By Reason", ["Reason", "Trades", "Win Rate", "PnL"], [_performance_row(p, "reason") for p in reason_performance])}
       </div>
       <div class="stack" data-view="alerts" hidden>
         {summary_card(trade_summary)}
@@ -312,12 +324,27 @@ def render_dashboard_html(payload: dict[str, Any]) -> str:
       ctx.stroke();
     }}
 
+    async function refreshDashboard() {{
+      if (!window.location || window.location.protocol === "file:") return;
+      try {{
+        const response = await fetch("/api/dashboard", {{ cache: "no-store" }});
+        if (!response.ok) return;
+        const latest = await response.json();
+        if (JSON.stringify(latest) !== JSON.stringify(dashboardData)) {{
+          window.location.reload();
+        }}
+      }} catch (error) {{
+        return;
+      }}
+    }}
+
     document.querySelectorAll("[data-view-button]").forEach((button) => {{
       button.addEventListener("click", () => setView(button.dataset.viewButton));
     }});
     search.addEventListener("input", filterVisibleRows);
     window.addEventListener("resize", drawEquityChart);
     drawEquityChart();
+    window.setInterval(refreshDashboard, 30000);
   </script>
 </body>
 </html>
@@ -329,6 +356,31 @@ def write_dashboard(db_path: Path, out_path: Path) -> Path:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(render_dashboard_html(payload), encoding="utf-8")
     return out_path
+
+
+def summarize_performance(trades: list[dict[str, Any]], source_key: str, output_key: str) -> list[dict[str, Any]]:
+    buckets: dict[str, dict[str, Any]] = {}
+    for trade in trades:
+        key = str(trade.get(source_key) or "unknown")
+        bucket = buckets.setdefault(key, {output_key: key, "trades": 0, "wins": 0, "total_pnl": 0.0})
+        pnl = float(trade.get("pnl") or 0.0)
+        bucket["trades"] += 1
+        bucket["wins"] += 1 if pnl > 0 else 0
+        bucket["total_pnl"] += pnl
+    rows = []
+    for bucket in buckets.values():
+        trades_count = int(bucket["trades"])
+        rows.append(
+            {
+                output_key: bucket[output_key],
+                "trades": trades_count,
+                "wins": int(bucket["wins"]),
+                "win_rate": round(bucket["wins"] / trades_count, 4) if trades_count else 0.0,
+                "total_pnl": round(float(bucket["total_pnl"]), 4),
+            }
+        )
+    rows.sort(key=lambda row: abs(float(row["total_pnl"])), reverse=True)
+    return rows
 
 
 def create_dashboard_server(db_path: Path, host: str = "127.0.0.1", port: int = 8090) -> ThreadingHTTPServer:
@@ -441,6 +493,17 @@ def _alert_row(alert: dict[str, Any]) -> list[str]:
 
 def _risk_row(event: dict[str, Any]) -> list[str]:
     return [e(event.get("event_type", "")), e(event.get("detail", ""))]
+
+
+def _performance_row(row: dict[str, Any], label_key: str) -> list[str]:
+    pnl = float(row.get("total_pnl") or 0.0)
+    cls = "positive" if pnl >= 0 else "negative"
+    return [
+        e(row.get(label_key, "")),
+        e(row.get("trades", 0)),
+        e(pct(row.get("win_rate", 0.0))),
+        f"<span class=\"{cls}\">{e(money(pnl))}</span>",
+    ]
 
 
 def e(value: Any) -> str:

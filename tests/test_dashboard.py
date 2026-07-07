@@ -46,6 +46,9 @@ class TestDashboard(unittest.TestCase):
         self.assertEqual(1, len(payload["positions"]))
         self.assertEqual(1, payload["trade_summary"]["total"])
         self.assertEqual("api_failure", payload["alerts"][0]["kind"])
+        self.assertEqual("BTC-USDT-SWAP", payload["symbol_performance"][0]["symbol"])
+        self.assertEqual(0.1, payload["symbol_performance"][0]["total_pnl"])
+        self.assertEqual("range_revert_long", payload["reason_performance"][0]["reason"])
 
     def test_render_dashboard_html_contains_operational_sections(self):
         payload = {
@@ -55,6 +58,8 @@ class TestDashboard(unittest.TestCase):
             "recent_trades": [{"symbol": "ETH-USDT-SWAP", "direction": "short", "pnl": 0.2, "exit_reason": "take_profit"}],
             "risk_events": [{"event_type": "reject", "detail": "{\"reason\":\"volatility\"}"}],
             "alerts": [{"severity": "critical", "kind": "api_failure", "message": "Exchange unavailable"}],
+            "symbol_performance": [{"symbol": "ETH-USDT-SWAP", "trades": 1, "win_rate": 1.0, "total_pnl": 0.2}],
+            "reason_performance": [{"reason": "take_profit", "trades": 1, "win_rate": 1.0, "total_pnl": 0.2}],
             "health": {"status": "critical", "issue_count": 1},
             "equity_series": [
                 {"ts": "2026-07-06 10:00:00", "equity": 100.0},
@@ -72,7 +77,10 @@ class TestDashboard(unittest.TestCase):
         self.assertIn("id=\"equity-chart\"", html)
         self.assertIn("id=\"table-search\"", html)
         self.assertIn("data-view-button=\"positions\"", html)
+        self.assertIn("data-view-button=\"performance\"", html)
         self.assertIn("function setView", html)
+        self.assertIn("function refreshDashboard", html)
+        self.assertIn("/api/dashboard", html)
 
     def test_render_dashboard_json_payload_escapes_script_closers(self):
         payload = {
