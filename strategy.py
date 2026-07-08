@@ -94,22 +94,62 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
                 score = 2.45 + min(0.7, (bar.rsi - 60) / 25.0) + min(0.35, band_width / 0.018)
                 return Signal(symbol, -1, score, regime, "range_revert_short")
 
-    # Transition regime: only take high-volume breakouts, keeping it selective.
-    if regime == "transition" and vol_ratio > 1.4:
+    # Transition regime: breakout + pullback continuation + volume breakout.
+    if regime == "transition":
         transition_long_enabled = getattr(config, "transition_long_enabled", True)
         transition_short_enabled = getattr(config, "transition_short_enabled", True)
         transition_long_min_move_21d = getattr(config, "transition_long_min_move_21d", -1.0)
         lookback_21d = bars[max(0, idx - 96 * 21)]
         move_21d = bar.close / lookback_21d.close - 1.0 if lookback_21d.close else 0.0
-        if (
-            transition_long_enabled
-            and move_21d >= transition_long_min_move_21d
-            and bar.close > bar.donchian_high * 0.9995
-            and bar.ema20 > bar.ema50
-        ):
-            return Signal(symbol, 1, 2.9 + min(0.6, vol_ratio / 6.0), regime, "transition_breakout_long")
-        if transition_short_enabled and bar.close < bar.donchian_low * 1.0005 and bar.ema20 < bar.ema50:
-            return Signal(symbol, -1, 2.9 + min(0.6, vol_ratio / 6.0), regime, "transition_breakout_short")
+        move_ok = move_21d >= transition_long_min_move_21d
+
+        # --- Pattern 1: Original high-volume breakout (strict) ---
+        if vol_ratio > 1.4:
+            if (
+                transition_long_enabled
+                and move_ok
+                and bar.close > bar.donchian_high * 0.9995
+                and bar.ema20 > bar.ema50
+            ):
+                return Signal(symbol, 1, 2.9 + min(0.6, vol_ratio / 6.0), regime, "transition_breakout_long")
+            if transition_short_enabled and bar.close < bar.donchian_low * 1.0005 and bar.ema20 < bar.ema50:
+                return Signal(symbol, -1, 2.9 + min(0.6, vol_ratio / 6.0), regime, "transition_breakout_short")
+
+        # --- Pattern 2: Pullback continuation long ---
+        # After a breakout, price pulls back to EMA20 area and bounces back above it.
+        if transition_long_enabled and idx >= 2:
+            prev_bar = bars[idx - 1]
+            # Conditions: previous bar was below ema20 (pullback), current bar closes above ema20
+            pullback_bounce = (
+                prev_bar.close < prev_bar.ema20
+                and bar.close > bar.ema20
+                and bar.ema20 > bar.ema50
+                and 45 <= bar.rsi <= 65
+                and vol_ratio >= 1.1
+                and move_ok
+                and abs(move_21d) < 0.15  # not extreme overheat
+            )
+            if pullback_bounce:
+                score = 2.7 + min(0.5, vol_ratio / 5.0) + min(0.3, abs(bar.trend_strength) / 4.0)
+                return Signal(symbol, 1, score, regime, "transition_breakout_long")
+
+        # --- Pattern 3: Volume breakout without overheat (relaxed) ---
+        # Volume-backed push near donchian high, but not requiring extreme volume.
+        if transition_long_enabled and vol_ratio >= 1.25:
+            candle_body = abs(bar.close - bar.open) / bar.close if bar.close else 0.0
+            candle_range = (bar.high - bar.low) / bar.close if bar.close else 0.0
+            upper_shadow = (bar.high - max(bar.open, bar.close)) / bar.close if bar.close else 0.0
+            volume_breakout = (
+                bar.close >= bar.donchian_high * 0.998
+                and bar.ema20 > bar.ema50
+                and bar.rsi <= 68
+                and candle_body >= bar.atr_pct * 0.25  # reasonable body
+                and upper_shadow < candle_body * 1.5  # no long upper shadow rejection
+                and move_ok
+            )
+            if volume_breakout:
+                score = 2.8 + min(0.55, vol_ratio / 5.0) + min(0.35, abs(bar.trend_strength) / 4.0)
+                return Signal(symbol, 1, score, regime, "transition_breakout_long")
 
     return None
 
