@@ -66,16 +66,16 @@ class TestTransitionBreakoutLongPullback(unittest.TestCase):
                 ema20=100.0,
                 ema50=99.5,
                 ema200=98.0,
-                trend_strength=0.95,  # near transition threshold
+                trend_strength=0.95,
                 atr=2.0,
                 atr_pct=0.02,
                 rsi=55.0,
                 vol_sma=400_000.0,
-                volume_quote=450_000.0,  # vol_ratio ~1.1
+                volume_quote=550_000.0,  # vol_ratio ~1.375
                 donchian_high=104.0,
                 donchian_low=96.0,
             ))
-        # Last bar: pullback bounce
+        # Last bar: pullback bounce with tighter conditions
         bars.append(_make_bar(
             ts=1700000000000 + 260 * 900_000,
             close=101.0,  # just above ema20
@@ -90,7 +90,7 @@ class TestTransitionBreakoutLongPullback(unittest.TestCase):
             atr_pct=0.02,
             rsi=52.0,
             vol_sma=400_000.0,
-            volume_quote=460_000.0,  # vol_ratio ~1.15
+            volume_quote=540_000.0,  # vol_ratio ~1.35
             donchian_high=104.0,
             donchian_low=96.0,
         ))
@@ -265,7 +265,7 @@ class TestTransitionBreakoutLongVolume(unittest.TestCase):
                 donchian_high=104.0,
                 donchian_low=96.0,
             ))
-        # Last bar: volume breakout
+        # Last bar: volume breakout with tighter conditions
         bars.append(_make_bar(
             ts=1700000000000 + 260 * 900_000,
             close=104.0,  # at donchian high
@@ -280,7 +280,7 @@ class TestTransitionBreakoutLongVolume(unittest.TestCase):
             atr_pct=0.02,
             rsi=62.0,  # not overbought
             vol_sma=400_000.0,
-            volume_quote=550_000.0,  # vol_ratio ~1.375
+            volume_quote=560_000.0,  # vol_ratio ~1.4
             donchian_high=104.0,
             donchian_low=96.0,
         ))

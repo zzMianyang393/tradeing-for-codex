@@ -117,32 +117,37 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
 
         # --- Pattern 2: Pullback continuation long ---
         # After a breakout, price pulls back to EMA20 area and bounces back above it.
+        # Tightened: require vol >= 1.3, ema50 > ema200 (medium-term uptrend), RSI 45-62.
         if transition_long_enabled and idx >= 2:
             prev_bar = bars[idx - 1]
-            # Conditions: previous bar was below ema20 (pullback), current bar closes above ema20
             pullback_bounce = (
                 prev_bar.close < prev_bar.ema20
                 and bar.close > bar.ema20
                 and bar.ema20 > bar.ema50
-                and 45 <= bar.rsi <= 65
-                and vol_ratio >= 1.1
+                and bar.ema50 > bar.ema200  # medium-term uptrend confirmed
+                and 45 <= bar.rsi <= 62
+                and vol_ratio >= 1.3
                 and move_ok
-                and abs(move_21d) < 0.15  # not extreme overheat
+                and abs(move_21d) < 0.12  # not extreme overheat
+                and bar.trend_strength > 0.5  # minimum trend quality
             )
             if pullback_bounce:
-                score = 2.7 + min(0.5, vol_ratio / 5.0) + min(0.3, abs(bar.trend_strength) / 4.0)
+                score = 2.9 + min(0.5, vol_ratio / 5.0) + min(0.3, abs(bar.trend_strength) / 4.0)
                 return Signal(symbol, 1, score, regime, "transition_breakout_long")
 
         # --- Pattern 3: Volume breakout without overheat (relaxed) ---
         # Volume-backed push near donchian high, but not requiring extreme volume.
-        if transition_long_enabled and vol_ratio >= 1.25:
+        # Tightened: vol >= 1.35, RSI <= 65, require trend_strength > 0.5.
+        if transition_long_enabled and vol_ratio >= 1.35:
             candle_body = abs(bar.close - bar.open) / bar.close if bar.close else 0.0
             candle_range = (bar.high - bar.low) / bar.close if bar.close else 0.0
             upper_shadow = (bar.high - max(bar.open, bar.close)) / bar.close if bar.close else 0.0
             volume_breakout = (
                 bar.close >= bar.donchian_high * 0.998
                 and bar.ema20 > bar.ema50
-                and bar.rsi <= 68
+                and bar.ema50 > bar.ema200  # medium-term uptrend confirmed
+                and bar.rsi <= 65
+                and bar.trend_strength > 0.5  # minimum trend quality
                 and candle_body >= bar.atr_pct * 0.25  # reasonable body
                 and upper_shadow < candle_body * 1.5  # no long upper shadow rejection
                 and move_ok
