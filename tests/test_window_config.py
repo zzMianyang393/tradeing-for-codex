@@ -76,7 +76,10 @@ class WindowConfigTests(unittest.TestCase):
 
         window_cfg = config_for_window(cfg, 180, ("AAA-USDT-SWAP",))
 
-        self.assertEqual(cfg.target_180_excluded_symbols, window_cfg.excluded_symbols)
+        self.assertEqual(
+            cfg.target_180_excluded_symbols + ("NEAR-USDT-SWAP", "DOT-USDT-SWAP", "ARB-USDT-SWAP"),
+            window_cfg.excluded_symbols,
+        )
         self.assertIn("SOL-USDT-SWAP", window_cfg.excluded_symbols)
         self.assertIn("UNI-USDT-SWAP", window_cfg.excluded_symbols)
 

@@ -1,0 +1,573 @@
+{
+  "days": 365,
+  "start_equity": 10.0,
+  "router_profile": {
+    "mode": "conservative",
+    "allowed_reasons": [
+      "transition_breakout_long"
+    ],
+    "blocked_reasons": [
+      "attack_breakout_long",
+      "attack_breakout_short",
+      "range_revert_long",
+      "range_revert_short",
+      "transition_breakout_short",
+      "trend_long"
+    ],
+    "reason_risk_multipliers": {},
+    "allowed_reasons_cn": [
+      "转换突破做多"
+    ],
+    "blocked_reasons_cn": [
+      "攻击突破做多",
+      "攻击突破做空",
+      "震荡反转做多",
+      "震荡反转做空",
+      "转换突破做空",
+      "趋势做多"
+    ]
+  },
+  "best": {
+    "rank": "goal_30d_fullseed_40#7",
+    "result": {
+      "end_equity": 13.5609,
+      "pnl": 3.5609,
+      "return_pct": 35.6088,
+      "max_drawdown_pct": 17.985,
+      "trades": 8,
+      "win_rate": 0.375,
+      "by_reason": {
+        "transition_breakout_long": {
+          "trades": 8,
+          "wins": 3,
+          "pnl": 3.687,
+          "win_rate": 0.375
+        }
+      },
+      "by_regime": {
+        "transition": {
+          "trades": 8,
+          "wins": 3,
+          "pnl": 3.687,
+          "win_rate": 0.375
+        }
+      }
+    }
+  },
+  "top": [
+    {
+      "rank": "goal_30d_fullseed_40#7",
+      "result": {
+        "end_equity": 13.5609,
+        "pnl": 3.5609,
+        "return_pct": 35.6088,
+        "max_drawdown_pct": 17.985,
+        "trades": 8,
+        "win_rate": 0.375,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 8,
+            "wins": 3,
+            "pnl": 3.687,
+            "win_rate": 0.375
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 8,
+            "wins": 3,
+            "pnl": 3.687,
+            "win_rate": 0.375
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition4",
+      "result": {
+        "end_equity": 12.3453,
+        "pnl": 2.3453,
+        "return_pct": 23.4526,
+        "max_drawdown_pct": 15.9502,
+        "trades": 5,
+        "win_rate": 0.4,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 5,
+            "wins": 2,
+            "pnl": 2.4019,
+            "win_rate": 0.4
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 5,
+            "wins": 2,
+            "pnl": 2.4019,
+            "win_rate": 0.4
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition10",
+      "result": {
+        "end_equity": 12.3453,
+        "pnl": 2.3453,
+        "return_pct": 23.4526,
+        "max_drawdown_pct": 15.9502,
+        "trades": 5,
+        "win_rate": 0.4,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 5,
+            "wins": 2,
+            "pnl": 2.4019,
+            "win_rate": 0.4
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 5,
+            "wins": 2,
+            "pnl": 2.4019,
+            "win_rate": 0.4
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition16",
+      "result": {
+        "end_equity": 12.3453,
+        "pnl": 2.3453,
+        "return_pct": 23.4526,
+        "max_drawdown_pct": 15.9502,
+        "trades": 5,
+        "win_rate": 0.4,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 5,
+            "wins": 2,
+            "pnl": 2.4019,
+            "win_rate": 0.4
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 5,
+            "wins": 2,
+            "pnl": 2.4019,
+            "win_rate": 0.4
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition6",
+      "result": {
+        "end_equity": 10.6455,
+        "pnl": 0.6455,
+        "return_pct": 6.4554,
+        "max_drawdown_pct": 15.8946,
+        "trades": 3,
+        "win_rate": 0.3333,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 3,
+            "wins": 1,
+            "pnl": 0.6772,
+            "win_rate": 0.3333333333333333
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 3,
+            "wins": 1,
+            "pnl": 0.6772,
+            "win_rate": 0.3333333333333333
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition12",
+      "result": {
+        "end_equity": 10.6455,
+        "pnl": 0.6455,
+        "return_pct": 6.4554,
+        "max_drawdown_pct": 15.8946,
+        "trades": 3,
+        "win_rate": 0.3333,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 3,
+            "wins": 1,
+            "pnl": 0.6772,
+            "win_rate": 0.3333333333333333
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 3,
+            "wins": 1,
+            "pnl": 0.6772,
+            "win_rate": 0.3333333333333333
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition18",
+      "result": {
+        "end_equity": 10.6455,
+        "pnl": 0.6455,
+        "return_pct": 6.4554,
+        "max_drawdown_pct": 15.8946,
+        "trades": 3,
+        "win_rate": 0.3333,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 3,
+            "wins": 1,
+            "pnl": 0.6772,
+            "win_rate": 0.3333333333333333
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 3,
+            "wins": 1,
+            "pnl": 0.6772,
+            "win_rate": 0.3333333333333333
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition1",
+      "result": {
+        "end_equity": 10.6084,
+        "pnl": 0.6084,
+        "return_pct": 6.0836,
+        "max_drawdown_pct": 29.3838,
+        "trades": 17,
+        "win_rate": 0.3529,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 17,
+            "wins": 6,
+            "pnl": 0.7363,
+            "win_rate": 0.35294117647058826
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 17,
+            "wins": 6,
+            "pnl": 0.7363,
+            "win_rate": 0.35294117647058826
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition7",
+      "result": {
+        "end_equity": 10.6084,
+        "pnl": 0.6084,
+        "return_pct": 6.0836,
+        "max_drawdown_pct": 29.3838,
+        "trades": 17,
+        "win_rate": 0.3529,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 17,
+            "wins": 6,
+            "pnl": 0.7363,
+            "win_rate": 0.35294117647058826
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 17,
+            "wins": 6,
+            "pnl": 0.7363,
+            "win_rate": 0.35294117647058826
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition13",
+      "result": {
+        "end_equity": 10.6084,
+        "pnl": 0.6084,
+        "return_pct": 6.0836,
+        "max_drawdown_pct": 29.3838,
+        "trades": 17,
+        "win_rate": 0.3529,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 17,
+            "wins": 6,
+            "pnl": 0.7363,
+            "win_rate": 0.35294117647058826
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 17,
+            "wins": 6,
+            "pnl": 0.7363,
+            "win_rate": 0.35294117647058826
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition2",
+      "result": {
+        "end_equity": 8.4742,
+        "pnl": -1.5258,
+        "return_pct": -15.2577,
+        "max_drawdown_pct": 29.1564,
+        "trades": 9,
+        "win_rate": 0.2222,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 9,
+            "wins": 2,
+            "pnl": -1.4106,
+            "win_rate": 0.2222222222222222
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 9,
+            "wins": 2,
+            "pnl": -1.4106,
+            "win_rate": 0.2222222222222222
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition8",
+      "result": {
+        "end_equity": 8.4742,
+        "pnl": -1.5258,
+        "return_pct": -15.2577,
+        "max_drawdown_pct": 29.1564,
+        "trades": 9,
+        "win_rate": 0.2222,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 9,
+            "wins": 2,
+            "pnl": -1.4106,
+            "win_rate": 0.2222222222222222
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 9,
+            "wins": 2,
+            "pnl": -1.4106,
+            "win_rate": 0.2222222222222222
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition14",
+      "result": {
+        "end_equity": 8.4742,
+        "pnl": -1.5258,
+        "return_pct": -15.2577,
+        "max_drawdown_pct": 29.1564,
+        "trades": 9,
+        "win_rate": 0.2222,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 9,
+            "wins": 2,
+            "pnl": -1.4106,
+            "win_rate": 0.2222222222222222
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 9,
+            "wins": 2,
+            "pnl": -1.4106,
+            "win_rate": 0.2222222222222222
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition3",
+      "result": {
+        "end_equity": 7.114,
+        "pnl": -2.886,
+        "return_pct": -28.8597,
+        "max_drawdown_pct": 28.8597,
+        "trades": 4,
+        "win_rate": 0.0,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition9",
+      "result": {
+        "end_equity": 7.114,
+        "pnl": -2.886,
+        "return_pct": -28.8597,
+        "max_drawdown_pct": 28.8597,
+        "trades": 4,
+        "win_rate": 0.0,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition15",
+      "result": {
+        "end_equity": 7.114,
+        "pnl": -2.886,
+        "return_pct": -28.8597,
+        "max_drawdown_pct": 28.8597,
+        "trades": 4,
+        "win_rate": 0.0,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition5",
+      "result": {
+        "end_equity": 7.114,
+        "pnl": -2.886,
+        "return_pct": -28.8605,
+        "max_drawdown_pct": 28.8605,
+        "trades": 4,
+        "win_rate": 0.0,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition11",
+      "result": {
+        "end_equity": 7.114,
+        "pnl": -2.886,
+        "return_pct": -28.8605,
+        "max_drawdown_pct": 28.8605,
+        "trades": 4,
+        "win_rate": 0.0,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        }
+      }
+    },
+    {
+      "rank": "goal_30d_fullseed_40#7.transition17",
+      "result": {
+        "end_equity": 7.114,
+        "pnl": -2.886,
+        "return_pct": -28.8605,
+        "max_drawdown_pct": 28.8605,
+        "trades": 4,
+        "win_rate": 0.0,
+        "by_reason": {
+          "transition_breakout_long": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 4,
+            "wins": 0,
+            "pnl": -2.8575,
+            "win_rate": 0.0
+          }
+        }
+      }
+    }
+  ],
+  "searched": 19
+}
