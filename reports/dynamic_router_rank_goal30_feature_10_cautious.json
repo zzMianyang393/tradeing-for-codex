@@ -1,0 +1,89 @@
+{
+  "days": 365,
+  "start_equity": 10.0,
+  "router_profile": {
+    "mode": "cautious",
+    "allowed_reasons": [
+      "transition_breakout_long",
+      "transition_breakout_short"
+    ],
+    "blocked_reasons": [
+      "attack_breakout_long",
+      "attack_breakout_short",
+      "range_revert_long",
+      "range_revert_short",
+      "trend_long"
+    ],
+    "reason_risk_multipliers": {
+      "transition_breakout_short": 0.35
+    },
+    "allowed_reasons_cn": [
+      "转换突破做多",
+      "转换突破做空"
+    ],
+    "blocked_reasons_cn": [
+      "攻击突破做多",
+      "攻击突破做空",
+      "震荡反转做多",
+      "震荡反转做空",
+      "趋势做多"
+    ]
+  },
+  "best": {
+    "rank": "goal_30d_featureseed_80#10",
+    "result": {
+      "end_equity": 10.0427,
+      "pnl": 0.0427,
+      "return_pct": 0.4272,
+      "max_drawdown_pct": 18.7967,
+      "trades": 15,
+      "win_rate": 0.6,
+      "by_reason": {
+        "transition_breakout_short": {
+          "trades": 15,
+          "wins": 9,
+          "pnl": 0.0766,
+          "win_rate": 0.6
+        }
+      },
+      "by_regime": {
+        "transition": {
+          "trades": 15,
+          "wins": 9,
+          "pnl": 0.0766,
+          "win_rate": 0.6
+        }
+      }
+    }
+  },
+  "top": [
+    {
+      "rank": "goal_30d_featureseed_80#10",
+      "result": {
+        "end_equity": 10.0427,
+        "pnl": 0.0427,
+        "return_pct": 0.4272,
+        "max_drawdown_pct": 18.7967,
+        "trades": 15,
+        "win_rate": 0.6,
+        "by_reason": {
+          "transition_breakout_short": {
+            "trades": 15,
+            "wins": 9,
+            "pnl": 0.0766,
+            "win_rate": 0.6
+          }
+        },
+        "by_regime": {
+          "transition": {
+            "trades": 15,
+            "wins": 9,
+            "pnl": 0.0766,
+            "win_rate": 0.6
+          }
+        }
+      }
+    }
+  ],
+  "searched": 1
+}

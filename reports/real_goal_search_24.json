@@ -1,0 +1,610 @@
+{
+  "windows": [
+    30,
+    365
+  ],
+  "target_pnl": 10.0,
+  "target_pnls": {
+    "30": 200.0,
+    "365": 2000.0
+  },
+  "max_drawdown_pct": 80.0,
+  "min_trades_by_window": {
+    "30": 8.0,
+    "365": 50.0
+  },
+  "seed_reports": [
+    "reports\\sprint200u.json",
+    "reports\\adaptive_365.json",
+    "reports\\adaptive.json"
+  ],
+  "top": [
+    {
+      "trial": 22,
+      "score": [
+        0.0316,
+        -2007.2775,
+        -2204.7914,
+        -76.6929
+      ],
+      "config": {
+        "risk_per_trade": 2.0,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 2.0,
+        "max_positions": 6,
+        "active_symbol_limit": 10,
+        "short_window_symbol_limit": 16,
+        "min_score": 3.05,
+        "range_take_profit_atr": 0.35,
+        "range_stop_atr": 1.8,
+        "range_trailing_atr": 2.4,
+        "transition_long_enabled": false,
+        "transition_short_enabled": false,
+        "enable_attack_module": false,
+        "enable_continuation_module": true,
+        "continuation_risk_per_trade": 0.32,
+        "continuation_take_profit_atr": 0.8,
+        "continuation_stop_atr": 2.2,
+        "continuation_min_volume_ratio": 1.25,
+        "continuation_min_trend_strength": 1.5,
+        "selector_min_avg_quote": 100000.0,
+        "selector_max_micro_noise": 0.008,
+        "short_rebound_block_pct": 0.03,
+        "excluded_symbols": []
+      },
+      "results": {
+        "30": {
+          "pnl": 6.3207,
+          "return_pct": 63.207,
+          "win_rate": 0.8409,
+          "max_drawdown_pct": 20.2383,
+          "trades": 44,
+          "from": "2026-06-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        },
+        "365": {
+          "pnl": -7.2775,
+          "return_pct": -72.7746,
+          "win_rate": 0.7514,
+          "max_drawdown_pct": 76.6929,
+          "trades": 181,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "30d pnl 6.3207 < 200",
+          "365d pnl -7.2775 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "30": 200.0,
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 80.0,
+        "min_trades_by_window": {
+          "30": 8.0,
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 16,
+      "score": [
+        0.0,
+        -2003.2542,
+        -2208.1321,
+        -64.4986
+      ],
+      "config": {
+        "risk_per_trade": 0.65,
+        "max_margin_fraction": 0.65,
+        "max_total_margin_fraction": 2.0,
+        "max_positions": 5,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 8,
+        "min_score": 3.05,
+        "range_take_profit_atr": 1.25,
+        "range_stop_atr": 3.6,
+        "range_trailing_atr": 1.2,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "enable_attack_module": false,
+        "enable_continuation_module": false,
+        "continuation_risk_per_trade": 0.16,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.1,
+        "continuation_min_trend_strength": 1.5,
+        "selector_min_avg_quote": 0.0,
+        "selector_max_micro_noise": 0.0,
+        "short_rebound_block_pct": 0.03,
+        "excluded_symbols": [
+          "SUI-USDT-SWAP"
+        ]
+      },
+      "results": {
+        "30": {
+          "pnl": -1.653,
+          "return_pct": -16.5302,
+          "win_rate": 0.56,
+          "max_drawdown_pct": 31.4522,
+          "trades": 25,
+          "from": "2026-06-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        },
+        "365": {
+          "pnl": -3.2542,
+          "return_pct": -32.5422,
+          "win_rate": 0.5205,
+          "max_drawdown_pct": 64.4986,
+          "trades": 73,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "30d pnl -1.653 < 200",
+          "365d pnl -3.2542 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "30": 200.0,
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 80.0,
+        "min_trades_by_window": {
+          "30": 8.0,
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 21,
+      "score": [
+        -0.125,
+        -2007.091,
+        -2212.2163,
+        -76.7269
+      ],
+      "config": {
+        "risk_per_trade": 1.6,
+        "max_margin_fraction": 0.65,
+        "max_total_margin_fraction": 1.25,
+        "max_positions": 4,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 16,
+        "min_score": 2.45,
+        "range_take_profit_atr": 0.55,
+        "range_stop_atr": 2.4,
+        "range_trailing_atr": 1.56,
+        "transition_long_enabled": false,
+        "transition_short_enabled": false,
+        "enable_attack_module": false,
+        "enable_continuation_module": true,
+        "continuation_risk_per_trade": 0.32,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_stop_atr": 2.8,
+        "continuation_min_volume_ratio": 1.45,
+        "continuation_min_trend_strength": 1.0,
+        "selector_min_avg_quote": 250000.0,
+        "selector_max_micro_noise": 0.012,
+        "short_rebound_block_pct": 0.03,
+        "excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ]
+      },
+      "results": {
+        "30": {
+          "pnl": -1.289,
+          "return_pct": -12.8901,
+          "win_rate": 0.4286,
+          "max_drawdown_pct": 46.1848,
+          "trades": 7,
+          "from": "2026-06-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        },
+        "365": {
+          "pnl": -7.091,
+          "return_pct": -70.9095,
+          "win_rate": 0.5085,
+          "max_drawdown_pct": 76.7269,
+          "trades": 59,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "30d pnl -1.289 < 200",
+          "30d trades 7 < 8",
+          "365d pnl -7.091 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "30": 200.0,
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 80.0,
+        "min_trades_by_window": {
+          "30": 8.0,
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 14,
+      "score": [
+        -0.38,
+        -2001.5338,
+        -2210.6514,
+        -60.7837
+      ],
+      "config": {
+        "risk_per_trade": 0.45,
+        "max_margin_fraction": 0.65,
+        "max_total_margin_fraction": 0.55,
+        "max_positions": 6,
+        "active_symbol_limit": 12,
+        "short_window_symbol_limit": 12,
+        "min_score": 2.65,
+        "range_take_profit_atr": 0.75,
+        "range_stop_atr": 1.8,
+        "range_trailing_atr": 2.0,
+        "transition_long_enabled": true,
+        "transition_short_enabled": false,
+        "enable_attack_module": false,
+        "enable_continuation_module": true,
+        "continuation_risk_per_trade": 0.1,
+        "continuation_take_profit_atr": 2.6,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.25,
+        "continuation_min_trend_strength": 1.0,
+        "selector_min_avg_quote": 150000.0,
+        "selector_max_micro_noise": 0.0072,
+        "short_rebound_block_pct": 0.08,
+        "excluded_symbols": []
+      },
+      "results": {
+        "30": {
+          "pnl": -6.0784,
+          "return_pct": -60.7837,
+          "win_rate": 0.4444,
+          "max_drawdown_pct": 60.7837,
+          "trades": 27,
+          "from": "2026-06-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        },
+        "365": {
+          "pnl": -1.5338,
+          "return_pct": -15.3384,
+          "win_rate": 0.5484,
+          "max_drawdown_pct": 53.6108,
+          "trades": 31,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "30d pnl -6.0784 < 200",
+          "365d pnl -1.5338 < 2000",
+          "365d trades 31 < 50"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "30": 200.0,
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 80.0,
+        "min_trades_by_window": {
+          "30": 8.0,
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 19,
+      "score": [
+        -0.7284,
+        -1996.8165,
+        -2204.8844,
+        -62.0195
+      ],
+      "config": {
+        "risk_per_trade": 0.24,
+        "max_margin_fraction": 1.5,
+        "max_total_margin_fraction": 1.5,
+        "max_positions": 3,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 16,
+        "min_score": 2.2,
+        "range_take_profit_atr": 1.6,
+        "range_stop_atr": 1.8,
+        "range_trailing_atr": 2.4,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "enable_attack_module": true,
+        "enable_continuation_module": true,
+        "continuation_risk_per_trade": 0.24,
+        "continuation_take_profit_atr": 1.2,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.1,
+        "continuation_min_trend_strength": 1.2,
+        "selector_min_avg_quote": 50000.0,
+        "selector_max_micro_noise": 0.012,
+        "short_rebound_block_pct": 0.0,
+        "excluded_symbols": [
+          "XRP-USDT-SWAP"
+        ]
+      },
+      "results": {
+        "30": {
+          "pnl": -4.9669,
+          "return_pct": -49.6687,
+          "win_rate": 0.3333,
+          "max_drawdown_pct": 62.0195,
+          "trades": 6,
+          "from": "2026-06-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        },
+        "365": {
+          "pnl": 3.1835,
+          "return_pct": 31.8351,
+          "win_rate": 0.5769,
+          "max_drawdown_pct": 36.1515,
+          "trades": 26,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "30d pnl -4.9669 < 200",
+          "30d trades 6 < 8",
+          "365d pnl 3.1835 < 2000",
+          "365d trades 26 < 50"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "30": 200.0,
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 80.0,
+        "min_trades_by_window": {
+          "30": 8.0,
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 20,
+      "score": [
+        -0.7365,
+        -1992.9287,
+        -2202.111,
+        -64.9969
+      ],
+      "config": {
+        "risk_per_trade": 0.24,
+        "max_margin_fraction": 1.5,
+        "max_total_margin_fraction": 1.5,
+        "max_positions": 6,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 20,
+        "min_score": 2.65,
+        "range_take_profit_atr": 1.0,
+        "range_stop_atr": 1.2,
+        "range_trailing_atr": 2.0,
+        "transition_long_enabled": true,
+        "transition_short_enabled": true,
+        "enable_attack_module": false,
+        "enable_continuation_module": false,
+        "continuation_risk_per_trade": 0.1,
+        "continuation_take_profit_atr": 2.6,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.45,
+        "continuation_min_trend_strength": 0.8,
+        "selector_min_avg_quote": 100000.0,
+        "selector_max_micro_noise": 0.012,
+        "short_rebound_block_pct": 0.015,
+        "excluded_symbols": []
+      },
+      "results": {
+        "30": {
+          "pnl": -5.9325,
+          "return_pct": -59.3248,
+          "win_rate": 0.25,
+          "max_drawdown_pct": 64.9969,
+          "trades": 8,
+          "from": "2026-06-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        },
+        "365": {
+          "pnl": 7.0713,
+          "return_pct": 70.7129,
+          "win_rate": 0.5385,
+          "max_drawdown_pct": 23.7435,
+          "trades": 13,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "30d pnl -5.9325 < 200",
+          "365d pnl 7.0713 < 2000",
+          "365d trades 13 < 50"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "30": 200.0,
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 80.0,
+        "min_trades_by_window": {
+          "30": 8.0,
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 11,
+      "score": [
+        -0.7571,
+        -2001.6941,
+        -2187.0492,
+        -38.8972
+      ],
+      "config": {
+        "risk_per_trade": 0.32,
+        "max_margin_fraction": 0.85,
+        "max_total_margin_fraction": 0.75,
+        "max_positions": 2,
+        "active_symbol_limit": 12,
+        "short_window_symbol_limit": 8,
+        "min_score": 2.45,
+        "range_take_profit_atr": 0.75,
+        "range_stop_atr": 1.8,
+        "range_trailing_atr": 2.4,
+        "transition_long_enabled": false,
+        "transition_short_enabled": false,
+        "enable_attack_module": false,
+        "enable_continuation_module": false,
+        "continuation_risk_per_trade": 0.32,
+        "continuation_take_profit_atr": 2.0,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.1,
+        "continuation_min_trend_strength": 1.5,
+        "selector_min_avg_quote": 50000.0,
+        "selector_max_micro_noise": 0.0,
+        "short_rebound_block_pct": 0.015,
+        "excluded_symbols": [
+          "BNB-USDT-SWAP"
+        ]
+      },
+      "results": {
+        "30": {
+          "pnl": 16.5898,
+          "return_pct": 165.8981,
+          "win_rate": 0.7429,
+          "max_drawdown_pct": 37.0095,
+          "trades": 35,
+          "from": "2026-06-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        },
+        "365": {
+          "pnl": -1.6941,
+          "return_pct": -16.9412,
+          "win_rate": 0.375,
+          "max_drawdown_pct": 38.8972,
+          "trades": 8,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "30d pnl 16.5898 < 200",
+          "365d pnl -1.6941 < 2000",
+          "365d trades 8 < 50"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "30": 200.0,
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 80.0,
+        "min_trades_by_window": {
+          "30": 8.0,
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 9,
+      "score": [
+        -0.78,
+        -2001.5813,
+        -2208.4862,
+        -58.3966
+      ],
+      "config": {
+        "risk_per_trade": 1.2,
+        "max_margin_fraction": 0.65,
+        "max_total_margin_fraction": 2.0,
+        "max_positions": 6,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 8,
+        "min_score": 2.45,
+        "range_take_profit_atr": 1.6,
+        "range_stop_atr": 2.4,
+        "range_trailing_atr": 1.2,
+        "transition_long_enabled": false,
+        "transition_short_enabled": false,
+        "enable_attack_module": false,
+        "enable_continuation_module": false,
+        "continuation_risk_per_trade": 0.06,
+        "continuation_take_profit_atr": 1.2,
+        "continuation_stop_atr": 2.8,
+        "continuation_min_volume_ratio": 1.45,
+        "continuation_min_trend_strength": 1.2,
+        "selector_min_avg_quote": 250000.0,
+        "selector_max_micro_noise": 0.0072,
+        "short_rebound_block_pct": 0.045,
+        "excluded_symbols": [
+          "XRP-USDT-SWAP"
+        ]
+      },
+      "results": {
+        "30": {
+          "pnl": -3.9851,
+          "return_pct": -39.8511,
+          "win_rate": 0.6207,
+          "max_drawdown_pct": 58.3966,
+          "trades": 29,
+          "from": "2026-06-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        },
+        "365": {
+          "pnl": -1.5813,
+          "return_pct": -15.813,
+          "win_rate": 0.4545,
+          "max_drawdown_pct": 38.1484,
+          "trades": 11,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "30d pnl -3.9851 < 200",
+          "365d pnl -1.5813 < 2000",
+          "365d trades 11 < 50"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "30": 200.0,
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 80.0,
+        "min_trades_by_window": {
+          "30": 8.0,
+          "365": 50.0
+        }
+      }
+    }
+  ]
+}

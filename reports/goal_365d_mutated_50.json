@@ -1,0 +1,3090 @@
+{
+  "windows": [
+    365
+  ],
+  "target_pnl": 10.0,
+  "target_pnls": {
+    "365": 2000.0
+  },
+  "max_drawdown_pct": 95.0,
+  "min_trades_by_window": {
+    "365": 50.0
+  },
+  "seed_reports": [
+    "reports\\goal_365d_fullseed_40.json",
+    "reports\\real_goal_search_sprint_32.json",
+    "reports\\adaptive_365.json"
+  ],
+  "profile_mode": "base",
+  "top": [
+    {
+      "trial": 1,
+      "score": [
+        0.0053,
+        -1989.3772,
+        -1992.6028,
+        -64.5114
+      ],
+      "config": {
+        "risk_per_trade": 0.32,
+        "max_margin_fraction": 2.0,
+        "max_total_margin_fraction": 0.75,
+        "max_positions": 3,
+        "active_symbol_limit": 10,
+        "short_window_symbol_limit": 12,
+        "min_score": 2.2,
+        "range_take_profit_atr": 0.75,
+        "range_stop_atr": 1.8,
+        "range_trailing_atr": 1.56,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "enable_attack_module": false,
+        "enable_continuation_module": false,
+        "enable_micro_momentum_module": false,
+        "enable_funding_module": true,
+        "enable_open_interest_module": false,
+        "continuation_risk_per_trade": 0.32,
+        "continuation_take_profit_atr": 2.6,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.45,
+        "continuation_min_trend_strength": 0.8,
+        "selector_min_avg_quote": 50000.0,
+        "selector_max_micro_noise": 0.0,
+        "short_rebound_block_pct": 0.08,
+        "excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "attack_risk_per_trade": 0.05,
+        "micro_momentum_risk_per_trade": 0.12,
+        "funding_risk_per_trade": 0.12,
+        "open_interest_risk_per_trade": 0.12,
+        "rm_max_single_position_pct": 2.0,
+        "rm_max_total_position_pct": 3.0,
+        "rm_min_liquidation_distance_pct": 0.005,
+        "max_trade_loss_pct_equity": 999.0
+      },
+      "full_config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.32,
+        "max_margin_fraction": 2.0,
+        "max_total_margin_fraction": 0.75,
+        "defensive_equity_fraction": 0.0,
+        "defensive_risk_multiplier": 0.65,
+        "defensive_margin_fraction": 0.35,
+        "profit_lock_equity_fraction": 999.0,
+        "profit_lock_risk_multiplier": 1.0,
+        "profit_lock_margin_fraction": 1.0,
+        "volatility_target_atr_pct": 0.022,
+        "volatility_risk_floor": 0.75,
+        "volatility_risk_power": 0.75,
+        "max_trade_loss_pct_equity": 999.0,
+        "bearish_range_long_risk_multiplier": 1.0,
+        "bullish_range_short_risk_multiplier": 1.0,
+        "symbol_risk_multipliers": {},
+        "reason_risk_multipliers": {
+          "range_revert_long": 0.85,
+          "range_revert_short": 0.85
+        },
+        "allowed_symbols": [],
+        "excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "max_positions": 3,
+        "active_symbol_limit": 10,
+        "short_window_symbol_limit": 12,
+        "short_window_days": 30,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 70.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 0.0,
+        "selector_min_avg_quote": 50000.0,
+        "selector_max_micro_noise": 0.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 1.8,
+        "trailing_atr": 2.34,
+        "max_hold_bars": 8,
+        "range_stop_atr": 1.8,
+        "range_take_profit_atr": 0.75,
+        "range_trailing_atr": 1.56,
+        "range_max_hold_bars": 8,
+        "defensive_range_exit_equity_fraction": 1.1,
+        "defensive_range_take_profit_atr": 0.65,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 48,
+        "time_exit_loss_cooldown_bars": 96,
+        "early_failure_bars": 0,
+        "early_failure_min_mfe_pct": 0.002,
+        "early_failure_max_mae_pct": 0.016,
+        "early_failure_reasons": [
+          "range_revert_long",
+          "range_revert_short"
+        ],
+        "direction_loss_pause_bars": 192,
+        "direction_loss_pause_pct": 15.0,
+        "short_rebound_lookback_bars": 288,
+        "short_rebound_block_pct": 0.08,
+        "short_rebound_rsi_floor": 48.0,
+        "short_exhaustion_drop_pct": -0.06,
+        "short_exhaustion_rsi_ceiling": 46.0,
+        "short_exhaustion_volume_ratio": 2.4,
+        "long_flush_lookback_bars": 288,
+        "long_flush_block_pct": -0.03,
+        "long_flush_rsi_ceiling": 52.0,
+        "long_exhaustion_rise_pct": 0.06,
+        "long_exhaustion_rsi_floor": 54.0,
+        "long_exhaustion_volume_ratio": 2.4,
+        "range_long_rsi_min": 27.0,
+        "range_long_rsi_max": 37.0,
+        "range_short_rsi_min": 64.0,
+        "range_short_rsi_max": 73.0,
+        "range_max_volume_ratio": 1.7,
+        "range_long_max_body_pct": 1.0,
+        "range_long_max_range_pct": 1.0,
+        "range_short_min_move_1d": -1.0,
+        "range_long_max_trend_strength": 0.1,
+        "range_short_max_trend_strength": -0.05,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "transition_long_min_move_21d": -1.0,
+        "enable_target_window_profiles": true,
+        "target_window_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "target_180_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "UNI-USDT-SWAP",
+          "SOL-USDT-SWAP",
+          "LINK-USDT-SWAP"
+        ],
+        "target_long_window_preferred_symbols": [
+          "ADA-USDT-SWAP",
+          "AVAX-USDT-SWAP",
+          "NEAR-USDT-SWAP",
+          "ARB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "INJ-USDT-SWAP"
+        ],
+        "long_window_days": 365,
+        "long_window_symbol_limit": 5,
+        "enable_long_window_aggressive_profile": false,
+        "long_window_aggressive_cooldown_bars": 12,
+        "long_window_aggressive_max_margin_fraction": 1.0,
+        "long_window_aggressive_max_total_margin_fraction": 0.85,
+        "long_window_aggressive_leverage": 30.0,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.2,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 1,
+        "symbol_edge_min_win_rate": 0.5,
+        "symbol_edge_pause_bars": 672,
+        "reason_edge_lookback_trades": 7,
+        "reason_edge_min_win_rate": 0.34,
+        "reason_edge_pause_bars": 192,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "enable_adaptive_profiles": true,
+        "adaptive_trend_min_score": 3.7,
+        "adaptive_trend_risk_per_trade": 0.055,
+        "adaptive_trend_stop_atr": 2.4,
+        "adaptive_trend_take_profit_atr": 0.55,
+        "adaptive_trend_trailing_atr": 2.04,
+        "adaptive_trend_max_hold_bars": 8,
+        "adaptive_trend_allowed_regimes": [
+          "downtrend"
+        ],
+        "enable_continuation_module": false,
+        "continuation_min_volume_ratio": 1.45,
+        "continuation_min_trend_strength": 0.8,
+        "continuation_risk_per_trade": 0.32,
+        "continuation_stop_atr": 1.8,
+        "continuation_take_profit_atr": 2.6,
+        "continuation_trailing_atr": 2.2,
+        "continuation_max_hold_bars": 16,
+        "enable_micro_momentum_module": false,
+        "micro_momentum_min_volume_ratio": 1.8,
+        "micro_momentum_min_body_atr": 0.7,
+        "micro_momentum_risk_per_trade": 0.12,
+        "micro_momentum_stop_atr": 1.4,
+        "micro_momentum_take_profit_atr": 0.8,
+        "micro_momentum_trailing_atr": 1.0,
+        "micro_momentum_max_hold_bars": 4,
+        "enable_funding_module": true,
+        "funding_abs_rate_threshold": 0.0005,
+        "funding_min_abs_ma": 0.0002,
+        "funding_risk_per_trade": 0.12,
+        "funding_stop_atr": 2.0,
+        "funding_take_profit_atr": 1.0,
+        "funding_trailing_atr": 1.4,
+        "funding_max_hold_bars": 12,
+        "enable_open_interest_module": false,
+        "open_interest_min_change_pct": 0.08,
+        "open_interest_min_volume_ratio": 1.05,
+        "open_interest_risk_per_trade": 0.12,
+        "open_interest_stop_atr": 1.9,
+        "open_interest_take_profit_atr": 1.2,
+        "open_interest_trailing_atr": 1.5,
+        "open_interest_max_hold_bars": 12,
+        "enable_trade_flow_module": false,
+        "trade_flow_min_imbalance": 0.45,
+        "trade_flow_min_quote": 500000.0,
+        "trade_flow_risk_per_trade": 0.035,
+        "trade_flow_stop_atr": 1.6,
+        "trade_flow_take_profit_atr": 1.05,
+        "trade_flow_trailing_atr": 1.2,
+        "trade_flow_max_hold_bars": 8,
+        "enable_attack_module": false,
+        "attack_min_score": 4.5,
+        "attack_risk_per_trade": 0.05,
+        "attack_max_positions": 3,
+        "attack_stop_atr": 1.05,
+        "attack_take_profit_atr": 1.0,
+        "attack_trailing_atr": 1.3,
+        "attack_max_hold_bars": 3,
+        "attack_cooldown_bars": 48,
+        "attack_loss_cooldown_bars": 384,
+        "attack_volume_spike": 2.2,
+        "attack_range_atr": 1.7,
+        "attack_enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "attack_breakout_enabled": true,
+        "attack_exhaustion_enabled": true,
+        "enable_order_book_module": false,
+        "order_book_min_depth_imbalance": 0.3,
+        "order_book_min_spread_pct": 0.0,
+        "order_book_max_spread_pct": 0.005,
+        "order_book_risk_per_trade": 0.035,
+        "order_book_stop_atr": 1.6,
+        "order_book_take_profit_atr": 1.0,
+        "order_book_trailing_atr": 1.2,
+        "order_book_max_hold_bars": 8,
+        "rm_enabled": true,
+        "rm_max_single_position_pct": 2.0,
+        "rm_max_total_position_pct": 3.0,
+        "rm_max_daily_loss_pct": 15.0,
+        "rm_max_weekly_loss_pct": 30.0,
+        "rm_consecutive_loss_pause": 4,
+        "rm_consecutive_loss_pause_bars": 96,
+        "rm_volatility_halt_threshold": 0.06,
+        "rm_max_order_book_spread_pct": 0.0,
+        "rm_min_order_book_depth_quote": 0.0,
+        "rm_min_liquidation_distance_pct": 0.005,
+        "rm_pause_on_inconsistency": true,
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.0,
+        "validation_target_profit": 0.0,
+        "validation_target_profit_by_window": {
+          "365": 10.0,
+          "180": 10.0,
+          "90": 10.0,
+          "60": 10.0,
+          "30": 10.0,
+          "14": 10.0
+        },
+        "validation_target_returns": {},
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "pnl": 10.6228,
+          "return_pct": 106.2283,
+          "win_rate": 0.5955,
+          "max_drawdown_pct": 64.5114,
+          "trades": 89,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "365d pnl 10.6228 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 95.0,
+        "min_trades_by_window": {
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 3,
+      "score": [
+        0.0029,
+        -1994.2508,
+        -1995.9963,
+        -34.9093
+      ],
+      "config": {
+        "risk_per_trade": 0.9,
+        "max_margin_fraction": 0.65,
+        "max_total_margin_fraction": 0.75,
+        "max_positions": 3,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 12,
+        "min_score": 2.0,
+        "range_take_profit_atr": 0.55,
+        "range_stop_atr": 1.8,
+        "range_trailing_atr": 0.8,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "enable_attack_module": true,
+        "enable_continuation_module": false,
+        "enable_micro_momentum_module": true,
+        "enable_funding_module": false,
+        "enable_open_interest_module": false,
+        "continuation_risk_per_trade": 0.16,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.1,
+        "continuation_min_trend_strength": 1.5,
+        "selector_min_avg_quote": 150000.0,
+        "selector_max_micro_noise": 0.0,
+        "short_rebound_block_pct": 0.03,
+        "excluded_symbols": [],
+        "attack_risk_per_trade": 0.1,
+        "micro_momentum_risk_per_trade": 0.12,
+        "funding_risk_per_trade": 0.08,
+        "open_interest_risk_per_trade": 0.04,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 0.8,
+        "rm_min_liquidation_distance_pct": 0.015,
+        "max_trade_loss_pct_equity": 999.0
+      },
+      "full_config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.9,
+        "max_margin_fraction": 0.65,
+        "max_total_margin_fraction": 0.75,
+        "defensive_equity_fraction": 0.0,
+        "defensive_risk_multiplier": 0.65,
+        "defensive_margin_fraction": 0.35,
+        "profit_lock_equity_fraction": 999.0,
+        "profit_lock_risk_multiplier": 1.0,
+        "profit_lock_margin_fraction": 1.0,
+        "volatility_target_atr_pct": 0.022,
+        "volatility_risk_floor": 0.75,
+        "volatility_risk_power": 0.75,
+        "max_trade_loss_pct_equity": 999.0,
+        "bearish_range_long_risk_multiplier": 1.0,
+        "bullish_range_short_risk_multiplier": 1.0,
+        "symbol_risk_multipliers": {},
+        "reason_risk_multipliers": {
+          "range_revert_long": 0.85,
+          "range_revert_short": 0.85
+        },
+        "allowed_symbols": [],
+        "excluded_symbols": [],
+        "max_positions": 3,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 12,
+        "short_window_days": 30,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 9.0,
+        "selector_min_avg_quote": 150000.0,
+        "selector_max_micro_noise": 0.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 1.8,
+        "trailing_atr": 2.34,
+        "max_hold_bars": 8,
+        "range_stop_atr": 1.8,
+        "range_take_profit_atr": 0.55,
+        "range_trailing_atr": 0.8,
+        "range_max_hold_bars": 8,
+        "defensive_range_exit_equity_fraction": 1.1,
+        "defensive_range_take_profit_atr": 0.65,
+        "cooldown_bars": 0,
+        "loss_cooldown_bars": 24,
+        "time_exit_loss_cooldown_bars": 96,
+        "early_failure_bars": 0,
+        "early_failure_min_mfe_pct": 0.002,
+        "early_failure_max_mae_pct": 0.016,
+        "early_failure_reasons": [
+          "range_revert_long",
+          "range_revert_short"
+        ],
+        "direction_loss_pause_bars": 192,
+        "direction_loss_pause_pct": 15.0,
+        "short_rebound_lookback_bars": 288,
+        "short_rebound_block_pct": 0.03,
+        "short_rebound_rsi_floor": 48.0,
+        "short_exhaustion_drop_pct": -0.06,
+        "short_exhaustion_rsi_ceiling": 46.0,
+        "short_exhaustion_volume_ratio": 2.4,
+        "long_flush_lookback_bars": 288,
+        "long_flush_block_pct": -0.08,
+        "long_flush_rsi_ceiling": 52.0,
+        "long_exhaustion_rise_pct": 0.06,
+        "long_exhaustion_rsi_floor": 54.0,
+        "long_exhaustion_volume_ratio": 2.4,
+        "range_long_rsi_min": 27.0,
+        "range_long_rsi_max": 37.0,
+        "range_short_rsi_min": 64.0,
+        "range_short_rsi_max": 73.0,
+        "range_max_volume_ratio": 1.7,
+        "range_long_max_body_pct": 1.0,
+        "range_long_max_range_pct": 1.0,
+        "range_short_min_move_1d": -1.0,
+        "range_long_max_trend_strength": 0.1,
+        "range_short_max_trend_strength": -0.05,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "transition_long_min_move_21d": -1.0,
+        "enable_target_window_profiles": true,
+        "target_window_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "target_180_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "UNI-USDT-SWAP",
+          "SOL-USDT-SWAP",
+          "LINK-USDT-SWAP"
+        ],
+        "target_long_window_preferred_symbols": [
+          "ADA-USDT-SWAP",
+          "AVAX-USDT-SWAP",
+          "NEAR-USDT-SWAP",
+          "ARB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "INJ-USDT-SWAP"
+        ],
+        "long_window_days": 365,
+        "long_window_symbol_limit": 5,
+        "enable_long_window_aggressive_profile": false,
+        "long_window_aggressive_cooldown_bars": 12,
+        "long_window_aggressive_max_margin_fraction": 1.0,
+        "long_window_aggressive_max_total_margin_fraction": 0.85,
+        "long_window_aggressive_leverage": 30.0,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.0,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "reason_edge_lookback_trades": 7,
+        "reason_edge_min_win_rate": 0.34,
+        "reason_edge_pause_bars": 192,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "enable_adaptive_profiles": true,
+        "adaptive_trend_min_score": 3.7,
+        "adaptive_trend_risk_per_trade": 0.055,
+        "adaptive_trend_stop_atr": 2.4,
+        "adaptive_trend_take_profit_atr": 0.55,
+        "adaptive_trend_trailing_atr": 2.04,
+        "adaptive_trend_max_hold_bars": 8,
+        "adaptive_trend_allowed_regimes": [
+          "downtrend"
+        ],
+        "enable_continuation_module": false,
+        "continuation_min_volume_ratio": 1.1,
+        "continuation_min_trend_strength": 1.5,
+        "continuation_risk_per_trade": 0.16,
+        "continuation_stop_atr": 1.8,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_trailing_atr": 2.2,
+        "continuation_max_hold_bars": 36,
+        "enable_micro_momentum_module": true,
+        "micro_momentum_min_volume_ratio": 1.8,
+        "micro_momentum_min_body_atr": 0.7,
+        "micro_momentum_risk_per_trade": 0.12,
+        "micro_momentum_stop_atr": 1.4,
+        "micro_momentum_take_profit_atr": 0.8,
+        "micro_momentum_trailing_atr": 1.0,
+        "micro_momentum_max_hold_bars": 4,
+        "enable_funding_module": false,
+        "funding_abs_rate_threshold": 0.0005,
+        "funding_min_abs_ma": 0.0002,
+        "funding_risk_per_trade": 0.08,
+        "funding_stop_atr": 2.0,
+        "funding_take_profit_atr": 1.0,
+        "funding_trailing_atr": 1.4,
+        "funding_max_hold_bars": 12,
+        "enable_open_interest_module": false,
+        "open_interest_min_change_pct": 0.08,
+        "open_interest_min_volume_ratio": 1.05,
+        "open_interest_risk_per_trade": 0.04,
+        "open_interest_stop_atr": 1.9,
+        "open_interest_take_profit_atr": 1.2,
+        "open_interest_trailing_atr": 1.5,
+        "open_interest_max_hold_bars": 12,
+        "enable_trade_flow_module": false,
+        "trade_flow_min_imbalance": 0.45,
+        "trade_flow_min_quote": 500000.0,
+        "trade_flow_risk_per_trade": 0.035,
+        "trade_flow_stop_atr": 1.6,
+        "trade_flow_take_profit_atr": 1.05,
+        "trade_flow_trailing_atr": 1.2,
+        "trade_flow_max_hold_bars": 8,
+        "enable_attack_module": true,
+        "attack_min_score": 4.5,
+        "attack_risk_per_trade": 0.1,
+        "attack_max_positions": 2,
+        "attack_stop_atr": 1.05,
+        "attack_take_profit_atr": 1.0,
+        "attack_trailing_atr": 1.3,
+        "attack_max_hold_bars": 3,
+        "attack_cooldown_bars": 48,
+        "attack_loss_cooldown_bars": 384,
+        "attack_volume_spike": 2.2,
+        "attack_range_atr": 1.7,
+        "attack_enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "attack_breakout_enabled": true,
+        "attack_exhaustion_enabled": true,
+        "enable_order_book_module": false,
+        "order_book_min_depth_imbalance": 0.3,
+        "order_book_min_spread_pct": 0.0,
+        "order_book_max_spread_pct": 0.005,
+        "order_book_risk_per_trade": 0.035,
+        "order_book_stop_atr": 1.6,
+        "order_book_take_profit_atr": 1.0,
+        "order_book_trailing_atr": 1.2,
+        "order_book_max_hold_bars": 8,
+        "rm_enabled": true,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 0.8,
+        "rm_max_daily_loss_pct": 15.0,
+        "rm_max_weekly_loss_pct": 30.0,
+        "rm_consecutive_loss_pause": 4,
+        "rm_consecutive_loss_pause_bars": 96,
+        "rm_volatility_halt_threshold": 0.06,
+        "rm_max_order_book_spread_pct": 0.0,
+        "rm_min_order_book_depth_quote": 0.0,
+        "rm_min_liquidation_distance_pct": 0.015,
+        "rm_pause_on_inconsistency": true,
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.0,
+        "validation_target_profit": 0.0,
+        "validation_target_profit_by_window": {
+          "365": 10.0,
+          "180": 10.0,
+          "90": 10.0,
+          "60": 10.0,
+          "30": 10.0,
+          "14": 10.0
+        },
+        "validation_target_returns": {},
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "pnl": 5.7492,
+          "return_pct": 57.4924,
+          "win_rate": 0.5926,
+          "max_drawdown_pct": 34.9093,
+          "trades": 54,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "365d pnl 5.7492 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 95.0,
+        "min_trades_by_window": {
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 4,
+      "score": [
+        0.0027,
+        -1994.5911,
+        -1996.0709,
+        -29.5964
+      ],
+      "config": {
+        "risk_per_trade": 0.81,
+        "max_margin_fraction": 0.5525,
+        "max_total_margin_fraction": 0.6375,
+        "max_positions": 3,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 12,
+        "min_score": 1.9,
+        "range_take_profit_atr": 0.66,
+        "range_stop_atr": 1.8,
+        "range_trailing_atr": 0.8,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "enable_attack_module": true,
+        "enable_continuation_module": false,
+        "enable_micro_momentum_module": true,
+        "enable_funding_module": false,
+        "enable_open_interest_module": false,
+        "continuation_risk_per_trade": 0.16,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.1,
+        "continuation_min_trend_strength": 1.5,
+        "selector_min_avg_quote": 150000.0,
+        "selector_max_micro_noise": 0.0,
+        "short_rebound_block_pct": 0.03,
+        "excluded_symbols": [],
+        "attack_risk_per_trade": 0.1,
+        "micro_momentum_risk_per_trade": 0.12,
+        "funding_risk_per_trade": 0.08,
+        "open_interest_risk_per_trade": 0.04,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 1.0,
+        "rm_min_liquidation_distance_pct": 0.015,
+        "max_trade_loss_pct_equity": 999.0
+      },
+      "full_config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.81,
+        "max_margin_fraction": 0.5525,
+        "max_total_margin_fraction": 0.6375,
+        "defensive_equity_fraction": 0.0,
+        "defensive_risk_multiplier": 0.65,
+        "defensive_margin_fraction": 0.35,
+        "profit_lock_equity_fraction": 999.0,
+        "profit_lock_risk_multiplier": 1.0,
+        "profit_lock_margin_fraction": 1.0,
+        "volatility_target_atr_pct": 0.022,
+        "volatility_risk_floor": 0.75,
+        "volatility_risk_power": 0.75,
+        "max_trade_loss_pct_equity": 999.0,
+        "bearish_range_long_risk_multiplier": 1.0,
+        "bullish_range_short_risk_multiplier": 1.0,
+        "symbol_risk_multipliers": {},
+        "reason_risk_multipliers": {
+          "range_revert_long": 0.85,
+          "range_revert_short": 0.85
+        },
+        "allowed_symbols": [],
+        "excluded_symbols": [],
+        "max_positions": 3,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 12,
+        "short_window_days": 30,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 9.0,
+        "selector_min_avg_quote": 150000.0,
+        "selector_max_micro_noise": 0.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 1.8,
+        "trailing_atr": 2.34,
+        "max_hold_bars": 8,
+        "range_stop_atr": 1.8,
+        "range_take_profit_atr": 0.66,
+        "range_trailing_atr": 0.8,
+        "range_max_hold_bars": 8,
+        "defensive_range_exit_equity_fraction": 1.1,
+        "defensive_range_take_profit_atr": 0.65,
+        "cooldown_bars": 0,
+        "loss_cooldown_bars": 24,
+        "time_exit_loss_cooldown_bars": 96,
+        "early_failure_bars": 0,
+        "early_failure_min_mfe_pct": 0.002,
+        "early_failure_max_mae_pct": 0.016,
+        "early_failure_reasons": [
+          "range_revert_long",
+          "range_revert_short"
+        ],
+        "direction_loss_pause_bars": 192,
+        "direction_loss_pause_pct": 15.0,
+        "short_rebound_lookback_bars": 288,
+        "short_rebound_block_pct": 0.03,
+        "short_rebound_rsi_floor": 48.0,
+        "short_exhaustion_drop_pct": -0.06,
+        "short_exhaustion_rsi_ceiling": 46.0,
+        "short_exhaustion_volume_ratio": 2.4,
+        "long_flush_lookback_bars": 288,
+        "long_flush_block_pct": -0.08,
+        "long_flush_rsi_ceiling": 52.0,
+        "long_exhaustion_rise_pct": 0.06,
+        "long_exhaustion_rsi_floor": 54.0,
+        "long_exhaustion_volume_ratio": 2.4,
+        "range_long_rsi_min": 27.0,
+        "range_long_rsi_max": 37.0,
+        "range_short_rsi_min": 64.0,
+        "range_short_rsi_max": 73.0,
+        "range_max_volume_ratio": 1.7,
+        "range_long_max_body_pct": 1.0,
+        "range_long_max_range_pct": 1.0,
+        "range_short_min_move_1d": -1.0,
+        "range_long_max_trend_strength": 0.1,
+        "range_short_max_trend_strength": -0.05,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "transition_long_min_move_21d": -1.0,
+        "enable_target_window_profiles": true,
+        "target_window_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "target_180_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "UNI-USDT-SWAP",
+          "SOL-USDT-SWAP",
+          "LINK-USDT-SWAP"
+        ],
+        "target_long_window_preferred_symbols": [
+          "ADA-USDT-SWAP",
+          "AVAX-USDT-SWAP",
+          "NEAR-USDT-SWAP",
+          "ARB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "INJ-USDT-SWAP"
+        ],
+        "long_window_days": 365,
+        "long_window_symbol_limit": 5,
+        "enable_long_window_aggressive_profile": false,
+        "long_window_aggressive_cooldown_bars": 12,
+        "long_window_aggressive_max_margin_fraction": 1.0,
+        "long_window_aggressive_max_total_margin_fraction": 0.85,
+        "long_window_aggressive_leverage": 30.0,
+        "long_window_preferred_symbols": [],
+        "min_score": 1.9,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 2,
+        "symbol_edge_min_win_rate": 0.34,
+        "symbol_edge_pause_bars": 1344,
+        "reason_edge_lookback_trades": 7,
+        "reason_edge_min_win_rate": 0.34,
+        "reason_edge_pause_bars": 192,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "enable_adaptive_profiles": true,
+        "adaptive_trend_min_score": 3.7,
+        "adaptive_trend_risk_per_trade": 0.055,
+        "adaptive_trend_stop_atr": 2.4,
+        "adaptive_trend_take_profit_atr": 0.55,
+        "adaptive_trend_trailing_atr": 2.04,
+        "adaptive_trend_max_hold_bars": 8,
+        "adaptive_trend_allowed_regimes": [
+          "downtrend"
+        ],
+        "enable_continuation_module": false,
+        "continuation_min_volume_ratio": 1.1,
+        "continuation_min_trend_strength": 1.5,
+        "continuation_risk_per_trade": 0.16,
+        "continuation_stop_atr": 1.8,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_trailing_atr": 2.2,
+        "continuation_max_hold_bars": 36,
+        "enable_micro_momentum_module": true,
+        "micro_momentum_min_volume_ratio": 1.8,
+        "micro_momentum_min_body_atr": 0.7,
+        "micro_momentum_risk_per_trade": 0.12,
+        "micro_momentum_stop_atr": 1.4,
+        "micro_momentum_take_profit_atr": 0.8,
+        "micro_momentum_trailing_atr": 1.0,
+        "micro_momentum_max_hold_bars": 4,
+        "enable_funding_module": false,
+        "funding_abs_rate_threshold": 0.0005,
+        "funding_min_abs_ma": 0.0002,
+        "funding_risk_per_trade": 0.08,
+        "funding_stop_atr": 2.0,
+        "funding_take_profit_atr": 1.0,
+        "funding_trailing_atr": 1.4,
+        "funding_max_hold_bars": 12,
+        "enable_open_interest_module": false,
+        "open_interest_min_change_pct": 0.08,
+        "open_interest_min_volume_ratio": 1.05,
+        "open_interest_risk_per_trade": 0.04,
+        "open_interest_stop_atr": 1.9,
+        "open_interest_take_profit_atr": 1.2,
+        "open_interest_trailing_atr": 1.5,
+        "open_interest_max_hold_bars": 12,
+        "enable_trade_flow_module": false,
+        "trade_flow_min_imbalance": 0.45,
+        "trade_flow_min_quote": 500000.0,
+        "trade_flow_risk_per_trade": 0.035,
+        "trade_flow_stop_atr": 1.6,
+        "trade_flow_take_profit_atr": 1.05,
+        "trade_flow_trailing_atr": 1.2,
+        "trade_flow_max_hold_bars": 8,
+        "enable_attack_module": true,
+        "attack_min_score": 4.5,
+        "attack_risk_per_trade": 0.1,
+        "attack_max_positions": 2,
+        "attack_stop_atr": 1.05,
+        "attack_take_profit_atr": 1.0,
+        "attack_trailing_atr": 1.3,
+        "attack_max_hold_bars": 3,
+        "attack_cooldown_bars": 48,
+        "attack_loss_cooldown_bars": 384,
+        "attack_volume_spike": 2.2,
+        "attack_range_atr": 1.7,
+        "attack_enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "attack_breakout_enabled": true,
+        "attack_exhaustion_enabled": true,
+        "enable_order_book_module": false,
+        "order_book_min_depth_imbalance": 0.3,
+        "order_book_min_spread_pct": 0.0,
+        "order_book_max_spread_pct": 0.005,
+        "order_book_risk_per_trade": 0.035,
+        "order_book_stop_atr": 1.6,
+        "order_book_take_profit_atr": 1.0,
+        "order_book_trailing_atr": 1.2,
+        "order_book_max_hold_bars": 8,
+        "rm_enabled": true,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 1.0,
+        "rm_max_daily_loss_pct": 15.0,
+        "rm_max_weekly_loss_pct": 30.0,
+        "rm_consecutive_loss_pause": 4,
+        "rm_consecutive_loss_pause_bars": 96,
+        "rm_volatility_halt_threshold": 0.06,
+        "rm_max_order_book_spread_pct": 0.0,
+        "rm_min_order_book_depth_quote": 0.0,
+        "rm_min_liquidation_distance_pct": 0.015,
+        "rm_pause_on_inconsistency": true,
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.0,
+        "validation_target_profit": 0.0,
+        "validation_target_profit_by_window": {
+          "365": 10.0,
+          "180": 10.0,
+          "90": 10.0,
+          "60": 10.0,
+          "30": 10.0,
+          "14": 10.0
+        },
+        "validation_target_returns": {},
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "pnl": 5.4089,
+          "return_pct": 54.0885,
+          "win_rate": 0.5926,
+          "max_drawdown_pct": 29.5964,
+          "trades": 54,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "365d pnl 5.4089 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 95.0,
+        "min_trades_by_window": {
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 5,
+      "score": [
+        0.0,
+        -2000.2486,
+        -2003.1157,
+        -57.3411
+      ],
+      "config": {
+        "risk_per_trade": 2.0,
+        "max_margin_fraction": 0.65,
+        "max_total_margin_fraction": 0.55,
+        "max_positions": 5,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 10,
+        "min_score": 2.65,
+        "range_take_profit_atr": 1.6,
+        "range_stop_atr": 3.0,
+        "range_trailing_atr": 2.0,
+        "transition_long_enabled": true,
+        "transition_short_enabled": false,
+        "enable_attack_module": true,
+        "enable_continuation_module": true,
+        "enable_micro_momentum_module": false,
+        "enable_funding_module": false,
+        "enable_open_interest_module": false,
+        "continuation_risk_per_trade": 0.1,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.7,
+        "continuation_min_trend_strength": 1.5,
+        "selector_min_avg_quote": 250000.0,
+        "selector_max_micro_noise": 0.009,
+        "short_rebound_block_pct": 0.015,
+        "excluded_symbols": [
+          "SUI-USDT-SWAP"
+        ],
+        "attack_risk_per_trade": 0.025,
+        "micro_momentum_risk_per_trade": 0.08,
+        "funding_risk_per_trade": 0.04,
+        "open_interest_risk_per_trade": 0.08,
+        "rm_max_single_position_pct": 0.8,
+        "rm_max_total_position_pct": 0.8,
+        "rm_min_liquidation_distance_pct": 0.01,
+        "max_trade_loss_pct_equity": 20.0
+      },
+      "full_config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 2.0,
+        "max_margin_fraction": 0.65,
+        "max_total_margin_fraction": 0.55,
+        "defensive_equity_fraction": 0.0,
+        "defensive_risk_multiplier": 0.65,
+        "defensive_margin_fraction": 0.35,
+        "profit_lock_equity_fraction": 999.0,
+        "profit_lock_risk_multiplier": 1.0,
+        "profit_lock_margin_fraction": 1.0,
+        "volatility_target_atr_pct": 0.022,
+        "volatility_risk_floor": 0.75,
+        "volatility_risk_power": 0.75,
+        "max_trade_loss_pct_equity": 20.0,
+        "bearish_range_long_risk_multiplier": 1.0,
+        "bullish_range_short_risk_multiplier": 1.0,
+        "symbol_risk_multipliers": {},
+        "reason_risk_multipliers": {
+          "range_revert_long": 0.85,
+          "range_revert_short": 0.85
+        },
+        "allowed_symbols": [],
+        "excluded_symbols": [
+          "SUI-USDT-SWAP"
+        ],
+        "max_positions": 5,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 10,
+        "short_window_days": 30,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 6.0,
+        "selector_min_avg_quote": 250000.0,
+        "selector_max_micro_noise": 0.009,
+        "stop_atr": 2.8,
+        "take_profit_atr": 1.8,
+        "trailing_atr": 2.34,
+        "max_hold_bars": 8,
+        "range_stop_atr": 3.0,
+        "range_take_profit_atr": 1.6,
+        "range_trailing_atr": 2.0,
+        "range_max_hold_bars": 8,
+        "defensive_range_exit_equity_fraction": 1.1,
+        "defensive_range_take_profit_atr": 0.65,
+        "cooldown_bars": 48,
+        "loss_cooldown_bars": 48,
+        "time_exit_loss_cooldown_bars": 96,
+        "early_failure_bars": 0,
+        "early_failure_min_mfe_pct": 0.002,
+        "early_failure_max_mae_pct": 0.016,
+        "early_failure_reasons": [
+          "range_revert_long",
+          "range_revert_short"
+        ],
+        "direction_loss_pause_bars": 192,
+        "direction_loss_pause_pct": 15.0,
+        "short_rebound_lookback_bars": 288,
+        "short_rebound_block_pct": 0.015,
+        "short_rebound_rsi_floor": 48.0,
+        "short_exhaustion_drop_pct": -0.06,
+        "short_exhaustion_rsi_ceiling": 46.0,
+        "short_exhaustion_volume_ratio": 2.4,
+        "long_flush_lookback_bars": 288,
+        "long_flush_block_pct": -0.08,
+        "long_flush_rsi_ceiling": 52.0,
+        "long_exhaustion_rise_pct": 0.06,
+        "long_exhaustion_rsi_floor": 54.0,
+        "long_exhaustion_volume_ratio": 2.4,
+        "range_long_rsi_min": 27.0,
+        "range_long_rsi_max": 37.0,
+        "range_short_rsi_min": 64.0,
+        "range_short_rsi_max": 73.0,
+        "range_max_volume_ratio": 1.7,
+        "range_long_max_body_pct": 1.0,
+        "range_long_max_range_pct": 1.0,
+        "range_short_min_move_1d": -1.0,
+        "range_long_max_trend_strength": 0.1,
+        "range_short_max_trend_strength": -0.05,
+        "transition_long_enabled": true,
+        "transition_short_enabled": false,
+        "transition_long_min_move_21d": -1.0,
+        "enable_target_window_profiles": true,
+        "target_window_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "target_180_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "UNI-USDT-SWAP",
+          "SOL-USDT-SWAP",
+          "LINK-USDT-SWAP"
+        ],
+        "target_long_window_preferred_symbols": [
+          "ADA-USDT-SWAP",
+          "AVAX-USDT-SWAP",
+          "NEAR-USDT-SWAP",
+          "ARB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "INJ-USDT-SWAP"
+        ],
+        "long_window_days": 365,
+        "long_window_symbol_limit": 5,
+        "enable_long_window_aggressive_profile": false,
+        "long_window_aggressive_cooldown_bars": 12,
+        "long_window_aggressive_max_margin_fraction": 1.0,
+        "long_window_aggressive_max_total_margin_fraction": 0.85,
+        "long_window_aggressive_leverage": 30.0,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.65,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 1,
+        "symbol_edge_min_win_rate": 0.0,
+        "symbol_edge_pause_bars": 672,
+        "reason_edge_lookback_trades": 7,
+        "reason_edge_min_win_rate": 0.34,
+        "reason_edge_pause_bars": 192,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "enable_adaptive_profiles": true,
+        "adaptive_trend_min_score": 3.7,
+        "adaptive_trend_risk_per_trade": 0.055,
+        "adaptive_trend_stop_atr": 2.4,
+        "adaptive_trend_take_profit_atr": 0.55,
+        "adaptive_trend_trailing_atr": 2.04,
+        "adaptive_trend_max_hold_bars": 8,
+        "adaptive_trend_allowed_regimes": [
+          "downtrend"
+        ],
+        "enable_continuation_module": true,
+        "continuation_min_volume_ratio": 1.7,
+        "continuation_min_trend_strength": 1.5,
+        "continuation_risk_per_trade": 0.1,
+        "continuation_stop_atr": 1.8,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_trailing_atr": 1.8,
+        "continuation_max_hold_bars": 24,
+        "enable_micro_momentum_module": false,
+        "micro_momentum_min_volume_ratio": 1.8,
+        "micro_momentum_min_body_atr": 0.7,
+        "micro_momentum_risk_per_trade": 0.08,
+        "micro_momentum_stop_atr": 1.4,
+        "micro_momentum_take_profit_atr": 0.8,
+        "micro_momentum_trailing_atr": 1.0,
+        "micro_momentum_max_hold_bars": 4,
+        "enable_funding_module": false,
+        "funding_abs_rate_threshold": 0.0005,
+        "funding_min_abs_ma": 0.0002,
+        "funding_risk_per_trade": 0.04,
+        "funding_stop_atr": 2.0,
+        "funding_take_profit_atr": 1.0,
+        "funding_trailing_atr": 1.4,
+        "funding_max_hold_bars": 12,
+        "enable_open_interest_module": false,
+        "open_interest_min_change_pct": 0.08,
+        "open_interest_min_volume_ratio": 1.05,
+        "open_interest_risk_per_trade": 0.08,
+        "open_interest_stop_atr": 1.9,
+        "open_interest_take_profit_atr": 1.2,
+        "open_interest_trailing_atr": 1.5,
+        "open_interest_max_hold_bars": 12,
+        "enable_trade_flow_module": false,
+        "trade_flow_min_imbalance": 0.45,
+        "trade_flow_min_quote": 500000.0,
+        "trade_flow_risk_per_trade": 0.035,
+        "trade_flow_stop_atr": 1.6,
+        "trade_flow_take_profit_atr": 1.05,
+        "trade_flow_trailing_atr": 1.2,
+        "trade_flow_max_hold_bars": 8,
+        "enable_attack_module": true,
+        "attack_min_score": 4.5,
+        "attack_risk_per_trade": 0.025,
+        "attack_max_positions": 1,
+        "attack_stop_atr": 1.05,
+        "attack_take_profit_atr": 1.0,
+        "attack_trailing_atr": 1.3,
+        "attack_max_hold_bars": 3,
+        "attack_cooldown_bars": 48,
+        "attack_loss_cooldown_bars": 384,
+        "attack_volume_spike": 2.2,
+        "attack_range_atr": 1.7,
+        "attack_enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "attack_breakout_enabled": true,
+        "attack_exhaustion_enabled": true,
+        "enable_order_book_module": false,
+        "order_book_min_depth_imbalance": 0.3,
+        "order_book_min_spread_pct": 0.0,
+        "order_book_max_spread_pct": 0.005,
+        "order_book_risk_per_trade": 0.035,
+        "order_book_stop_atr": 1.6,
+        "order_book_take_profit_atr": 1.0,
+        "order_book_trailing_atr": 1.2,
+        "order_book_max_hold_bars": 8,
+        "rm_enabled": true,
+        "rm_max_single_position_pct": 0.8,
+        "rm_max_total_position_pct": 0.8,
+        "rm_max_daily_loss_pct": 15.0,
+        "rm_max_weekly_loss_pct": 30.0,
+        "rm_consecutive_loss_pause": 4,
+        "rm_consecutive_loss_pause_bars": 96,
+        "rm_volatility_halt_threshold": 0.06,
+        "rm_max_order_book_spread_pct": 0.0,
+        "rm_min_order_book_depth_quote": 0.0,
+        "rm_min_liquidation_distance_pct": 0.01,
+        "rm_pause_on_inconsistency": true,
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.0,
+        "validation_target_profit": 0.0,
+        "validation_target_profit_by_window": {
+          "365": 10.0,
+          "180": 10.0,
+          "90": 10.0,
+          "60": 10.0,
+          "30": 10.0,
+          "14": 10.0
+        },
+        "validation_target_returns": {},
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "pnl": -0.2486,
+          "return_pct": -2.4859,
+          "win_rate": 0.5455,
+          "max_drawdown_pct": 57.3411,
+          "trades": 66,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "365d pnl -0.2486 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 95.0,
+        "min_trades_by_window": {
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 20,
+      "score": [
+        0.0,
+        -2001.017,
+        -2003.7715,
+        -55.0904
+      ],
+      "config": {
+        "risk_per_trade": 0.3375,
+        "max_margin_fraction": 2.4,
+        "max_total_margin_fraction": 0.8999999999999999,
+        "max_positions": 4,
+        "active_symbol_limit": 12,
+        "short_window_symbol_limit": 20,
+        "min_score": 2.9499999999999997,
+        "range_take_profit_atr": 0.27999999999999997,
+        "range_stop_atr": 0.96,
+        "range_trailing_atr": 1.56,
+        "transition_long_enabled": false,
+        "transition_short_enabled": false,
+        "enable_attack_module": false,
+        "enable_continuation_module": true,
+        "enable_micro_momentum_module": true,
+        "enable_funding_module": false,
+        "enable_open_interest_module": true,
+        "continuation_risk_per_trade": 0.1,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_stop_atr": 1.8,
+        "continuation_min_volume_ratio": 1.7,
+        "continuation_min_trend_strength": 0.8,
+        "selector_min_avg_quote": 0.0,
+        "selector_max_micro_noise": 0.0,
+        "short_rebound_block_pct": 0.045,
+        "excluded_symbols": [
+          "SUI-USDT-SWAP"
+        ],
+        "attack_risk_per_trade": 0.1,
+        "micro_momentum_risk_per_trade": 0.25,
+        "funding_risk_per_trade": 0.02,
+        "open_interest_risk_per_trade": 0.08,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 1.5,
+        "rm_min_liquidation_distance_pct": 0.005,
+        "max_trade_loss_pct_equity": 20.0
+      },
+      "full_config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.3375,
+        "max_margin_fraction": 2.4,
+        "max_total_margin_fraction": 0.8999999999999999,
+        "defensive_equity_fraction": 0.8,
+        "defensive_risk_multiplier": 0.65,
+        "defensive_margin_fraction": 0.35,
+        "profit_lock_equity_fraction": 1.25,
+        "profit_lock_risk_multiplier": 0.55,
+        "profit_lock_margin_fraction": 0.35,
+        "volatility_target_atr_pct": 0.022,
+        "volatility_risk_floor": 0.75,
+        "volatility_risk_power": 0.75,
+        "max_trade_loss_pct_equity": 20.0,
+        "bearish_range_long_risk_multiplier": 1.0,
+        "bullish_range_short_risk_multiplier": 1.0,
+        "symbol_risk_multipliers": {},
+        "reason_risk_multipliers": {
+          "range_revert_long": 0.85,
+          "range_revert_short": 0.85
+        },
+        "allowed_symbols": [],
+        "excluded_symbols": [
+          "SUI-USDT-SWAP"
+        ],
+        "max_positions": 4,
+        "active_symbol_limit": 12,
+        "short_window_symbol_limit": 20,
+        "short_window_days": 30,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 140.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 9.0,
+        "selector_min_avg_quote": 0.0,
+        "selector_max_micro_noise": 0.0,
+        "stop_atr": 2.8,
+        "take_profit_atr": 1.8,
+        "trailing_atr": 2.34,
+        "max_hold_bars": 8,
+        "range_stop_atr": 0.96,
+        "range_take_profit_atr": 0.27999999999999997,
+        "range_trailing_atr": 1.56,
+        "range_max_hold_bars": 8,
+        "defensive_range_exit_equity_fraction": 1.1,
+        "defensive_range_take_profit_atr": 0.65,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 48,
+        "time_exit_loss_cooldown_bars": 96,
+        "early_failure_bars": 0,
+        "early_failure_min_mfe_pct": 0.002,
+        "early_failure_max_mae_pct": 0.016,
+        "early_failure_reasons": [
+          "range_revert_long",
+          "range_revert_short"
+        ],
+        "direction_loss_pause_bars": 192,
+        "direction_loss_pause_pct": 15.0,
+        "short_rebound_lookback_bars": 288,
+        "short_rebound_block_pct": 0.045,
+        "short_rebound_rsi_floor": 48.0,
+        "short_exhaustion_drop_pct": -0.06,
+        "short_exhaustion_rsi_ceiling": 46.0,
+        "short_exhaustion_volume_ratio": 2.4,
+        "long_flush_lookback_bars": 288,
+        "long_flush_block_pct": -0.045,
+        "long_flush_rsi_ceiling": 52.0,
+        "long_exhaustion_rise_pct": 0.06,
+        "long_exhaustion_rsi_floor": 54.0,
+        "long_exhaustion_volume_ratio": 2.4,
+        "range_long_rsi_min": 27.0,
+        "range_long_rsi_max": 37.0,
+        "range_short_rsi_min": 64.0,
+        "range_short_rsi_max": 73.0,
+        "range_max_volume_ratio": 1.7,
+        "range_long_max_body_pct": 1.0,
+        "range_long_max_range_pct": 1.0,
+        "range_short_min_move_1d": -1.0,
+        "range_long_max_trend_strength": 0.1,
+        "range_short_max_trend_strength": -0.05,
+        "transition_long_enabled": false,
+        "transition_short_enabled": false,
+        "transition_long_min_move_21d": -1.0,
+        "enable_target_window_profiles": true,
+        "target_window_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "target_180_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "UNI-USDT-SWAP",
+          "SOL-USDT-SWAP",
+          "LINK-USDT-SWAP"
+        ],
+        "target_long_window_preferred_symbols": [
+          "ADA-USDT-SWAP",
+          "AVAX-USDT-SWAP",
+          "NEAR-USDT-SWAP",
+          "ARB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "INJ-USDT-SWAP"
+        ],
+        "long_window_days": 365,
+        "long_window_symbol_limit": 5,
+        "enable_long_window_aggressive_profile": false,
+        "long_window_aggressive_cooldown_bars": 12,
+        "long_window_aggressive_max_margin_fraction": 1.0,
+        "long_window_aggressive_max_total_margin_fraction": 0.85,
+        "long_window_aggressive_leverage": 30.0,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.9499999999999997,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 1,
+        "symbol_edge_min_win_rate": 1.0,
+        "symbol_edge_pause_bars": 192,
+        "reason_edge_lookback_trades": 7,
+        "reason_edge_min_win_rate": 0.34,
+        "reason_edge_pause_bars": 192,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "enable_adaptive_profiles": true,
+        "adaptive_trend_min_score": 3.7,
+        "adaptive_trend_risk_per_trade": 0.055,
+        "adaptive_trend_stop_atr": 2.4,
+        "adaptive_trend_take_profit_atr": 0.55,
+        "adaptive_trend_trailing_atr": 2.04,
+        "adaptive_trend_max_hold_bars": 8,
+        "adaptive_trend_allowed_regimes": [
+          "downtrend"
+        ],
+        "enable_continuation_module": true,
+        "continuation_min_volume_ratio": 1.7,
+        "continuation_min_trend_strength": 0.8,
+        "continuation_risk_per_trade": 0.1,
+        "continuation_stop_atr": 1.8,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_trailing_atr": 1.8,
+        "continuation_max_hold_bars": 16,
+        "enable_micro_momentum_module": true,
+        "micro_momentum_min_volume_ratio": 1.8,
+        "micro_momentum_min_body_atr": 0.7,
+        "micro_momentum_risk_per_trade": 0.25,
+        "micro_momentum_stop_atr": 1.4,
+        "micro_momentum_take_profit_atr": 0.8,
+        "micro_momentum_trailing_atr": 1.0,
+        "micro_momentum_max_hold_bars": 4,
+        "enable_funding_module": false,
+        "funding_abs_rate_threshold": 0.0005,
+        "funding_min_abs_ma": 0.0002,
+        "funding_risk_per_trade": 0.02,
+        "funding_stop_atr": 2.0,
+        "funding_take_profit_atr": 1.0,
+        "funding_trailing_atr": 1.4,
+        "funding_max_hold_bars": 12,
+        "enable_open_interest_module": true,
+        "open_interest_min_change_pct": 0.08,
+        "open_interest_min_volume_ratio": 1.05,
+        "open_interest_risk_per_trade": 0.08,
+        "open_interest_stop_atr": 1.9,
+        "open_interest_take_profit_atr": 1.2,
+        "open_interest_trailing_atr": 1.5,
+        "open_interest_max_hold_bars": 12,
+        "enable_trade_flow_module": false,
+        "trade_flow_min_imbalance": 0.45,
+        "trade_flow_min_quote": 500000.0,
+        "trade_flow_risk_per_trade": 0.035,
+        "trade_flow_stop_atr": 1.6,
+        "trade_flow_take_profit_atr": 1.05,
+        "trade_flow_trailing_atr": 1.2,
+        "trade_flow_max_hold_bars": 8,
+        "enable_attack_module": false,
+        "attack_min_score": 4.5,
+        "attack_risk_per_trade": 0.1,
+        "attack_max_positions": 2,
+        "attack_stop_atr": 1.05,
+        "attack_take_profit_atr": 1.0,
+        "attack_trailing_atr": 1.3,
+        "attack_max_hold_bars": 3,
+        "attack_cooldown_bars": 48,
+        "attack_loss_cooldown_bars": 384,
+        "attack_volume_spike": 2.2,
+        "attack_range_atr": 1.7,
+        "attack_enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "attack_breakout_enabled": true,
+        "attack_exhaustion_enabled": true,
+        "enable_order_book_module": false,
+        "order_book_min_depth_imbalance": 0.3,
+        "order_book_min_spread_pct": 0.0,
+        "order_book_max_spread_pct": 0.005,
+        "order_book_risk_per_trade": 0.035,
+        "order_book_stop_atr": 1.6,
+        "order_book_take_profit_atr": 1.0,
+        "order_book_trailing_atr": 1.2,
+        "order_book_max_hold_bars": 8,
+        "rm_enabled": true,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 1.5,
+        "rm_max_daily_loss_pct": 15.0,
+        "rm_max_weekly_loss_pct": 30.0,
+        "rm_consecutive_loss_pause": 4,
+        "rm_consecutive_loss_pause_bars": 96,
+        "rm_volatility_halt_threshold": 0.06,
+        "rm_max_order_book_spread_pct": 0.0,
+        "rm_min_order_book_depth_quote": 0.0,
+        "rm_min_liquidation_distance_pct": 0.005,
+        "rm_pause_on_inconsistency": true,
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.0,
+        "validation_target_profit": 0.0,
+        "validation_target_profit_by_window": {
+          "365": 10.0,
+          "180": 10.0,
+          "90": 10.0,
+          "60": 10.0,
+          "30": 10.0,
+          "14": 10.0
+        },
+        "validation_target_returns": {},
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "pnl": -1.017,
+          "return_pct": -10.17,
+          "win_rate": 0.5566,
+          "max_drawdown_pct": 55.0904,
+          "trades": 106,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "365d pnl -1.017 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 95.0,
+        "min_trades_by_window": {
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 10,
+      "score": [
+        0.0,
+        -2004.8977,
+        -2008.3506,
+        -69.0579
+      ],
+      "config": {
+        "risk_per_trade": 3.0,
+        "max_margin_fraction": 0.9750000000000001,
+        "max_total_margin_fraction": 1.125,
+        "max_positions": 4,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 10,
+        "min_score": 2.5500000000000003,
+        "range_take_profit_atr": 0.35,
+        "range_stop_atr": 0.96,
+        "range_trailing_atr": 2.4,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "enable_attack_module": false,
+        "enable_continuation_module": false,
+        "enable_micro_momentum_module": true,
+        "enable_funding_module": false,
+        "enable_open_interest_module": false,
+        "continuation_risk_per_trade": 0.06,
+        "continuation_take_profit_atr": 2.0,
+        "continuation_stop_atr": 1.4,
+        "continuation_min_volume_ratio": 1.45,
+        "continuation_min_trend_strength": 0.8,
+        "selector_min_avg_quote": 50000.0,
+        "selector_max_micro_noise": 0.0072,
+        "short_rebound_block_pct": 0.0,
+        "excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "attack_risk_per_trade": 0.2,
+        "micro_momentum_risk_per_trade": 0.08,
+        "funding_risk_per_trade": 0.04,
+        "open_interest_risk_per_trade": 0.08,
+        "rm_max_single_position_pct": 2.0,
+        "rm_max_total_position_pct": 2.0,
+        "rm_min_liquidation_distance_pct": 0.015,
+        "max_trade_loss_pct_equity": 20.0
+      },
+      "full_config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 3.0,
+        "max_margin_fraction": 0.9750000000000001,
+        "max_total_margin_fraction": 1.125,
+        "defensive_equity_fraction": 0.0,
+        "defensive_risk_multiplier": 0.65,
+        "defensive_margin_fraction": 0.35,
+        "profit_lock_equity_fraction": 999.0,
+        "profit_lock_risk_multiplier": 1.0,
+        "profit_lock_margin_fraction": 1.0,
+        "volatility_target_atr_pct": 0.022,
+        "volatility_risk_floor": 0.75,
+        "volatility_risk_power": 0.75,
+        "max_trade_loss_pct_equity": 20.0,
+        "bearish_range_long_risk_multiplier": 1.0,
+        "bullish_range_short_risk_multiplier": 1.0,
+        "symbol_risk_multipliers": {},
+        "reason_risk_multipliers": {
+          "range_revert_long": 0.85,
+          "range_revert_short": 0.85
+        },
+        "allowed_symbols": [],
+        "excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "max_positions": 4,
+        "active_symbol_limit": 6,
+        "short_window_symbol_limit": 10,
+        "short_window_days": 30,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 45.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 6.0,
+        "selector_min_avg_quote": 50000.0,
+        "selector_max_micro_noise": 0.0072,
+        "stop_atr": 2.8,
+        "take_profit_atr": 1.8,
+        "trailing_atr": 2.34,
+        "max_hold_bars": 8,
+        "range_stop_atr": 0.96,
+        "range_take_profit_atr": 0.35,
+        "range_trailing_atr": 2.4,
+        "range_max_hold_bars": 8,
+        "defensive_range_exit_equity_fraction": 1.1,
+        "defensive_range_take_profit_atr": 0.65,
+        "cooldown_bars": 12,
+        "loss_cooldown_bars": 96,
+        "time_exit_loss_cooldown_bars": 96,
+        "early_failure_bars": 0,
+        "early_failure_min_mfe_pct": 0.002,
+        "early_failure_max_mae_pct": 0.016,
+        "early_failure_reasons": [
+          "range_revert_long",
+          "range_revert_short"
+        ],
+        "direction_loss_pause_bars": 192,
+        "direction_loss_pause_pct": 15.0,
+        "short_rebound_lookback_bars": 288,
+        "short_rebound_block_pct": 0.0,
+        "short_rebound_rsi_floor": 48.0,
+        "short_exhaustion_drop_pct": -0.06,
+        "short_exhaustion_rsi_ceiling": 46.0,
+        "short_exhaustion_volume_ratio": 2.4,
+        "long_flush_lookback_bars": 288,
+        "long_flush_block_pct": -0.045,
+        "long_flush_rsi_ceiling": 52.0,
+        "long_exhaustion_rise_pct": 0.06,
+        "long_exhaustion_rsi_floor": 54.0,
+        "long_exhaustion_volume_ratio": 2.4,
+        "range_long_rsi_min": 27.0,
+        "range_long_rsi_max": 37.0,
+        "range_short_rsi_min": 64.0,
+        "range_short_rsi_max": 73.0,
+        "range_max_volume_ratio": 1.7,
+        "range_long_max_body_pct": 1.0,
+        "range_long_max_range_pct": 1.0,
+        "range_short_min_move_1d": -1.0,
+        "range_long_max_trend_strength": 0.1,
+        "range_short_max_trend_strength": -0.05,
+        "transition_long_enabled": false,
+        "transition_short_enabled": true,
+        "transition_long_min_move_21d": -1.0,
+        "enable_target_window_profiles": true,
+        "target_window_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "target_180_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "UNI-USDT-SWAP",
+          "SOL-USDT-SWAP",
+          "LINK-USDT-SWAP"
+        ],
+        "target_long_window_preferred_symbols": [
+          "ADA-USDT-SWAP",
+          "AVAX-USDT-SWAP",
+          "NEAR-USDT-SWAP",
+          "ARB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "INJ-USDT-SWAP"
+        ],
+        "long_window_days": 365,
+        "long_window_symbol_limit": 5,
+        "enable_long_window_aggressive_profile": false,
+        "long_window_aggressive_cooldown_bars": 12,
+        "long_window_aggressive_max_margin_fraction": 1.0,
+        "long_window_aggressive_max_total_margin_fraction": 0.85,
+        "long_window_aggressive_leverage": 30.0,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.5500000000000003,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 1,
+        "symbol_edge_min_win_rate": 0.75,
+        "symbol_edge_pause_bars": 2880,
+        "reason_edge_lookback_trades": 7,
+        "reason_edge_min_win_rate": 0.34,
+        "reason_edge_pause_bars": 192,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "enable_adaptive_profiles": true,
+        "adaptive_trend_min_score": 3.7,
+        "adaptive_trend_risk_per_trade": 0.055,
+        "adaptive_trend_stop_atr": 2.4,
+        "adaptive_trend_take_profit_atr": 0.55,
+        "adaptive_trend_trailing_atr": 2.04,
+        "adaptive_trend_max_hold_bars": 8,
+        "adaptive_trend_allowed_regimes": [
+          "downtrend"
+        ],
+        "enable_continuation_module": false,
+        "continuation_min_volume_ratio": 1.45,
+        "continuation_min_trend_strength": 0.8,
+        "continuation_risk_per_trade": 0.06,
+        "continuation_stop_atr": 1.4,
+        "continuation_take_profit_atr": 2.0,
+        "continuation_trailing_atr": 1.8,
+        "continuation_max_hold_bars": 8,
+        "enable_micro_momentum_module": true,
+        "micro_momentum_min_volume_ratio": 1.8,
+        "micro_momentum_min_body_atr": 0.7,
+        "micro_momentum_risk_per_trade": 0.08,
+        "micro_momentum_stop_atr": 1.4,
+        "micro_momentum_take_profit_atr": 0.8,
+        "micro_momentum_trailing_atr": 1.0,
+        "micro_momentum_max_hold_bars": 4,
+        "enable_funding_module": false,
+        "funding_abs_rate_threshold": 0.0005,
+        "funding_min_abs_ma": 0.0002,
+        "funding_risk_per_trade": 0.04,
+        "funding_stop_atr": 2.0,
+        "funding_take_profit_atr": 1.0,
+        "funding_trailing_atr": 1.4,
+        "funding_max_hold_bars": 12,
+        "enable_open_interest_module": false,
+        "open_interest_min_change_pct": 0.08,
+        "open_interest_min_volume_ratio": 1.05,
+        "open_interest_risk_per_trade": 0.08,
+        "open_interest_stop_atr": 1.9,
+        "open_interest_take_profit_atr": 1.2,
+        "open_interest_trailing_atr": 1.5,
+        "open_interest_max_hold_bars": 12,
+        "enable_trade_flow_module": false,
+        "trade_flow_min_imbalance": 0.45,
+        "trade_flow_min_quote": 500000.0,
+        "trade_flow_risk_per_trade": 0.035,
+        "trade_flow_stop_atr": 1.6,
+        "trade_flow_take_profit_atr": 1.05,
+        "trade_flow_trailing_atr": 1.2,
+        "trade_flow_max_hold_bars": 8,
+        "enable_attack_module": false,
+        "attack_min_score": 4.5,
+        "attack_risk_per_trade": 0.2,
+        "attack_max_positions": 2,
+        "attack_stop_atr": 1.05,
+        "attack_take_profit_atr": 1.0,
+        "attack_trailing_atr": 1.3,
+        "attack_max_hold_bars": 3,
+        "attack_cooldown_bars": 48,
+        "attack_loss_cooldown_bars": 384,
+        "attack_volume_spike": 2.2,
+        "attack_range_atr": 1.7,
+        "attack_enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "attack_breakout_enabled": true,
+        "attack_exhaustion_enabled": true,
+        "enable_order_book_module": false,
+        "order_book_min_depth_imbalance": 0.3,
+        "order_book_min_spread_pct": 0.0,
+        "order_book_max_spread_pct": 0.005,
+        "order_book_risk_per_trade": 0.035,
+        "order_book_stop_atr": 1.6,
+        "order_book_take_profit_atr": 1.0,
+        "order_book_trailing_atr": 1.2,
+        "order_book_max_hold_bars": 8,
+        "rm_enabled": true,
+        "rm_max_single_position_pct": 2.0,
+        "rm_max_total_position_pct": 2.0,
+        "rm_max_daily_loss_pct": 15.0,
+        "rm_max_weekly_loss_pct": 30.0,
+        "rm_consecutive_loss_pause": 4,
+        "rm_consecutive_loss_pause_bars": 96,
+        "rm_volatility_halt_threshold": 0.06,
+        "rm_max_order_book_spread_pct": 0.0,
+        "rm_min_order_book_depth_quote": 0.0,
+        "rm_min_liquidation_distance_pct": 0.015,
+        "rm_pause_on_inconsistency": true,
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.0,
+        "validation_target_profit": 0.0,
+        "validation_target_profit_by_window": {
+          "365": 10.0,
+          "180": 10.0,
+          "90": 10.0,
+          "60": 10.0,
+          "30": 10.0,
+          "14": 10.0
+        },
+        "validation_target_returns": {},
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "pnl": -4.8977,
+          "return_pct": -48.9775,
+          "win_rate": 0.4886,
+          "max_drawdown_pct": 69.0579,
+          "trades": 88,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "365d pnl -4.8977 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 95.0,
+        "min_trades_by_window": {
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 16,
+      "score": [
+        0.0,
+        -2007.0981,
+        -2010.8708,
+        -75.4541
+      ],
+      "config": {
+        "risk_per_trade": 0.28800000000000003,
+        "max_margin_fraction": 1.0625,
+        "max_total_margin_fraction": 1.0625,
+        "max_positions": 6,
+        "active_symbol_limit": 8,
+        "short_window_symbol_limit": 8,
+        "min_score": 1.75,
+        "range_take_profit_atr": 0.27999999999999997,
+        "range_stop_atr": 3.5999999999999996,
+        "range_trailing_atr": 2.0,
+        "transition_long_enabled": true,
+        "transition_short_enabled": true,
+        "enable_attack_module": false,
+        "enable_continuation_module": false,
+        "enable_micro_momentum_module": false,
+        "enable_funding_module": true,
+        "enable_open_interest_module": false,
+        "continuation_risk_per_trade": 0.1,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_stop_atr": 1.4,
+        "continuation_min_volume_ratio": 1.7,
+        "continuation_min_trend_strength": 1.5,
+        "selector_min_avg_quote": 100000.0,
+        "selector_max_micro_noise": 0.008,
+        "short_rebound_block_pct": 0.03,
+        "excluded_symbols": [
+          "BNB-USDT-SWAP"
+        ],
+        "attack_risk_per_trade": 0.05,
+        "micro_momentum_risk_per_trade": 0.18,
+        "funding_risk_per_trade": 0.12,
+        "open_interest_risk_per_trade": 0.04,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 1.5,
+        "rm_min_liquidation_distance_pct": 0.005,
+        "max_trade_loss_pct_equity": 20.0
+      },
+      "full_config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 0.28800000000000003,
+        "max_margin_fraction": 1.0625,
+        "max_total_margin_fraction": 1.0625,
+        "defensive_equity_fraction": 0.0,
+        "defensive_risk_multiplier": 0.65,
+        "defensive_margin_fraction": 0.35,
+        "profit_lock_equity_fraction": 999.0,
+        "profit_lock_risk_multiplier": 1.0,
+        "profit_lock_margin_fraction": 1.0,
+        "volatility_target_atr_pct": 0.022,
+        "volatility_risk_floor": 0.75,
+        "volatility_risk_power": 0.75,
+        "max_trade_loss_pct_equity": 20.0,
+        "bearish_range_long_risk_multiplier": 1.0,
+        "bullish_range_short_risk_multiplier": 1.0,
+        "symbol_risk_multipliers": {},
+        "reason_risk_multipliers": {
+          "range_revert_long": 0.85,
+          "range_revert_short": 0.85
+        },
+        "allowed_symbols": [],
+        "excluded_symbols": [
+          "BNB-USDT-SWAP"
+        ],
+        "max_positions": 6,
+        "active_symbol_limit": 8,
+        "short_window_symbol_limit": 8,
+        "short_window_days": 30,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 100.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 6.0,
+        "selector_min_avg_quote": 100000.0,
+        "selector_max_micro_noise": 0.008,
+        "stop_atr": 2.8,
+        "take_profit_atr": 1.8,
+        "trailing_atr": 2.34,
+        "max_hold_bars": 8,
+        "range_stop_atr": 3.5999999999999996,
+        "range_take_profit_atr": 0.27999999999999997,
+        "range_trailing_atr": 2.0,
+        "range_max_hold_bars": 8,
+        "defensive_range_exit_equity_fraction": 1.1,
+        "defensive_range_take_profit_atr": 0.65,
+        "cooldown_bars": 6,
+        "loss_cooldown_bars": 144,
+        "time_exit_loss_cooldown_bars": 96,
+        "early_failure_bars": 0,
+        "early_failure_min_mfe_pct": 0.002,
+        "early_failure_max_mae_pct": 0.016,
+        "early_failure_reasons": [
+          "range_revert_long",
+          "range_revert_short"
+        ],
+        "direction_loss_pause_bars": 192,
+        "direction_loss_pause_pct": 15.0,
+        "short_rebound_lookback_bars": 288,
+        "short_rebound_block_pct": 0.03,
+        "short_rebound_rsi_floor": 48.0,
+        "short_exhaustion_drop_pct": -0.06,
+        "short_exhaustion_rsi_ceiling": 46.0,
+        "short_exhaustion_volume_ratio": 2.4,
+        "long_flush_lookback_bars": 288,
+        "long_flush_block_pct": -0.045,
+        "long_flush_rsi_ceiling": 52.0,
+        "long_exhaustion_rise_pct": 0.06,
+        "long_exhaustion_rsi_floor": 54.0,
+        "long_exhaustion_volume_ratio": 2.4,
+        "range_long_rsi_min": 27.0,
+        "range_long_rsi_max": 37.0,
+        "range_short_rsi_min": 64.0,
+        "range_short_rsi_max": 73.0,
+        "range_max_volume_ratio": 1.7,
+        "range_long_max_body_pct": 1.0,
+        "range_long_max_range_pct": 1.0,
+        "range_short_min_move_1d": -1.0,
+        "range_long_max_trend_strength": 0.1,
+        "range_short_max_trend_strength": -0.05,
+        "transition_long_enabled": true,
+        "transition_short_enabled": true,
+        "transition_long_min_move_21d": -1.0,
+        "enable_target_window_profiles": true,
+        "target_window_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "target_180_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "UNI-USDT-SWAP",
+          "SOL-USDT-SWAP",
+          "LINK-USDT-SWAP"
+        ],
+        "target_long_window_preferred_symbols": [
+          "ADA-USDT-SWAP",
+          "AVAX-USDT-SWAP",
+          "NEAR-USDT-SWAP",
+          "ARB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "INJ-USDT-SWAP"
+        ],
+        "long_window_days": 365,
+        "long_window_symbol_limit": 5,
+        "enable_long_window_aggressive_profile": false,
+        "long_window_aggressive_cooldown_bars": 12,
+        "long_window_aggressive_max_margin_fraction": 1.0,
+        "long_window_aggressive_max_total_margin_fraction": 0.85,
+        "long_window_aggressive_leverage": 30.0,
+        "long_window_preferred_symbols": [],
+        "min_score": 1.75,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 1,
+        "symbol_edge_min_win_rate": 1.0,
+        "symbol_edge_pause_bars": 288,
+        "reason_edge_lookback_trades": 7,
+        "reason_edge_min_win_rate": 0.34,
+        "reason_edge_pause_bars": 192,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "enable_adaptive_profiles": true,
+        "adaptive_trend_min_score": 3.7,
+        "adaptive_trend_risk_per_trade": 0.055,
+        "adaptive_trend_stop_atr": 2.4,
+        "adaptive_trend_take_profit_atr": 0.55,
+        "adaptive_trend_trailing_atr": 2.04,
+        "adaptive_trend_max_hold_bars": 8,
+        "adaptive_trend_allowed_regimes": [
+          "downtrend"
+        ],
+        "enable_continuation_module": false,
+        "continuation_min_volume_ratio": 1.7,
+        "continuation_min_trend_strength": 1.5,
+        "continuation_risk_per_trade": 0.1,
+        "continuation_stop_atr": 1.4,
+        "continuation_take_profit_atr": 1.6,
+        "continuation_trailing_atr": 1.0,
+        "continuation_max_hold_bars": 16,
+        "enable_micro_momentum_module": false,
+        "micro_momentum_min_volume_ratio": 1.8,
+        "micro_momentum_min_body_atr": 0.7,
+        "micro_momentum_risk_per_trade": 0.18,
+        "micro_momentum_stop_atr": 1.4,
+        "micro_momentum_take_profit_atr": 0.8,
+        "micro_momentum_trailing_atr": 1.0,
+        "micro_momentum_max_hold_bars": 4,
+        "enable_funding_module": true,
+        "funding_abs_rate_threshold": 0.0005,
+        "funding_min_abs_ma": 0.0002,
+        "funding_risk_per_trade": 0.12,
+        "funding_stop_atr": 2.0,
+        "funding_take_profit_atr": 1.0,
+        "funding_trailing_atr": 1.4,
+        "funding_max_hold_bars": 12,
+        "enable_open_interest_module": false,
+        "open_interest_min_change_pct": 0.08,
+        "open_interest_min_volume_ratio": 1.05,
+        "open_interest_risk_per_trade": 0.04,
+        "open_interest_stop_atr": 1.9,
+        "open_interest_take_profit_atr": 1.2,
+        "open_interest_trailing_atr": 1.5,
+        "open_interest_max_hold_bars": 12,
+        "enable_trade_flow_module": false,
+        "trade_flow_min_imbalance": 0.45,
+        "trade_flow_min_quote": 500000.0,
+        "trade_flow_risk_per_trade": 0.035,
+        "trade_flow_stop_atr": 1.6,
+        "trade_flow_take_profit_atr": 1.05,
+        "trade_flow_trailing_atr": 1.2,
+        "trade_flow_max_hold_bars": 8,
+        "enable_attack_module": false,
+        "attack_min_score": 4.5,
+        "attack_risk_per_trade": 0.05,
+        "attack_max_positions": 3,
+        "attack_stop_atr": 1.05,
+        "attack_take_profit_atr": 1.0,
+        "attack_trailing_atr": 1.3,
+        "attack_max_hold_bars": 3,
+        "attack_cooldown_bars": 48,
+        "attack_loss_cooldown_bars": 384,
+        "attack_volume_spike": 2.2,
+        "attack_range_atr": 1.7,
+        "attack_enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "attack_breakout_enabled": true,
+        "attack_exhaustion_enabled": true,
+        "enable_order_book_module": false,
+        "order_book_min_depth_imbalance": 0.3,
+        "order_book_min_spread_pct": 0.0,
+        "order_book_max_spread_pct": 0.005,
+        "order_book_risk_per_trade": 0.035,
+        "order_book_stop_atr": 1.6,
+        "order_book_take_profit_atr": 1.0,
+        "order_book_trailing_atr": 1.2,
+        "order_book_max_hold_bars": 8,
+        "rm_enabled": true,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 1.5,
+        "rm_max_daily_loss_pct": 15.0,
+        "rm_max_weekly_loss_pct": 30.0,
+        "rm_consecutive_loss_pause": 4,
+        "rm_consecutive_loss_pause_bars": 96,
+        "rm_volatility_halt_threshold": 0.06,
+        "rm_max_order_book_spread_pct": 0.0,
+        "rm_min_order_book_depth_quote": 0.0,
+        "rm_min_liquidation_distance_pct": 0.005,
+        "rm_pause_on_inconsistency": true,
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.0,
+        "validation_target_profit": 0.0,
+        "validation_target_profit_by_window": {
+          "365": 10.0,
+          "180": 10.0,
+          "90": 10.0,
+          "60": 10.0,
+          "30": 10.0,
+          "14": 10.0
+        },
+        "validation_target_returns": {},
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 50,
+            "min_notional": 5.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 30,
+            "min_notional": 5.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 25,
+            "min_notional": 5.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 20,
+            "min_notional": 5.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 15,
+            "min_notional": 5.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 12,
+            "min_notional": 5.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "pnl": -7.0981,
+          "return_pct": -70.981,
+          "win_rate": 0.5584,
+          "max_drawdown_pct": 75.4541,
+          "trades": 77,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "365d pnl -7.0981 < 2000"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 95.0,
+        "min_trades_by_window": {
+          "365": 50.0
+        }
+      }
+    },
+    {
+      "trial": 7,
+      "score": [
+        -0.0365,
+        -1993.0299,
+        -1996.7669,
+        -74.7407
+      ],
+      "config": {
+        "risk_per_trade": 1.2,
+        "max_margin_fraction": 1.5,
+        "max_total_margin_fraction": 2.5,
+        "max_positions": 5,
+        "active_symbol_limit": 12,
+        "short_window_symbol_limit": 16,
+        "min_score": 2.25,
+        "range_take_profit_atr": 0.75,
+        "range_stop_atr": 1.8,
+        "range_trailing_atr": 1.2,
+        "transition_long_enabled": true,
+        "transition_short_enabled": true,
+        "enable_attack_module": true,
+        "enable_continuation_module": true,
+        "enable_micro_momentum_module": true,
+        "enable_funding_module": false,
+        "enable_open_interest_module": false,
+        "continuation_risk_per_trade": 0.32,
+        "continuation_take_profit_atr": 1.4,
+        "continuation_stop_atr": 2.2,
+        "continuation_min_volume_ratio": 1.45,
+        "continuation_min_trend_strength": 1.2,
+        "selector_min_avg_quote": 250000.0,
+        "selector_max_micro_noise": 0.0072,
+        "short_rebound_block_pct": 0.015,
+        "excluded_symbols": [],
+        "attack_risk_per_trade": 0.25,
+        "micro_momentum_risk_per_trade": 0.18,
+        "funding_risk_per_trade": 0.04,
+        "open_interest_risk_per_trade": 0.04,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 2.5,
+        "rm_min_liquidation_distance_pct": 0.005,
+        "max_trade_loss_pct_equity": 35.0
+      },
+      "full_config": {
+        "start_equity": 10.0,
+        "timeframe_minutes": 15,
+        "taker_fee": 5e-05,
+        "slippage": 0.0,
+        "risk_per_trade": 1.2,
+        "max_margin_fraction": 1.5,
+        "max_total_margin_fraction": 2.5,
+        "defensive_equity_fraction": 0.0,
+        "defensive_risk_multiplier": 0.65,
+        "defensive_margin_fraction": 0.35,
+        "profit_lock_equity_fraction": 8.0,
+        "profit_lock_risk_multiplier": 0.55,
+        "profit_lock_margin_fraction": 0.8,
+        "volatility_target_atr_pct": 0.022,
+        "volatility_risk_floor": 0.75,
+        "volatility_risk_power": 0.75,
+        "max_trade_loss_pct_equity": 35.0,
+        "bearish_range_long_risk_multiplier": 1.0,
+        "bullish_range_short_risk_multiplier": 1.0,
+        "symbol_risk_multipliers": {},
+        "reason_risk_multipliers": {
+          "range_revert_long": 0.85,
+          "range_revert_short": 0.85
+        },
+        "allowed_symbols": [],
+        "excluded_symbols": [],
+        "max_positions": 5,
+        "active_symbol_limit": 12,
+        "short_window_symbol_limit": 16,
+        "short_window_days": 30,
+        "selector_lookback_bars": 2016,
+        "selector_momentum_weight": 32.0,
+        "selector_volatility_weight": 140.0,
+        "selector_trend_weight": 0.12,
+        "selector_noise_penalty": 9.0,
+        "selector_min_avg_quote": 250000.0,
+        "selector_max_micro_noise": 0.0072,
+        "stop_atr": 2.8,
+        "take_profit_atr": 1.8,
+        "trailing_atr": 2.34,
+        "max_hold_bars": 8,
+        "range_stop_atr": 1.8,
+        "range_take_profit_atr": 0.75,
+        "range_trailing_atr": 1.2,
+        "range_max_hold_bars": 8,
+        "defensive_range_exit_equity_fraction": 1.1,
+        "defensive_range_take_profit_atr": 0.65,
+        "cooldown_bars": 24,
+        "loss_cooldown_bars": 48,
+        "time_exit_loss_cooldown_bars": 96,
+        "early_failure_bars": 0,
+        "early_failure_min_mfe_pct": 0.002,
+        "early_failure_max_mae_pct": 0.016,
+        "early_failure_reasons": [
+          "range_revert_long",
+          "range_revert_short"
+        ],
+        "direction_loss_pause_bars": 192,
+        "direction_loss_pause_pct": 15.0,
+        "short_rebound_lookback_bars": 288,
+        "short_rebound_block_pct": 0.015,
+        "short_rebound_rsi_floor": 48.0,
+        "short_exhaustion_drop_pct": -0.06,
+        "short_exhaustion_rsi_ceiling": 46.0,
+        "short_exhaustion_volume_ratio": 2.4,
+        "long_flush_lookback_bars": 288,
+        "long_flush_block_pct": -0.045,
+        "long_flush_rsi_ceiling": 52.0,
+        "long_exhaustion_rise_pct": 0.06,
+        "long_exhaustion_rsi_floor": 54.0,
+        "long_exhaustion_volume_ratio": 2.4,
+        "range_long_rsi_min": 27.0,
+        "range_long_rsi_max": 37.0,
+        "range_short_rsi_min": 64.0,
+        "range_short_rsi_max": 73.0,
+        "range_max_volume_ratio": 1.7,
+        "range_long_max_body_pct": 1.0,
+        "range_long_max_range_pct": 1.0,
+        "range_short_min_move_1d": -1.0,
+        "range_long_max_trend_strength": 0.1,
+        "range_short_max_trend_strength": -0.05,
+        "transition_long_enabled": true,
+        "transition_short_enabled": true,
+        "transition_long_min_move_21d": -1.0,
+        "enable_target_window_profiles": true,
+        "target_window_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP"
+        ],
+        "target_180_excluded_symbols": [
+          "XRP-USDT-SWAP",
+          "BNB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "UNI-USDT-SWAP",
+          "SOL-USDT-SWAP",
+          "LINK-USDT-SWAP"
+        ],
+        "target_long_window_preferred_symbols": [
+          "ADA-USDT-SWAP",
+          "AVAX-USDT-SWAP",
+          "NEAR-USDT-SWAP",
+          "ARB-USDT-SWAP",
+          "SUI-USDT-SWAP",
+          "INJ-USDT-SWAP"
+        ],
+        "long_window_days": 365,
+        "long_window_symbol_limit": 5,
+        "enable_long_window_aggressive_profile": false,
+        "long_window_aggressive_cooldown_bars": 12,
+        "long_window_aggressive_max_margin_fraction": 1.0,
+        "long_window_aggressive_max_total_margin_fraction": 0.85,
+        "long_window_aggressive_leverage": 30.0,
+        "long_window_preferred_symbols": [],
+        "min_score": 2.25,
+        "edge_lookback_trades": 10,
+        "edge_pause_bars": 48,
+        "symbol_edge_lookback_trades": 1,
+        "symbol_edge_min_win_rate": 1.0,
+        "symbol_edge_pause_bars": 192,
+        "reason_edge_lookback_trades": 7,
+        "reason_edge_min_win_rate": 0.34,
+        "reason_edge_pause_bars": 192,
+        "invert_signals": false,
+        "enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "enable_adaptive_profiles": true,
+        "adaptive_trend_min_score": 3.7,
+        "adaptive_trend_risk_per_trade": 0.055,
+        "adaptive_trend_stop_atr": 2.4,
+        "adaptive_trend_take_profit_atr": 0.55,
+        "adaptive_trend_trailing_atr": 2.04,
+        "adaptive_trend_max_hold_bars": 8,
+        "adaptive_trend_allowed_regimes": [
+          "downtrend"
+        ],
+        "enable_continuation_module": true,
+        "continuation_min_volume_ratio": 1.45,
+        "continuation_min_trend_strength": 1.2,
+        "continuation_risk_per_trade": 0.32,
+        "continuation_stop_atr": 2.2,
+        "continuation_take_profit_atr": 1.4,
+        "continuation_trailing_atr": 1.8,
+        "continuation_max_hold_bars": 16,
+        "enable_micro_momentum_module": true,
+        "micro_momentum_min_volume_ratio": 1.8,
+        "micro_momentum_min_body_atr": 0.7,
+        "micro_momentum_risk_per_trade": 0.18,
+        "micro_momentum_stop_atr": 1.4,
+        "micro_momentum_take_profit_atr": 0.8,
+        "micro_momentum_trailing_atr": 1.0,
+        "micro_momentum_max_hold_bars": 4,
+        "enable_funding_module": false,
+        "funding_abs_rate_threshold": 0.0005,
+        "funding_min_abs_ma": 0.0002,
+        "funding_risk_per_trade": 0.04,
+        "funding_stop_atr": 2.0,
+        "funding_take_profit_atr": 1.0,
+        "funding_trailing_atr": 1.4,
+        "funding_max_hold_bars": 12,
+        "enable_open_interest_module": false,
+        "open_interest_min_change_pct": 0.08,
+        "open_interest_min_volume_ratio": 1.05,
+        "open_interest_risk_per_trade": 0.04,
+        "open_interest_stop_atr": 1.9,
+        "open_interest_take_profit_atr": 1.2,
+        "open_interest_trailing_atr": 1.5,
+        "open_interest_max_hold_bars": 12,
+        "enable_trade_flow_module": false,
+        "trade_flow_min_imbalance": 0.45,
+        "trade_flow_min_quote": 500000.0,
+        "trade_flow_risk_per_trade": 0.035,
+        "trade_flow_stop_atr": 1.6,
+        "trade_flow_take_profit_atr": 1.05,
+        "trade_flow_trailing_atr": 1.2,
+        "trade_flow_max_hold_bars": 8,
+        "enable_attack_module": true,
+        "attack_min_score": 4.5,
+        "attack_risk_per_trade": 0.25,
+        "attack_max_positions": 3,
+        "attack_stop_atr": 1.05,
+        "attack_take_profit_atr": 1.0,
+        "attack_trailing_atr": 1.3,
+        "attack_max_hold_bars": 3,
+        "attack_cooldown_bars": 48,
+        "attack_loss_cooldown_bars": 384,
+        "attack_volume_spike": 2.2,
+        "attack_range_atr": 1.7,
+        "attack_enabled_regimes": [
+          "uptrend",
+          "downtrend",
+          "transition",
+          "range"
+        ],
+        "attack_breakout_enabled": true,
+        "attack_exhaustion_enabled": true,
+        "enable_order_book_module": false,
+        "order_book_min_depth_imbalance": 0.3,
+        "order_book_min_spread_pct": 0.0,
+        "order_book_max_spread_pct": 0.005,
+        "order_book_risk_per_trade": 0.035,
+        "order_book_stop_atr": 1.6,
+        "order_book_take_profit_atr": 1.0,
+        "order_book_trailing_atr": 1.2,
+        "order_book_max_hold_bars": 8,
+        "rm_enabled": true,
+        "rm_max_single_position_pct": 1.5,
+        "rm_max_total_position_pct": 2.5,
+        "rm_max_daily_loss_pct": 15.0,
+        "rm_max_weekly_loss_pct": 30.0,
+        "rm_consecutive_loss_pause": 4,
+        "rm_consecutive_loss_pause_bars": 96,
+        "rm_volatility_halt_threshold": 0.06,
+        "rm_max_order_book_spread_pct": 0.0,
+        "rm_min_order_book_depth_quote": 0.0,
+        "rm_min_liquidation_distance_pct": 0.005,
+        "rm_pause_on_inconsistency": true,
+        "min_bars": 260,
+        "windows_days": [
+          365,
+          180,
+          90,
+          60,
+          30,
+          14,
+          7
+        ],
+        "validation_target_win_rate": 0.0,
+        "validation_target_profit": 0.0,
+        "validation_target_profit_by_window": {
+          "365": 10.0,
+          "180": 10.0,
+          "90": 10.0,
+          "60": 10.0,
+          "30": 10.0,
+          "14": 10.0
+        },
+        "validation_target_returns": {},
+        "leverage_caps": {
+          "BTC-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "ETH-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "SOL-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "BNB-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "XRP-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "ADA-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "DOGE-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "LINK-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "AVAX-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "APT-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "INJ-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "SUI-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "OP-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "ARB-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "TIA-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          },
+          "FIL-USDT-SWAP": {
+            "max_leverage": 75,
+            "min_notional": 1.0
+          }
+        }
+      },
+      "results": {
+        "365": {
+          "pnl": 6.9701,
+          "return_pct": 69.7005,
+          "win_rate": 0.5208,
+          "max_drawdown_pct": 74.7407,
+          "trades": 48,
+          "from": "2025-07-02 08:45:00",
+          "to": "2026-07-02 08:45:00"
+        }
+      },
+      "audit": {
+        "complete": false,
+        "failures": [
+          "365d pnl 6.9701 < 2000",
+          "365d trades 48 < 50"
+        ],
+        "passed_windows": [],
+        "target_pnls": {
+          "365": 2000.0
+        },
+        "max_drawdown_pct": 95.0,
+        "min_trades_by_window": {
+          "365": 50.0
+        }
+      }
+    }
+  ]
+}

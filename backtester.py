@@ -289,7 +289,7 @@ class Backtester:
                     sig = signal_for(symbol, market[symbol], idx, self.config)
                     if sig and sig.score >= self.config.min_score:
                         # Regime-aware策略选择: 基于行情选择策略
-                        if not self._regime_allows_signal(sig):
+                        if not self._dynamic_router_allows_signal(sig):
                             continue
                         adaptive_trend = self._is_adaptive_trend_signal(sig)
                         if sig.regime not in self.config.enabled_regimes and not adaptive_trend:
@@ -305,6 +305,8 @@ class Backtester:
                         signals.append(sig)
                     attack_sig = attack_signal_for(symbol, market[symbol], idx, self.config)
                     if self.config.enable_attack_module and attack_sig and attack_sig.score >= self.config.attack_min_score:
+                        if not self._dynamic_router_allows_signal(attack_sig):
+                            continue
                         if attack_sig.regime not in self.config.attack_enabled_regimes:
                             continue
                         if step < direction_pause_until.get(attack_sig.direction, -1):
@@ -316,7 +318,7 @@ class Backtester:
                         signals.append(attack_sig)
                     continuation_sig = continuation_signal_for(symbol, market[symbol], idx, self.config)
                     if continuation_sig and continuation_sig.score >= self.config.min_score:
-                        if not self._regime_allows_signal(continuation_sig):
+                        if not self._dynamic_router_allows_signal(continuation_sig):
                             continue
                         if step < direction_pause_until.get(continuation_sig.direction, -1):
                             continue
@@ -325,7 +327,7 @@ class Backtester:
                         signals.append(continuation_sig)
                     micro_sig = micro_momentum_signal_for(symbol, market[symbol], idx, self.config)
                     if micro_sig and micro_sig.score >= self.config.min_score:
-                        if not self._regime_allows_signal(micro_sig):
+                        if not self._dynamic_router_allows_signal(micro_sig):
                             continue
                         if step < direction_pause_until.get(micro_sig.direction, -1):
                             continue
@@ -336,7 +338,7 @@ class Backtester:
                         signals.append(micro_sig)
                     funding_sig = funding_signal_for(symbol, market[symbol], idx, self.config)
                     if funding_sig and funding_sig.score >= self.config.min_score:
-                        if not self._regime_allows_signal(funding_sig):
+                        if not self._dynamic_router_allows_signal(funding_sig):
                             continue
                         if step < direction_pause_until.get(funding_sig.direction, -1):
                             continue
@@ -345,7 +347,7 @@ class Backtester:
                         signals.append(funding_sig)
                     open_interest_sig = open_interest_signal_for(symbol, market[symbol], idx, self.config)
                     if open_interest_sig and open_interest_sig.score >= self.config.min_score:
-                        if not self._regime_allows_signal(open_interest_sig):
+                        if not self._dynamic_router_allows_signal(open_interest_sig):
                             continue
                         if step < direction_pause_until.get(open_interest_sig.direction, -1):
                             continue
@@ -356,6 +358,8 @@ class Backtester:
                         signals.append(open_interest_sig)
                     trade_flow_sig = trade_flow_signal_for(symbol, market[symbol], idx, self.config)
                     if trade_flow_sig and trade_flow_sig.score >= self.config.min_score:
+                        if not self._dynamic_router_allows_signal(trade_flow_sig):
+                            continue
                         if step < direction_pause_until.get(trade_flow_sig.direction, -1):
                             continue
                         if step < reason_pause_until.get(trade_flow_sig.reason, -1):
@@ -365,6 +369,8 @@ class Backtester:
                         signals.append(trade_flow_sig)
                     order_book_sig = order_book_signal_for(symbol, market[symbol], idx, self.config)
                     if order_book_sig and order_book_sig.score >= self.config.min_score:
+                        if not self._dynamic_router_allows_signal(order_book_sig):
+                            continue
                         if step < direction_pause_until.get(order_book_sig.direction, -1):
                             continue
                         if step < reason_pause_until.get(order_book_sig.reason, -1):
@@ -769,6 +775,15 @@ class Backtester:
         """
         allowed = self._REGIME_STRATEGIES.get(sig.regime, set())
         return sig.reason in allowed
+
+    def _dynamic_router_allows_signal(self, sig: Signal) -> bool:
+        if not self.config.enable_dynamic_strategy_router:
+            return True
+        if sig.reason in self.config.router_blocked_reasons:
+            return False
+        if self.config.router_allowed_reasons and sig.reason not in self.config.router_allowed_reasons:
+            return False
+        return self._regime_allows_signal(sig)
 
     def _stop_atr_for_signal(self, sig: Signal) -> float:
         if self._is_attack_reason(sig.reason):

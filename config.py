@@ -137,6 +137,9 @@ class BacktestConfig:
     reason_edge_pause_bars: int = 192
     invert_signals: bool = False
     enabled_regimes: tuple[str, ...] = ("uptrend", "downtrend", "transition", "range")
+    enable_dynamic_strategy_router: bool = True
+    router_allowed_reasons: tuple[str, ...] = ()
+    router_blocked_reasons: tuple[str, ...] = ()
     enable_adaptive_profiles: bool = True
     adaptive_trend_min_score: float = 3.7
     adaptive_trend_risk_per_trade: float = 0.055
