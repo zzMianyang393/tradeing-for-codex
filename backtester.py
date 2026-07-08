@@ -176,10 +176,22 @@ class Backtester:
         direction_pause_until: dict[int, int] = {}
         reason_pause_until: dict[str, int] = {}
         equity_curve: list[tuple[str, float]] = []
+        _last_day: int = -1
+        _last_week: int = -1
 
         for step, ts in enumerate(timeline):
             if step % 96 == 0:
                 active_symbols = set(self._select_symbols_for_window(market, ts, days, symbol_limit))
+                # Reset daily PnL every 96 bars (1 day)
+                day_idx = step // 96
+                if self.risk_manager is not None and day_idx != _last_day:
+                    self.risk_manager._daily_pnl = 0.0
+                    _last_day = day_idx
+                # Reset weekly PnL every 672 bars (7 days)
+                week_idx = step // 672
+                if self.risk_manager is not None and week_idx != _last_week:
+                    self.risk_manager._weekly_pnl = 0.0
+                    _last_week = week_idx
             for symbol in list(cooldown):
                 cooldown[symbol] -= 1
                 if cooldown[symbol] <= 0:
@@ -276,6 +288,9 @@ class Backtester:
                         continue
                     sig = signal_for(symbol, market[symbol], idx, self.config)
                     if sig and sig.score >= self.config.min_score:
+                        # Regime-aware策略选择: 基于行情选择策略
+                        if not self._regime_allows_signal(sig):
+                            continue
                         adaptive_trend = self._is_adaptive_trend_signal(sig)
                         if sig.regime not in self.config.enabled_regimes and not adaptive_trend:
                             continue
@@ -301,6 +316,8 @@ class Backtester:
                         signals.append(attack_sig)
                     continuation_sig = continuation_signal_for(symbol, market[symbol], idx, self.config)
                     if continuation_sig and continuation_sig.score >= self.config.min_score:
+                        if not self._regime_allows_signal(continuation_sig):
+                            continue
                         if step < direction_pause_until.get(continuation_sig.direction, -1):
                             continue
                         if step < reason_pause_until.get(continuation_sig.reason, -1):
@@ -308,6 +325,8 @@ class Backtester:
                         signals.append(continuation_sig)
                     micro_sig = micro_momentum_signal_for(symbol, market[symbol], idx, self.config)
                     if micro_sig and micro_sig.score >= self.config.min_score:
+                        if not self._regime_allows_signal(micro_sig):
+                            continue
                         if step < direction_pause_until.get(micro_sig.direction, -1):
                             continue
                         if step < reason_pause_until.get(micro_sig.reason, -1):
@@ -317,6 +336,8 @@ class Backtester:
                         signals.append(micro_sig)
                     funding_sig = funding_signal_for(symbol, market[symbol], idx, self.config)
                     if funding_sig and funding_sig.score >= self.config.min_score:
+                        if not self._regime_allows_signal(funding_sig):
+                            continue
                         if step < direction_pause_until.get(funding_sig.direction, -1):
                             continue
                         if step < reason_pause_until.get(funding_sig.reason, -1):
@@ -324,6 +345,8 @@ class Backtester:
                         signals.append(funding_sig)
                     open_interest_sig = open_interest_signal_for(symbol, market[symbol], idx, self.config)
                     if open_interest_sig and open_interest_sig.score >= self.config.min_score:
+                        if not self._regime_allows_signal(open_interest_sig):
+                            continue
                         if step < direction_pause_until.get(open_interest_sig.direction, -1):
                             continue
                         if step < reason_pause_until.get(open_interest_sig.reason, -1):
@@ -727,6 +750,25 @@ class Backtester:
     @staticmethod
     def _is_range_revert_reason(reason: str) -> bool:
         return reason.startswith("range_revert_")
+    
+    # Regime-aware策略选择: 基于行情结构决定是否交易
+    _REGIME_STRATEGIES = {
+        "uptrend": {"trend_long", "attack_breakout_long", "range_revert_long", "micro_momentum_long", "funding_extreme_long", "open_interest_breakout_long"},
+        "downtrend": {"trend_short", "attack_breakout_short", "range_revert_short", "micro_momentum_short", "funding_extreme_short", "open_interest_breakout_short"},
+        "range": {"range_revert_long", "range_revert_short", "attack_exhaustion_long", "attack_exhaustion_short", "continuation_long", "continuation_short", "micro_momentum_long", "micro_momentum_short", "funding_extreme_long", "funding_extreme_short", "open_interest_breakout_long", "open_interest_breakout_short"},
+        "transition": {"transition_breakout_long", "transition_breakout_short", "continuation_long", "continuation_short", "funding_extreme_long", "funding_extreme_short", "open_interest_breakout_long", "open_interest_breakout_short"},
+    }
+    
+    def _regime_allows_signal(self, sig: Signal) -> bool:
+        """根据当前regime判断是否允许交易该信号
+        
+        原则 (不过拟合):
+        - 趋势市只做顺势 (避免逆势亏损)
+        - 震荡市只做反转 (range_revert)
+        - 规则基于市场结构, 不是历史表现
+        """
+        allowed = self._REGIME_STRATEGIES.get(sig.regime, set())
+        return sig.reason in allowed
 
     def _stop_atr_for_signal(self, sig: Signal) -> float:
         if self._is_attack_reason(sig.reason):
@@ -938,7 +980,7 @@ def config_for_window(config: BacktestConfig, days: int | None, symbols: tuple[s
                 risk_per_trade=0.39,
                 max_margin_fraction=1.95,
                 max_total_margin_fraction=1.65,
-                excluded_symbols=config.target_180_excluded_symbols,
+                excluded_symbols=config.target_180_excluded_symbols + ('NEAR-USDT-SWAP', 'DOT-USDT-SWAP', 'ARB-USDT-SWAP'),
                 profit_lock_equity_fraction=999.0,
                 profit_lock_risk_multiplier=1.0,
                 profit_lock_margin_fraction=1.0,
