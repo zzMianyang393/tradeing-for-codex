@@ -1,0 +1,31 @@
+{
+  "overall": {
+    "trades": 74,
+    "win_rate": 0.4865,
+    "pnl": -0.4383,
+    "return_pct": -4.3828,
+    "max_drawdown_pct": 22.4244
+  },
+  "by_reason": {
+    "trend_short": {
+      "trades": 66,
+      "wins": 33,
+      "pnl": -0.0313,
+      "win_rate": 0.5
+    },
+    "transition_breakout_long": {
+      "trades": 8,
+      "wins": 3,
+      "pnl": -0.243,
+      "win_rate": 0.375
+    }
+  },
+  "subtype_signals": {
+    "generic": 359012,
+    "pullback_continuation": 4978,
+    "strong_downtrend_volume": 31772,
+    "ema_cross": 881,
+    "momentum_fade": 122
+  },
+  "total_signals": 396765
+}

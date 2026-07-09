@@ -241,6 +241,78 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
                     score = 2.75 + min(0.45, vol_ratio / 5.0) + min(0.35, abs(bar.trend_strength) / 4.0)
                     return Signal(symbol, 1, score, regime, "transition_breakout_long")
 
+        # --- Pattern 5: Retest breakout ---
+        # After a breakout, price pulls back to retest the breakout level and holds above it.
+        # This is a higher-probability entry because it confirms the breakout is valid.
+        if transition_long_enabled and idx >= 3:
+            prev2_bar = bars[idx - 2]
+            prev_bar = bars[idx - 1]
+            retest_min_volume = getattr(config, "transition_long_retest_min_volume_ratio", 1.1)
+            retest_rsi_min = getattr(config, "transition_long_retest_rsi_min", 40.0)
+            retest_rsi_max = getattr(config, "transition_long_retest_rsi_max", 65.0)
+            retest_min_trend = getattr(config, "transition_long_retest_min_trend_strength", 0.3)
+
+            # Detect: prev2 broke above donchian high, prev pulled back below it, current reclaims it
+            prev2_breakout = prev2_bar.close > prev2_bar.donchian_high * 0.998
+            prev_pullback = prev_bar.close < prev_bar.donchian_high * 1.002
+            current_reclaim = bar.close > bar.donchian_high * 0.998
+            ema_bullish = bar.ema20 > bar.ema50
+            volume_ok = vol_ratio >= retest_min_volume
+            rsi_ok = retest_rsi_min <= bar.rsi <= retest_rsi_max
+            trend_ok = bar.trend_strength > retest_min_trend
+
+            retest_breakout = (
+                prev2_breakout
+                and prev_pullback
+                and current_reclaim
+                and ema_bullish
+                and volume_ok
+                and rsi_ok
+                and trend_ok
+                and move_ok
+            )
+            if retest_breakout:
+                score = 2.85 + min(0.5, vol_ratio / 5.0) + min(0.35, abs(bar.trend_strength) / 4.0)
+                return Signal(symbol, 1, score, regime, "transition_breakout_long")
+
+        # --- Pattern 6: Breakout from tight range ---
+        # Price breaks out from a very tight consolidation (low ATR) with volume confirmation.
+        # This catches early breakouts before they become obvious.
+        if transition_long_enabled and idx >= 4:
+            tight_range_lookback = int(getattr(config, "transition_long_tight_range_lookback_bars", 6))
+            tight_range_max_atr_pct = getattr(config, "transition_long_tight_range_max_atr_pct", 0.6)
+            tight_range_min_volume = getattr(config, "transition_long_tight_range_min_volume_ratio", 1.2)
+            tight_range_rsi_max = getattr(config, "transition_long_tight_range_rsi_max", 68.0)
+            tight_range_min_trend = getattr(config, "transition_long_tight_range_min_trend_strength", 0.3)
+
+            if idx >= tight_range_lookback:
+                range_bars = bars[idx - tight_range_lookback:idx]
+                range_high = max(b.high for b in range_bars)
+                range_low = min(b.low for b in range_bars)
+                range_atr_pct = (range_high - range_low) / bar.close if bar.close else 1.0
+                range_avg_volume = sum(b.volume_quote for b in range_bars) / max(len(range_bars), 1)
+                range_volume_ratio = range_avg_volume / bar.vol_sma if bar.vol_sma > 0 else 1.0
+
+                # Conditions: tight range, volume contraction, then breakout
+                tight_range = range_atr_pct <= bar.atr_pct * tight_range_max_atr_pct
+                volume_contracted = range_volume_ratio <= 0.9  # below average volume during range
+                breakout_up = bar.close > range_high * 1.001
+                volume_expanding = vol_ratio >= tight_range_min_volume
+
+                tight_breakout = (
+                    tight_range
+                    and volume_contracted
+                    and breakout_up
+                    and volume_expanding
+                    and bar.ema20 > bar.ema50
+                    and bar.rsi <= tight_range_rsi_max
+                    and bar.trend_strength > tight_range_min_trend
+                    and move_ok
+                )
+                if tight_breakout:
+                    score = 2.7 + min(0.5, vol_ratio / 5.0) + min(0.35, abs(bar.trend_strength) / 4.0)
+                    return Signal(symbol, 1, score, regime, "transition_breakout_long")
+
     return None
 
 
