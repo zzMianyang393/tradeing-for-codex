@@ -1,0 +1,172 @@
+{
+  "days": 365,
+  "start_equity": 10.0,
+  "router_profile": {
+    "mode": "trend_short_factor",
+    "allowed_reasons": [
+      "transition_breakout_long",
+      "trend_short"
+    ],
+    "blocked_reasons": [
+      "attack_breakout_long",
+      "attack_breakout_short",
+      "range_revert_long",
+      "range_revert_short",
+      "transition_breakout_short",
+      "trend_long"
+    ],
+    "reason_risk_multipliers": {
+      "trend_short": 0.35
+    },
+    "trend_short_factor_gate_enabled": true,
+    "reason_allowed_regimes": {
+      "transition_breakout_long": [
+        "transition"
+      ],
+      "trend_short": [
+        "downtrend"
+      ]
+    },
+    "reason_allowed_regimes_cn": {
+      "transition_breakout_long": [
+        "趋势转换"
+      ],
+      "trend_short": [
+        "下跌趋势"
+      ]
+    },
+    "allowed_reasons_cn": [
+      "转换突破做多",
+      "趋势做空"
+    ],
+    "blocked_reasons_cn": [
+      "攻击突破做多",
+      "攻击突破做空",
+      "震荡反转做多",
+      "震荡反转做空",
+      "转换突破做空",
+      "趋势做多"
+    ]
+  },
+  "best": {
+    "rank": "goal_30d_fullseed_40#7",
+    "result": {
+      "end_equity": 8.304,
+      "pnl": -1.696,
+      "return_pct": -16.9597,
+      "max_drawdown_pct": 17.8686,
+      "trades": 21,
+      "win_rate": 0.3333,
+      "by_reason": {
+        "trend_short": {
+          "trades": 20,
+          "wins": 7,
+          "pnl": -0.7739,
+          "win_rate": 0.35
+        },
+        "transition_breakout_long": {
+          "trades": 1,
+          "wins": 0,
+          "pnl": -0.8892,
+          "win_rate": 0.0
+        }
+      },
+      "by_regime": {
+        "downtrend": {
+          "trades": 20,
+          "wins": 7,
+          "pnl": -0.7739,
+          "win_rate": 0.35
+        },
+        "transition": {
+          "trades": 1,
+          "wins": 0,
+          "pnl": -0.8892,
+          "win_rate": 0.0
+        }
+      },
+      "router_rejections": {
+        "total": 1778,
+        "by_rejection_reason": {
+          "blocked_reason": 1187,
+          "trend_short_factor_mismatch": 591
+        },
+        "by_signal_reason": {
+          "trend_long": 972,
+          "range_revert_short": 77,
+          "trend_short": 591,
+          "range_revert_long": 136,
+          "transition_breakout_short": 2
+        },
+        "by_regime": {
+          "uptrend": 972,
+          "range": 213,
+          "downtrend": 591,
+          "transition": 2
+        }
+      }
+    }
+  },
+  "top": [
+    {
+      "rank": "goal_30d_fullseed_40#7",
+      "result": {
+        "end_equity": 8.304,
+        "pnl": -1.696,
+        "return_pct": -16.9597,
+        "max_drawdown_pct": 17.8686,
+        "trades": 21,
+        "win_rate": 0.3333,
+        "by_reason": {
+          "trend_short": {
+            "trades": 20,
+            "wins": 7,
+            "pnl": -0.7739,
+            "win_rate": 0.35
+          },
+          "transition_breakout_long": {
+            "trades": 1,
+            "wins": 0,
+            "pnl": -0.8892,
+            "win_rate": 0.0
+          }
+        },
+        "by_regime": {
+          "downtrend": {
+            "trades": 20,
+            "wins": 7,
+            "pnl": -0.7739,
+            "win_rate": 0.35
+          },
+          "transition": {
+            "trades": 1,
+            "wins": 0,
+            "pnl": -0.8892,
+            "win_rate": 0.0
+          }
+        },
+        "router_rejections": {
+          "total": 1778,
+          "by_rejection_reason": {
+            "blocked_reason": 1187,
+            "trend_short_factor_mismatch": 591
+          },
+          "by_signal_reason": {
+            "trend_long": 972,
+            "range_revert_short": 77,
+            "trend_short": 591,
+            "range_revert_long": 136,
+            "transition_breakout_short": 2
+          },
+          "by_regime": {
+            "uptrend": 972,
+            "range": 213,
+            "downtrend": 591,
+            "transition": 2
+          }
+        }
+      }
+    }
+  ],
+  "searched": 1
+}

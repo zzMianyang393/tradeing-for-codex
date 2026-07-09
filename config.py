@@ -168,7 +168,7 @@ class BacktestConfig:
     )
     router_trend_short_factor_gate_enabled: bool = False
     router_trend_short_min_trend_strength_abs: float = 2.0
-    router_trend_short_min_volume_ratio: float = 1.35
+    router_trend_short_min_volume_ratio: float = 1.15
     router_trend_short_rsi_min: float = 35.0
     router_trend_short_rsi_max: float = 54.0
     router_trend_short_max_ema20_distance_atr: float = 1.8
