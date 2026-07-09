@@ -167,6 +167,34 @@ class Backtester:
         symbol_limit = self._symbol_limit_for_window(days)
         active_symbols = set(self._select_symbols_for_window(market, timeline[0], days, symbol_limit))
         equity = self.config.start_equity
+
+        # ML model initialization
+        ml_model = None
+        ml_last_train_step = -1
+        if self.config.enable_ml_module:
+            try:
+                from ml_signal import MLSignalConfig, extract_features, prepare_dataset, train_model
+                ml_config = MLSignalConfig(
+                    train_days=self.config.ml_train_days,
+                    forward_bars=self.config.ml_forward_bars,
+                    profit_threshold_pct=self.config.ml_profit_threshold_pct,
+                    min_score=self.config.ml_min_score,
+                )
+                # Train on initial window
+                train_start = timeline[0]
+                train_end = timeline[min(len(timeline) - 1, ml_config.train_days * 96)]
+                train_bars = []
+                for sym in active_symbols:
+                    sym_bars = [b for b in market.get(sym, []) if train_start <= b.ts <= train_end]
+                    train_bars.extend(sym_bars)
+                if len(train_bars) >= ml_config.min_training_samples:
+                    X_train, y_train = prepare_dataset(train_bars, ml_config.forward_bars, ml_config.profit_threshold_pct)
+                    if len(X_train) >= 100:
+                        ml_model = train_model(X_train, y_train, ml_config.n_estimators, ml_config.max_depth, ml_config.learning_rate)
+                        ml_last_train_step = 0
+            except Exception as exc:
+                import logging
+                logging.getLogger("backtester").warning("ML model init failed: %s", exc)
         peak = equity
         max_drawdown = 0.0
         trades: list[Trade] = []
@@ -399,6 +427,43 @@ class Backtester:
                         if self._blocked_by_reversal_risk(order_book_sig, market[symbol], idx):
                             continue
                         signals.append(order_book_sig)
+                    # ML signal generation
+                    if ml_model is not None and self.config.enable_ml_module:
+                        try:
+                            from ml_signal import extract_features
+                            bar = market[symbol][idx]
+                            feat = extract_features(bar)
+                            import numpy as np
+                            X = np.array([[feat[col] for col in [
+                                "ema20", "ema50", "ema200", "atr", "atr_pct", "rsi",
+                                "bb_mid", "bb_upper", "bb_lower", "vol_sma",
+                                "donchian_high", "donchian_low", "trend_strength",
+                                "volume_ratio", "close_to_ema20", "close_to_ema50",
+                                "close_to_donchian_high", "close_to_donchian_low",
+                                "bb_position", "candle_body_pct", "candle_range_pct",
+                                "upper_shadow_pct", "lower_shadow_pct",
+                            ]]], dtype=np.float64)
+                            prob = ml_model.predict_proba(X)[0][1]
+                            if prob >= self.config.ml_min_score:
+                                ml_sig = Signal(
+                                    symbol=symbol,
+                                    direction=1,  # ML predicts up
+                                    score=3.0 + prob,
+                                    regime="ml",
+                                    reason="ml_long",
+                                )
+                                if not router_allows(ml_sig, bar):
+                                    pass  # skip
+                                elif step < direction_pause_until.get(ml_sig.direction, -1):
+                                    pass
+                                elif step < reason_pause_until.get(ml_sig.reason, -1):
+                                    pass
+                                elif self._blocked_by_reversal_risk(ml_sig, market[symbol], idx):
+                                    pass
+                                else:
+                                    signals.append(ml_sig)
+                        except Exception:
+                            pass  # ML signal failure is non-fatal
                 signals.sort(key=lambda sig: sig.score, reverse=True)
                 opened_symbols: set[str] = set()
                 for sig in signals[:slots]:
@@ -653,7 +718,10 @@ class Backtester:
         return False
 
     def _exit_price(self, pos: Position, bar: FeatureBar, idx: int) -> tuple[float | None, str]:
-        if (
+        if pos.reason == "ml_long":
+            trailing_atr = self.config.ml_trailing_atr
+            max_hold_bars = self.config.ml_max_hold_bars
+        elif (
             self.config.router_trend_short_factor_gate_enabled
             and pos.reason == "trend_short"
         ):
@@ -868,6 +936,8 @@ class Backtester:
         )
 
     def _stop_atr_for_signal(self, sig: Signal) -> float:
+        if sig.reason == "ml_long":
+            return self.config.ml_stop_atr
         if self._is_trend_short_factor(sig):
             return self.config.trend_short_factor_stop_atr
         if self._is_attack_reason(sig.reason):
@@ -891,6 +961,8 @@ class Backtester:
         return self.config.stop_atr
 
     def _take_profit_atr_for_signal(self, sig: Signal, equity: float | None = None) -> float:
+        if sig.reason == "ml_long":
+            return self.config.ml_take_profit_atr
         if self._is_trend_short_factor(sig):
             return self.config.trend_short_factor_take_profit_atr
         if self._is_attack_reason(sig.reason):
@@ -921,6 +993,8 @@ class Backtester:
         return self.config.take_profit_atr
 
     def _risk_per_trade_for_signal(self, sig: Signal) -> float:
+        if sig.reason == "ml_long":
+            return self.config.ml_risk_per_trade
         if self._is_trend_short_factor(sig):
             return self.config.trend_short_factor_risk_per_trade
         if self._is_attack_reason(sig.reason):

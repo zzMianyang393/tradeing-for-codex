@@ -244,6 +244,18 @@ class BacktestConfig:
     attack_enabled_regimes: tuple[str, ...] = ("uptrend", "downtrend", "transition", "range")
     attack_breakout_enabled: bool = True
     attack_exhaustion_enabled: bool = True
+    # ML signal module
+    enable_ml_module: bool = False
+    ml_train_days: int = 180
+    ml_forward_bars: int = 96
+    ml_profit_threshold_pct: float = 0.01
+    ml_min_score: float = 0.8
+    ml_risk_per_trade: float = 0.035
+    ml_stop_atr: float = 2.0
+    ml_take_profit_atr: float = 1.5
+    ml_trailing_atr: float = 1.8
+    ml_max_hold_bars: int = 8
+    ml_retrain_interval_bars: int = 96 * 7  # retrain weekly
     enable_order_book_module: bool = False
     order_book_min_depth_imbalance: float = 0.3
     order_book_min_spread_pct: float = 0.0
