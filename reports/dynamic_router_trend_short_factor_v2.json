@@ -51,57 +51,57 @@
   "best": {
     "rank": "goal_30d_fullseed_40#7",
     "result": {
-      "end_equity": 8.304,
-      "pnl": -1.696,
-      "return_pct": -16.9597,
-      "max_drawdown_pct": 17.8686,
-      "trades": 21,
-      "win_rate": 0.3333,
+      "end_equity": 8.5194,
+      "pnl": -1.4806,
+      "return_pct": -14.8058,
+      "max_drawdown_pct": 15.5659,
+      "trades": 22,
+      "win_rate": 0.4545,
       "by_reason": {
         "trend_short": {
-          "trades": 20,
-          "wins": 7,
-          "pnl": -0.7739,
-          "win_rate": 0.35
+          "trades": 21,
+          "wins": 10,
+          "pnl": -0.5531,
+          "win_rate": 0.47619047619047616
         },
         "transition_breakout_long": {
           "trades": 1,
           "wins": 0,
-          "pnl": -0.8892,
+          "pnl": -0.8969,
           "win_rate": 0.0
         }
       },
       "by_regime": {
         "downtrend": {
-          "trades": 20,
-          "wins": 7,
-          "pnl": -0.7739,
-          "win_rate": 0.35
+          "trades": 21,
+          "wins": 10,
+          "pnl": -0.5531,
+          "win_rate": 0.47619047619047616
         },
         "transition": {
           "trades": 1,
           "wins": 0,
-          "pnl": -0.8892,
+          "pnl": -0.8969,
           "win_rate": 0.0
         }
       },
       "router_rejections": {
-        "total": 1984,
+        "total": 1986,
         "by_rejection_reason": {
           "blocked_reason": 1187,
-          "trend_short_factor_mismatch": 797
+          "trend_short_factor_mismatch": 799
         },
         "by_signal_reason": {
           "trend_long": 972,
           "range_revert_short": 77,
-          "trend_short": 797,
+          "trend_short": 799,
           "range_revert_long": 136,
           "transition_breakout_short": 2
         },
         "by_regime": {
           "uptrend": 972,
           "range": 213,
-          "downtrend": 797,
+          "downtrend": 799,
           "transition": 2
         }
       }
@@ -111,57 +111,57 @@
     {
       "rank": "goal_30d_fullseed_40#7",
       "result": {
-        "end_equity": 8.304,
-        "pnl": -1.696,
-        "return_pct": -16.9597,
-        "max_drawdown_pct": 17.8686,
-        "trades": 21,
-        "win_rate": 0.3333,
+        "end_equity": 8.5194,
+        "pnl": -1.4806,
+        "return_pct": -14.8058,
+        "max_drawdown_pct": 15.5659,
+        "trades": 22,
+        "win_rate": 0.4545,
         "by_reason": {
           "trend_short": {
-            "trades": 20,
-            "wins": 7,
-            "pnl": -0.7739,
-            "win_rate": 0.35
+            "trades": 21,
+            "wins": 10,
+            "pnl": -0.5531,
+            "win_rate": 0.47619047619047616
           },
           "transition_breakout_long": {
             "trades": 1,
             "wins": 0,
-            "pnl": -0.8892,
+            "pnl": -0.8969,
             "win_rate": 0.0
           }
         },
         "by_regime": {
           "downtrend": {
-            "trades": 20,
-            "wins": 7,
-            "pnl": -0.7739,
-            "win_rate": 0.35
+            "trades": 21,
+            "wins": 10,
+            "pnl": -0.5531,
+            "win_rate": 0.47619047619047616
           },
           "transition": {
             "trades": 1,
             "wins": 0,
-            "pnl": -0.8892,
+            "pnl": -0.8969,
             "win_rate": 0.0
           }
         },
         "router_rejections": {
-          "total": 1984,
+          "total": 1986,
           "by_rejection_reason": {
             "blocked_reason": 1187,
-            "trend_short_factor_mismatch": 797
+            "trend_short_factor_mismatch": 799
           },
           "by_signal_reason": {
             "trend_long": 972,
             "range_revert_short": 77,
-            "trend_short": 797,
+            "trend_short": 799,
             "range_revert_long": 136,
             "transition_breakout_short": 2
           },
           "by_regime": {
             "uptrend": 972,
             "range": 213,
-            "downtrend": 797,
+            "downtrend": 799,
             "transition": 2
           }
         }
