@@ -153,16 +153,21 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
         # Tightened: require vol >= 1.3, ema50 > ema200 (medium-term uptrend), RSI 45-62.
         if transition_long_enabled and idx >= 2:
             prev_bar = bars[idx - 1]
+            pullback_min_volume = getattr(config, "transition_long_pullback_min_volume_ratio", 1.3)
+            pullback_rsi_min = getattr(config, "transition_long_pullback_rsi_min", 45.0)
+            pullback_rsi_max = getattr(config, "transition_long_pullback_rsi_max", 62.0)
+            pullback_max_move_21d_abs = getattr(config, "transition_long_pullback_max_move_21d_abs", 0.12)
+            pullback_min_trend = getattr(config, "transition_long_pullback_min_trend_strength", 0.5)
             pullback_bounce = (
                 prev_bar.close < prev_bar.ema20
                 and bar.close > bar.ema20
                 and bar.ema20 > bar.ema50
                 and bar.ema50 > bar.ema200  # medium-term uptrend confirmed
-                and 45 <= bar.rsi <= 62
-                and vol_ratio >= 1.3
+                and pullback_rsi_min <= bar.rsi <= pullback_rsi_max
+                and vol_ratio >= pullback_min_volume
                 and move_ok
-                and abs(move_21d) < 0.12  # not extreme overheat
-                and bar.trend_strength > 0.5  # minimum trend quality
+                and abs(move_21d) < pullback_max_move_21d_abs  # not extreme overheat
+                and bar.trend_strength > pullback_min_trend  # minimum trend quality
             )
             if pullback_bounce:
                 score = 2.9 + min(0.5, vol_ratio / 5.0) + min(0.3, abs(bar.trend_strength) / 4.0)
@@ -171,7 +176,12 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
         # --- Pattern 3: Volume breakout without overheat (relaxed) ---
         # Volume-backed push near donchian high, but not requiring extreme volume.
         # Tightened: vol >= 1.35, RSI <= 65, require trend_strength > 0.5.
-        if transition_long_enabled and vol_ratio >= 1.35:
+        volume_min_ratio = getattr(config, "transition_long_volume_min_volume_ratio", 1.35)
+        if transition_long_enabled and vol_ratio >= volume_min_ratio:
+            volume_rsi_max = getattr(config, "transition_long_volume_rsi_max", 65.0)
+            volume_min_trend = getattr(config, "transition_long_volume_min_trend_strength", 0.5)
+            volume_min_body_atr = getattr(config, "transition_long_volume_min_body_atr", 0.25)
+            volume_max_upper_shadow_body = getattr(config, "transition_long_volume_max_upper_shadow_body", 1.5)
             candle_body = abs(bar.close - bar.open) / bar.close if bar.close else 0.0
             candle_range = (bar.high - bar.low) / bar.close if bar.close else 0.0
             upper_shadow = (bar.high - max(bar.open, bar.close)) / bar.close if bar.close else 0.0
@@ -179,15 +189,51 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
                 bar.close >= bar.donchian_high * 0.998
                 and bar.ema20 > bar.ema50
                 and bar.ema50 > bar.ema200  # medium-term uptrend confirmed
-                and bar.rsi <= 65
-                and bar.trend_strength > 0.5  # minimum trend quality
-                and candle_body >= bar.atr_pct * 0.25  # reasonable body
-                and upper_shadow < candle_body * 1.5  # no long upper shadow rejection
+                and bar.rsi <= volume_rsi_max
+                and bar.trend_strength > volume_min_trend  # minimum trend quality
+                and candle_body >= bar.atr_pct * volume_min_body_atr  # reasonable body
+                and upper_shadow < candle_body * volume_max_upper_shadow_body  # no long upper shadow rejection
                 and move_ok
             )
             if volume_breakout:
                 score = 2.8 + min(0.55, vol_ratio / 5.0) + min(0.35, abs(bar.trend_strength) / 4.0)
                 return Signal(symbol, 1, score, regime, "transition_breakout_long")
+
+        # --- Pattern 4: Post-breakout consolidation then re-breakout ---
+        # A tight platform above EMA20 can add controlled entries without enabling weak strategy families.
+        if transition_long_enabled and getattr(config, "transition_long_consolidation_enabled", False):
+            lookback = int(getattr(config, "transition_long_consolidation_lookback_bars", 8))
+            if idx >= lookback:
+                platform = bars[idx - lookback:idx]
+                platform_high = max(item.high for item in platform)
+                platform_low = min(item.low for item in platform)
+                platform_range_pct = (platform_high - platform_low) / bar.close if bar.close else 999.0
+                platform_avg_volume = sum(item.volume_quote for item in platform) / max(len(platform), 1)
+                platform_volume_ratio = platform_avg_volume / bar.vol_sma if bar.vol_sma > 0 else 1.0
+                consolidation_max_range = getattr(config, "transition_long_consolidation_max_range_atr", 1.0)
+                consolidation_min_volume = getattr(config, "transition_long_consolidation_min_volume_ratio", 1.15)
+                consolidation_max_avg_volume = getattr(config, "transition_long_consolidation_max_avg_volume_ratio", 1.0)
+                consolidation_rsi_max = getattr(config, "transition_long_consolidation_rsi_max", 64.0)
+                consolidation_min_trend = getattr(config, "transition_long_consolidation_min_trend_strength", 0.5)
+                consolidation_min_body_atr = getattr(config, "transition_long_consolidation_min_body_atr", 0.25)
+                platform_above_ema20 = all(item.close >= item.ema20 for item in platform)
+                candle_body = abs(bar.close - bar.open) / bar.close if bar.close else 0.0
+                consolidation_breakout = (
+                    bar.close > platform_high * 1.001
+                    and platform_range_pct <= atr_pct * consolidation_max_range
+                    and platform_volume_ratio <= consolidation_max_avg_volume
+                    and platform_above_ema20
+                    and bar.ema20 > bar.ema50
+                    and bar.ema50 > bar.ema200
+                    and bar.rsi <= consolidation_rsi_max
+                    and bar.trend_strength > consolidation_min_trend
+                    and vol_ratio >= consolidation_min_volume
+                    and candle_body >= atr_pct * consolidation_min_body_atr
+                    and move_ok
+                )
+                if consolidation_breakout:
+                    score = 2.75 + min(0.45, vol_ratio / 5.0) + min(0.35, abs(bar.trend_strength) / 4.0)
+                    return Signal(symbol, 1, score, regime, "transition_breakout_long")
 
     return None
 

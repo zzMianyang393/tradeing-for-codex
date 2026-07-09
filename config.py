@@ -96,6 +96,24 @@ class BacktestConfig:
     transition_long_enabled: bool = True
     transition_short_enabled: bool = True
     transition_long_min_move_21d: float = -1.0
+    transition_long_pullback_min_volume_ratio: float = 1.3
+    transition_long_pullback_rsi_min: float = 45.0
+    transition_long_pullback_rsi_max: float = 62.0
+    transition_long_pullback_max_move_21d_abs: float = 0.12
+    transition_long_pullback_min_trend_strength: float = 0.5
+    transition_long_volume_min_volume_ratio: float = 1.35
+    transition_long_volume_rsi_max: float = 65.0
+    transition_long_volume_min_trend_strength: float = 0.5
+    transition_long_volume_min_body_atr: float = 0.25
+    transition_long_volume_max_upper_shadow_body: float = 1.5
+    transition_long_consolidation_enabled: bool = False
+    transition_long_consolidation_lookback_bars: int = 8
+    transition_long_consolidation_max_range_atr: float = 1.0
+    transition_long_consolidation_min_volume_ratio: float = 1.15
+    transition_long_consolidation_max_avg_volume_ratio: float = 1.0
+    transition_long_consolidation_rsi_max: float = 64.0
+    transition_long_consolidation_min_trend_strength: float = 0.5
+    transition_long_consolidation_min_body_atr: float = 0.25
     enable_target_window_profiles: bool = True
     target_window_excluded_symbols: tuple[str, ...] = (
         "XRP-USDT-SWAP",
@@ -140,6 +158,24 @@ class BacktestConfig:
     enable_dynamic_strategy_router: bool = True
     router_allowed_reasons: tuple[str, ...] = ()
     router_blocked_reasons: tuple[str, ...] = ()
+    router_reason_allowed_regimes: dict[str, tuple[str, ...]] = field(
+        default_factory=lambda: {}
+    )
+    router_trend_short_factor_gate_enabled: bool = False
+    router_trend_short_min_trend_strength_abs: float = 2.0
+    router_trend_short_min_volume_ratio: float = 1.35
+    router_trend_short_rsi_min: float = 35.0
+    router_trend_short_rsi_max: float = 54.0
+    router_trend_short_max_ema20_distance_atr: float = 1.8
+    router_trend_short_max_ema20_distance_pct: float = 0.025
+    # trend_short_factor 独立退出 profile（只在 factor gate 启用时生效）
+    trend_short_factor_stop_atr: float = 2.0
+    trend_short_factor_take_profit_atr: float = 1.5
+    trend_short_factor_trailing_atr: float = 1.8
+    trend_short_factor_max_hold_bars: int = 6
+    trend_short_factor_break_even_mfe_pct: float = 0.008
+    trend_short_factor_break_even_lock_pct: float = 0.002
+    trend_short_factor_risk_per_trade: float = 0.035
     enable_adaptive_profiles: bool = True
     adaptive_trend_min_score: float = 3.7
     adaptive_trend_risk_per_trade: float = 0.055

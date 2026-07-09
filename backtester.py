@@ -175,9 +175,30 @@ class Backtester:
         edge_pause_until = -1
         direction_pause_until: dict[int, int] = {}
         reason_pause_until: dict[str, int] = {}
+        router_rejections: dict[str, object] = {
+            "total": 0,
+            "by_rejection_reason": {},
+            "by_signal_reason": {},
+            "by_regime": {},
+        }
         equity_curve: list[tuple[str, float]] = []
         _last_day: int = -1
         _last_week: int = -1
+
+        def router_allows(sig: Signal, bar: FeatureBar) -> bool:
+            rejection = self._dynamic_router_rejection_reason(sig, bar)
+            if rejection is None:
+                return True
+            router_rejections["total"] = int(router_rejections["total"]) + 1
+            for bucket_name, key in (
+                ("by_rejection_reason", rejection),
+                ("by_signal_reason", sig.reason),
+                ("by_regime", sig.regime),
+            ):
+                bucket = router_rejections[bucket_name]
+                assert isinstance(bucket, dict)
+                bucket[key] = int(bucket.get(key, 0)) + 1
+            return False
 
         for step, ts in enumerate(timeline):
             if step % 96 == 0:
@@ -289,7 +310,7 @@ class Backtester:
                     sig = signal_for(symbol, market[symbol], idx, self.config)
                     if sig and sig.score >= self.config.min_score:
                         # Regime-aware策略选择: 基于行情选择策略
-                        if not self._dynamic_router_allows_signal(sig):
+                        if not router_allows(sig, market[symbol][idx]):
                             continue
                         adaptive_trend = self._is_adaptive_trend_signal(sig)
                         if sig.regime not in self.config.enabled_regimes and not adaptive_trend:
@@ -305,7 +326,7 @@ class Backtester:
                         signals.append(sig)
                     attack_sig = attack_signal_for(symbol, market[symbol], idx, self.config)
                     if self.config.enable_attack_module and attack_sig and attack_sig.score >= self.config.attack_min_score:
-                        if not self._dynamic_router_allows_signal(attack_sig):
+                        if not router_allows(attack_sig, market[symbol][idx]):
                             continue
                         if attack_sig.regime not in self.config.attack_enabled_regimes:
                             continue
@@ -318,7 +339,7 @@ class Backtester:
                         signals.append(attack_sig)
                     continuation_sig = continuation_signal_for(symbol, market[symbol], idx, self.config)
                     if continuation_sig and continuation_sig.score >= self.config.min_score:
-                        if not self._dynamic_router_allows_signal(continuation_sig):
+                        if not router_allows(continuation_sig, market[symbol][idx]):
                             continue
                         if step < direction_pause_until.get(continuation_sig.direction, -1):
                             continue
@@ -327,7 +348,7 @@ class Backtester:
                         signals.append(continuation_sig)
                     micro_sig = micro_momentum_signal_for(symbol, market[symbol], idx, self.config)
                     if micro_sig and micro_sig.score >= self.config.min_score:
-                        if not self._dynamic_router_allows_signal(micro_sig):
+                        if not router_allows(micro_sig, market[symbol][idx]):
                             continue
                         if step < direction_pause_until.get(micro_sig.direction, -1):
                             continue
@@ -338,7 +359,7 @@ class Backtester:
                         signals.append(micro_sig)
                     funding_sig = funding_signal_for(symbol, market[symbol], idx, self.config)
                     if funding_sig and funding_sig.score >= self.config.min_score:
-                        if not self._dynamic_router_allows_signal(funding_sig):
+                        if not router_allows(funding_sig, market[symbol][idx]):
                             continue
                         if step < direction_pause_until.get(funding_sig.direction, -1):
                             continue
@@ -347,7 +368,7 @@ class Backtester:
                         signals.append(funding_sig)
                     open_interest_sig = open_interest_signal_for(symbol, market[symbol], idx, self.config)
                     if open_interest_sig and open_interest_sig.score >= self.config.min_score:
-                        if not self._dynamic_router_allows_signal(open_interest_sig):
+                        if not router_allows(open_interest_sig, market[symbol][idx]):
                             continue
                         if step < direction_pause_until.get(open_interest_sig.direction, -1):
                             continue
@@ -358,7 +379,7 @@ class Backtester:
                         signals.append(open_interest_sig)
                     trade_flow_sig = trade_flow_signal_for(symbol, market[symbol], idx, self.config)
                     if trade_flow_sig and trade_flow_sig.score >= self.config.min_score:
-                        if not self._dynamic_router_allows_signal(trade_flow_sig):
+                        if not router_allows(trade_flow_sig, market[symbol][idx]):
                             continue
                         if step < direction_pause_until.get(trade_flow_sig.direction, -1):
                             continue
@@ -369,7 +390,7 @@ class Backtester:
                         signals.append(trade_flow_sig)
                     order_book_sig = order_book_signal_for(symbol, market[symbol], idx, self.config)
                     if order_book_sig and order_book_sig.score >= self.config.min_score:
-                        if not self._dynamic_router_allows_signal(order_book_sig):
+                        if not router_allows(order_book_sig, market[symbol][idx]):
                             continue
                         if step < direction_pause_until.get(order_book_sig.direction, -1):
                             continue
@@ -486,6 +507,7 @@ class Backtester:
             "by_symbol": by_symbol,
             "by_regime": by_regime,
             "by_reason": by_reason,
+            "router_rejections": router_rejections,
             "equity_curve": equity_curve,
             "trades_detail": [asdict(trade) for trade in trades],
             "risk_status": {
@@ -631,7 +653,13 @@ class Backtester:
         return False
 
     def _exit_price(self, pos: Position, bar: FeatureBar, idx: int) -> tuple[float | None, str]:
-        if self._is_attack_reason(pos.reason):
+        if (
+            self.config.router_trend_short_factor_gate_enabled
+            and pos.reason == "trend_short"
+        ):
+            trailing_atr = self.config.trend_short_factor_trailing_atr
+            max_hold_bars = self.config.trend_short_factor_max_hold_bars
+        elif self._is_attack_reason(pos.reason):
             trailing_atr = self.config.attack_trailing_atr
             max_hold_bars = self.config.attack_max_hold_bars
         elif self._is_micro_momentum_reason(pos.reason):
@@ -668,6 +696,23 @@ class Backtester:
         early_exit_price = self._early_failure_exit_price(pos, bar, idx)
         if early_exit_price is not None:
             return early_exit_price, "early_failure"
+
+        # Break-even logic: move stop to entry + small lock once MFE threshold is reached
+        be_mfe = getattr(self.config, "trend_short_factor_break_even_mfe_pct", 0.0)
+        be_lock = getattr(self.config, "trend_short_factor_break_even_lock_pct", 0.0)
+        if (
+            self.config.router_trend_short_factor_gate_enabled
+            and pos.reason == "trend_short"
+            and be_mfe > 0
+            and pos.max_favorable_pct >= be_mfe
+        ):
+            if pos.direction > 0:
+                be_stop = pos.entry * (1.0 + be_lock)
+                pos.trail = max(pos.trail, be_stop)
+            else:
+                be_stop = pos.entry * (1.0 - be_lock)
+                pos.trail = min(pos.trail, be_stop)
+
         if pos.direction > 0:
             pos.trail = max(pos.trail, bar.close - trail_dist)
             stop_price = max(pos.stop, pos.trail)
@@ -735,6 +780,13 @@ class Backtester:
     def _is_trade_flow_reason(reason: str) -> bool:
         return reason.startswith("trade_flow_")
 
+    def _is_trend_short_factor(self, sig: Signal) -> bool:
+        """Check if signal is a trend_short under factor gate."""
+        return (
+            self.config.router_trend_short_factor_gate_enabled
+            and sig.reason == "trend_short"
+        )
+
     @staticmethod
     def _is_order_book_reason(reason: str) -> bool:
         return reason.startswith("order_book_")
@@ -777,15 +829,47 @@ class Backtester:
         return sig.reason in allowed
 
     def _dynamic_router_allows_signal(self, sig: Signal) -> bool:
+        return self._dynamic_router_rejection_reason(sig) is None
+
+    def _dynamic_router_rejection_reason(self, sig: Signal, bar: FeatureBar | None = None) -> str | None:
         if not self.config.enable_dynamic_strategy_router:
-            return True
+            return None
         if sig.reason in self.config.router_blocked_reasons:
-            return False
+            return "blocked_reason"
         if self.config.router_allowed_reasons and sig.reason not in self.config.router_allowed_reasons:
-            return False
-        return self._regime_allows_signal(sig)
+            return "not_allowed_reason"
+        allowed_regimes = self.config.router_reason_allowed_regimes.get(sig.reason)
+        if allowed_regimes and sig.regime not in allowed_regimes:
+            return "configured_regime_mismatch"
+        if not self._regime_allows_signal(sig):
+            return "regime_structure_mismatch"
+        if (
+            self.config.router_trend_short_factor_gate_enabled
+            and sig.reason == "trend_short"
+            and bar is not None
+            and not self._trend_short_factor_gate_allows(bar)
+        ):
+            return "trend_short_factor_mismatch"
+        return None
+
+    def _trend_short_factor_gate_allows(self, bar: FeatureBar) -> bool:
+        volume_ratio = bar.volume_quote / bar.vol_sma if bar.vol_sma > 0 else 1.0
+        ema20_distance = abs(bar.close / bar.ema20 - 1.0) if bar.close and bar.ema20 else 0.0
+        max_ema_distance = max(
+            bar.atr_pct * self.config.router_trend_short_max_ema20_distance_atr,
+            self.config.router_trend_short_max_ema20_distance_pct,
+        )
+        return (
+            abs(bar.trend_strength) >= self.config.router_trend_short_min_trend_strength_abs
+            and bar.trend_strength < 0
+            and volume_ratio >= self.config.router_trend_short_min_volume_ratio
+            and self.config.router_trend_short_rsi_min <= bar.rsi <= self.config.router_trend_short_rsi_max
+            and ema20_distance <= max_ema_distance
+        )
 
     def _stop_atr_for_signal(self, sig: Signal) -> float:
+        if self._is_trend_short_factor(sig):
+            return self.config.trend_short_factor_stop_atr
         if self._is_attack_reason(sig.reason):
             return self.config.attack_stop_atr
         if self._is_micro_momentum_reason(sig.reason):
@@ -807,6 +891,8 @@ class Backtester:
         return self.config.stop_atr
 
     def _take_profit_atr_for_signal(self, sig: Signal, equity: float | None = None) -> float:
+        if self._is_trend_short_factor(sig):
+            return self.config.trend_short_factor_take_profit_atr
         if self._is_attack_reason(sig.reason):
             return self.config.attack_take_profit_atr
         if self._is_micro_momentum_reason(sig.reason):
@@ -835,6 +921,8 @@ class Backtester:
         return self.config.take_profit_atr
 
     def _risk_per_trade_for_signal(self, sig: Signal) -> float:
+        if self._is_trend_short_factor(sig):
+            return self.config.trend_short_factor_risk_per_trade
         if self._is_attack_reason(sig.reason):
             return self.config.attack_risk_per_trade
         if self._is_micro_momentum_reason(sig.reason):

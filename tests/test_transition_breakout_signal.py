@@ -233,6 +233,73 @@ class TestTransitionBreakoutLongPullback(unittest.TestCase):
         if sig and sig.direction == 1:
             self.assertNotIn("transition_breakout_long", sig.reason)
 
+    def test_pullback_volume_threshold_can_be_configured(self):
+        """Lowering pullback volume threshold allows a controlled extra signal."""
+        bars = []
+        for i in range(260):
+            bars.append(_make_bar(
+                ts=1700000000000 + i * 900_000,
+                close=100.0,
+                ema20=100.0,
+                ema50=99.5,
+                ema200=98.0,
+                trend_strength=0.95,
+                atr=2.0,
+                atr_pct=0.02,
+                rsi=55.0,
+                vol_sma=400_000.0,
+                volume_quote=400_000.0,
+                donchian_high=104.0,
+                donchian_low=96.0,
+            ))
+        bars.append(_make_bar(
+            ts=1700000000000 + 260 * 900_000,
+            close=101.0,
+            open=99.5,
+            high=101.5,
+            low=99.0,
+            ema20=100.0,
+            ema50=99.5,
+            ema200=98.0,
+            trend_strength=0.95,
+            atr=2.0,
+            atr_pct=0.02,
+            rsi=52.0,
+            vol_sma=400_000.0,
+            volume_quote=480_000.0,  # vol_ratio 1.20, below default 1.30
+            donchian_high=104.0,
+            donchian_low=96.0,
+        ))
+        bars[-2] = _make_bar(
+            ts=1700000000000 + 259 * 900_000,
+            close=99.0,
+            ema20=100.0,
+            ema50=99.5,
+            ema200=98.0,
+            trend_strength=0.95,
+            atr=2.0,
+            atr_pct=0.02,
+            rsi=48.0,
+            vol_sma=400_000.0,
+            volume_quote=400_000.0,
+            donchian_high=104.0,
+            donchian_low=96.0,
+        )
+
+        default_sig = signal_for("BTC-USDT-SWAP", bars, len(bars) - 1, self._make_config())
+        relaxed_sig = signal_for(
+            "BTC-USDT-SWAP",
+            bars,
+            len(bars) - 1,
+            self._make_config(transition_long_pullback_min_volume_ratio=1.15),
+        )
+
+        if default_sig and default_sig.direction == 1:
+            self.assertNotIn("transition_breakout_long", default_sig.reason)
+        self.assertIsNotNone(relaxed_sig)
+        self.assertEqual(1, relaxed_sig.direction)
+        self.assertEqual("transition_breakout_long", relaxed_sig.reason)
+
 
 class TestTransitionBreakoutLongVolume(unittest.TestCase):
     """Test: volume breakout without overheat in transition regime."""
@@ -378,6 +445,167 @@ class TestTransitionBreakoutLongVolume(unittest.TestCase):
         if sig and sig.direction == 1:
             # If signal exists, it should have lower score due to poor candle quality
             self.assertLessEqual(sig.score, 3.5)
+
+    def test_volume_breakout_rsi_ceiling_can_be_configured(self):
+        """Raising volume-breakout RSI ceiling allows a controlled extra signal."""
+        bars = []
+        for i in range(260):
+            bars.append(_make_bar(
+                ts=1700000000000 + i * 900_000,
+                close=100.0,
+                ema20=100.0,
+                ema50=99.5,
+                ema200=98.0,
+                trend_strength=0.95,
+                atr=2.0,
+                atr_pct=0.02,
+                rsi=55.0,
+                vol_sma=400_000.0,
+                volume_quote=400_000.0,
+                donchian_high=104.0,
+                donchian_low=96.0,
+            ))
+        bars.append(_make_bar(
+            ts=1700000000000 + 260 * 900_000,
+            close=104.0,
+            open=101.0,
+            high=104.5,
+            low=100.5,
+            ema20=100.5,
+            ema50=99.5,
+            ema200=98.0,
+            trend_strength=0.95,
+            atr=2.0,
+            atr_pct=0.02,
+            rsi=67.0,
+            vol_sma=400_000.0,
+            volume_quote=540_000.0,  # vol_ratio 1.35, avoids original >1.40 breakout path
+            donchian_high=104.0,
+            donchian_low=96.0,
+        ))
+
+        default_sig = signal_for("BTC-USDT-SWAP", bars, len(bars) - 1, self._make_config())
+        relaxed_sig = signal_for(
+            "BTC-USDT-SWAP",
+            bars,
+            len(bars) - 1,
+            self._make_config(transition_long_volume_rsi_max=68.0),
+        )
+
+        if default_sig and default_sig.direction == 1:
+            self.assertNotIn("transition_breakout_long", default_sig.reason)
+        self.assertIsNotNone(relaxed_sig)
+        self.assertEqual(1, relaxed_sig.direction)
+        self.assertEqual("transition_breakout_long", relaxed_sig.reason)
+
+
+class TestTransitionBreakoutLongConsolidation(unittest.TestCase):
+    """Test: post-breakout consolidation then re-breakout in transition regime."""
+
+    def _make_config(self, **overrides):
+        defaults = dict(
+            transition_long_enabled=True,
+            transition_short_enabled=True,
+            transition_long_min_move_21d=-1.0,
+            transition_long_consolidation_enabled=False,
+        )
+        defaults.update(overrides)
+        return SimpleNamespace(**defaults)
+
+    def _make_consolidation_bars(self):
+        bars = []
+        for i in range(252):
+            bars.append(_make_bar(
+                ts=1700000000000 + i * 900_000,
+                close=100.0,
+                ema20=100.0,
+                ema50=99.5,
+                ema200=98.0,
+                trend_strength=0.95,
+                atr=2.0,
+                atr_pct=0.02,
+                rsi=55.0,
+                vol_sma=400_000.0,
+                volume_quote=360_000.0,
+                donchian_high=106.0,
+                donchian_low=96.0,
+            ))
+        for i in range(8):
+            bars.append(_make_bar(
+                ts=1700000000000 + (252 + i) * 900_000,
+                close=101.0 + (i % 2) * 0.35,
+                open=101.0,
+                high=102.0,
+                low=100.6,
+                ema20=100.8,
+                ema50=99.7,
+                ema200=98.0,
+                trend_strength=0.95,
+                atr=2.0,
+                atr_pct=0.02,
+                rsi=55.0,
+                vol_sma=400_000.0,
+                volume_quote=320_000.0,
+                donchian_high=106.0,
+                donchian_low=96.0,
+            ))
+        bars.append(_make_bar(
+            ts=1700000000000 + 260 * 900_000,
+            close=102.4,
+            open=101.3,
+            high=102.8,
+            low=101.2,
+            ema20=100.9,
+            ema50=99.8,
+            ema200=98.0,
+            trend_strength=0.95,
+            atr=2.0,
+            atr_pct=0.02,
+            rsi=58.0,
+            vol_sma=400_000.0,
+            volume_quote=500_000.0,
+            donchian_high=106.0,
+            donchian_low=96.0,
+        ))
+        return bars
+
+    def test_consolidation_breakout_disabled_by_default(self):
+        bars = self._make_consolidation_bars()
+
+        sig = signal_for("BTC-USDT-SWAP", bars, len(bars) - 1, self._make_config())
+
+        if sig and sig.direction == 1:
+            self.assertNotIn("transition_breakout_long", sig.reason)
+
+    def test_consolidation_breakout_can_be_enabled(self):
+        bars = self._make_consolidation_bars()
+
+        sig = signal_for(
+            "BTC-USDT-SWAP",
+            bars,
+            len(bars) - 1,
+            self._make_config(transition_long_consolidation_enabled=True),
+        )
+
+        self.assertIsNotNone(sig)
+        self.assertEqual(1, sig.direction)
+        self.assertEqual("transition_breakout_long", sig.reason)
+
+    def test_consolidation_breakout_rejects_wide_platform(self):
+        bars = self._make_consolidation_bars()
+        bars[-4] = _make_bar(
+            **{**bars[-4].__dict__, "high": 105.0, "low": 98.0, "close": 101.0}
+        )
+
+        sig = signal_for(
+            "BTC-USDT-SWAP",
+            bars,
+            len(bars) - 1,
+            self._make_config(transition_long_consolidation_enabled=True),
+        )
+
+        if sig and sig.direction == 1:
+            self.assertNotIn("transition_breakout_long", sig.reason)
 
 
 class TestTransitionRegimeClassification(unittest.TestCase):
