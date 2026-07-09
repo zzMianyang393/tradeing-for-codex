@@ -38,27 +38,43 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
     candle_range = (bar.high - bar.low) / bar.close if bar.close else 0.0
 
     if regime == "uptrend":
-        pullback_ok = prev.close < prev.ema20 and bar.close > bar.ema20 and 44 <= bar.rsi <= 62
+        # Pullback bounce: tighter RSI (46-58), require volume > 1.0, trend not exhausted.
+        pullback_ok = (
+            prev.close < prev.ema20
+            and bar.close > bar.ema20
+            and 46 <= bar.rsi <= 58
+            and vol_ratio >= 1.0
+            and abs(move_1d) < 0.05  # not already extended
+        )
+        # Breakout: lower RSI ceiling (65), require stronger volume (1.35).
         breakout_ok = (
             prev.close <= prev.donchian_high
             and bar.close >= bar.donchian_high * 0.999
-            and vol_ratio > 1.25
-            and bar.rsi <= 68
+            and vol_ratio > 1.35
+            and bar.rsi <= 65
         )
         if pullback_ok or breakout_ok:
-            score = 1.55 + min(1.4, abs(bar.trend_strength) / 3.2) + min(0.55, vol_ratio / 5.0)
+            score = 2.0 + min(1.4, abs(bar.trend_strength) / 3.2) + min(0.55, vol_ratio / 5.0)
             return Signal(symbol, 1, score, regime, "trend_long")
 
     if regime == "downtrend":
-        pullback_ok = prev.close > prev.ema20 and bar.close < bar.ema20 and 38 <= bar.rsi <= 56
+        # Pullback bounce short: tighter RSI (42-54), require volume > 1.0, not extended.
+        pullback_ok = (
+            prev.close > prev.ema20
+            and bar.close < bar.ema20
+            and 42 <= bar.rsi <= 54
+            and vol_ratio >= 1.0
+            and abs(move_1d) < 0.05
+        )
+        # Breakdown: raise RSI floor (37), require stronger volume (1.35).
         breakout_ok = (
             prev.close >= prev.donchian_low
             and bar.close <= bar.donchian_low * 1.001
-            and vol_ratio > 1.25
-            and bar.rsi >= 32
+            and vol_ratio > 1.35
+            and bar.rsi >= 37
         )
         if pullback_ok or breakout_ok:
-            score = 1.55 + min(1.4, abs(bar.trend_strength) / 3.2) + min(0.55, vol_ratio / 5.0)
+            score = 2.0 + min(1.4, abs(bar.trend_strength) / 3.2) + min(0.55, vol_ratio / 5.0)
             return Signal(symbol, -1, score, regime, "trend_short")
 
     if regime == "range":
@@ -74,6 +90,9 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
         long_max_trend = getattr(config, "range_long_max_trend_strength", 999.0)
         short_max_trend = getattr(config, "range_short_max_trend_strength", 999.0)
         if band_width > atr_pct * 2.2:
+            # Long: require volume contraction (selling pressure fading), avoid hidden downtrend.
+            vol_contracting = bar.volume_quote < bar.vol_sma * 0.9 if bar.vol_sma > 0 else True
+            not_in_downtrend = bar.ema50 >= bar.ema200 * 0.98  # allow slight bearish but not full downtrend
             if (
                 bar.close <= bar.bb_lower * 1.001
                 and long_rsi_min <= bar.rsi <= long_rsi_max
@@ -81,15 +100,22 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
                 and candle_body <= long_max_body
                 and candle_range <= long_max_range
                 and bar.trend_strength <= long_max_trend
+                and vol_contracting
+                and not_in_downtrend
             ):
                 score = 2.45 + min(0.7, (40 - bar.rsi) / 25.0) + min(0.35, band_width / 0.018)
                 return Signal(symbol, 1, score, regime, "range_revert_long")
+            # Short: require volume contraction (buying pressure fading), avoid hidden uptrend.
+            vol_contracting_short = bar.volume_quote < bar.vol_sma * 0.9 if bar.vol_sma > 0 else True
+            not_in_uptrend = bar.ema50 <= bar.ema200 * 1.02
             if (
                 bar.close >= bar.bb_upper * 0.999
                 and short_rsi_min <= bar.rsi <= short_rsi_max
                 and vol_ratio < max_volume_ratio
                 and move_1d >= short_min_move_1d
                 and bar.trend_strength <= short_max_trend
+                and vol_contracting_short
+                and not_in_uptrend
             ):
                 score = 2.45 + min(0.7, (bar.rsi - 60) / 25.0) + min(0.35, band_width / 0.018)
                 return Signal(symbol, -1, score, regime, "range_revert_short")
@@ -112,7 +138,14 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
                 and bar.ema20 > bar.ema50
             ):
                 return Signal(symbol, 1, 2.9 + min(0.6, vol_ratio / 6.0), regime, "transition_breakout_long")
-            if transition_short_enabled and bar.close < bar.donchian_low * 1.0005 and bar.ema20 < bar.ema50:
+            if (
+                transition_short_enabled
+                and bar.close < bar.donchian_low * 1.0005
+                and bar.ema20 < bar.ema50
+                and bar.rsi >= 38  # not oversold, avoid catching knife
+                and bar.rsi <= 60  # not in strong bounce
+                and abs(move_1d) < 0.06  # not already crashed
+            ):
                 return Signal(symbol, -1, 2.9 + min(0.6, vol_ratio / 6.0), regime, "transition_breakout_short")
 
         # --- Pattern 2: Pullback continuation long ---
@@ -185,16 +218,11 @@ def attack_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None
             and vol_ratio >= volume_spike
             and range_ok
             and body >= atr_pct * 0.35
-            and bar.rsi <= 72
+            and bar.rsi <= 68  # tightened from 72
         )
-        pullback_resume = (
-            prev.close < prev.ema20
-            and bar.close > bar.ema20
-            and bar.ema20 > bar.ema50
-            and vol_ratio >= volume_spike * 0.85
-            and 42 <= bar.rsi <= 64
-        )
-        if breakout or pullback_resume:
+        # Removed pullback_resume — it's trend continuation, not breakout.
+        # Gets stopped out when trend stalls after the pullback.
+        if breakout:
             score = 3.0 + min(0.9, vol_ratio / 5.0) + min(0.7, abs(bar.trend_strength) / 4.0)
             return Signal(symbol, 1, score, regime, "attack_breakout_long")
 
@@ -206,16 +234,9 @@ def attack_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None
             and vol_ratio >= volume_spike
             and range_ok
             and body >= atr_pct * 0.35
-            and bar.rsi >= 28
+            and bar.rsi >= 32  # tightened from 28
         )
-        pullback_resume = (
-            prev.close > prev.ema20
-            and bar.close < bar.ema20
-            and bar.ema20 < bar.ema50
-            and vol_ratio >= volume_spike * 0.85
-            and 36 <= bar.rsi <= 58
-        )
-        if breakdown or pullback_resume:
+        if breakdown:
             score = 3.0 + min(0.9, vol_ratio / 5.0) + min(0.7, abs(bar.trend_strength) / 4.0)
             return Signal(symbol, -1, score, regime, "attack_breakout_short")
 
