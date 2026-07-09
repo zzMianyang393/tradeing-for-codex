@@ -247,9 +247,9 @@ class BacktestConfig:
     # ML signal module
     enable_ml_module: bool = False
     ml_train_days: int = 180
-    ml_forward_bars: int = 96
-    ml_profit_threshold_pct: float = 0.01
-    ml_min_score: float = 0.8
+    ml_forward_bars: int = 48
+    ml_profit_threshold_pct: float = 0.03
+    ml_min_score: float = 0.65
     ml_risk_per_trade: float = 0.035
     ml_stop_atr: float = 2.0
     ml_take_profit_atr: float = 1.5
