@@ -1,0 +1,73 @@
+{
+  "windows": 8,
+  "total_trades": 1091,
+  "total_profitable": 747,
+  "avg_win_rate": 0.6847,
+  "total_pnl_pct": 862.5,
+  "results": [
+    {
+      "train_samples": 500590,
+      "test_samples": 83424,
+      "predictions": 532,
+      "trades": 532,
+      "win_rate": 0.5808,
+      "pnl_pct": 296.25
+    },
+    {
+      "train_samples": 500069,
+      "test_samples": 82990,
+      "predictions": 0,
+      "trades": 0,
+      "win_rate": 0.0,
+      "pnl_pct": 0.0
+    },
+    {
+      "train_samples": 497189,
+      "test_samples": 83424,
+      "predictions": 6,
+      "trades": 6,
+      "win_rate": 0.0,
+      "pnl_pct": -4.5
+    },
+    {
+      "train_samples": 494309,
+      "test_samples": 83424,
+      "predictions": 150,
+      "trades": 150,
+      "win_rate": 0.9467,
+      "pnl_pct": 207.0
+    },
+    {
+      "train_samples": 491429,
+      "test_samples": 83424,
+      "predictions": 144,
+      "trades": 144,
+      "win_rate": 0.9583,
+      "pnl_pct": 202.5
+    },
+    {
+      "train_samples": 488549,
+      "test_samples": 83424,
+      "predictions": 207,
+      "trades": 207,
+      "win_rate": 0.5459,
+      "pnl_pct": 99.0
+    },
+    {
+      "train_samples": 485669,
+      "test_samples": 83424,
+      "predictions": 1,
+      "trades": 1,
+      "win_rate": 1.0,
+      "pnl_pct": 1.5
+    },
+    {
+      "train_samples": 483744,
+      "test_samples": 82469,
+      "predictions": 51,
+      "trades": 51,
+      "win_rate": 0.8627,
+      "pnl_pct": 60.75
+    }
+  ]
+}
