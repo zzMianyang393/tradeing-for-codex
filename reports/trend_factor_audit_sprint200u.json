@@ -1,0 +1,81 @@
+{
+  "total_trend_trades": 33,
+  "matched_trend_trades": 33,
+  "missed_entries": 0,
+  "min_trades": 3,
+  "buckets": [
+    {
+      "factor_key": "趋势做空|强趋势|放量|RSI中性|贴近均线",
+      "trades": 11,
+      "wins": 6,
+      "pnl": 3.7878,
+      "win_rate": 0.5455,
+      "avg_pnl": 0.3443,
+      "reasons_cn": {
+        "趋势做空": 11
+      },
+      "symbols": {
+        "ADA-USDT-SWAP": 1,
+        "LINK-USDT-SWAP": 1,
+        "DOGE-USDT-SWAP": 4,
+        "SOL-USDT-SWAP": 1,
+        "AAVE-USDT-SWAP": 1,
+        "AVAX-USDT-SWAP": 1,
+        "NEAR-USDT-SWAP": 2
+      },
+      "action_cn": "可候选复核"
+    },
+    {
+      "factor_key": "趋势做多|强趋势|常量|RSI中性|贴近均线",
+      "trades": 2,
+      "wins": 0,
+      "pnl": -1.9776,
+      "win_rate": 0.0,
+      "avg_pnl": -0.9888,
+      "reasons_cn": {
+        "趋势做多": 2
+      },
+      "symbols": {
+        "SOL-USDT-SWAP": 1,
+        "BTC-USDT-SWAP": 1
+      },
+      "action_cn": "样本不足"
+    },
+    {
+      "factor_key": "趋势做空|强趋势|常量|RSI中性|贴近均线",
+      "trades": 15,
+      "wins": 5,
+      "pnl": -2.4409,
+      "win_rate": 0.3333,
+      "avg_pnl": -0.1627,
+      "reasons_cn": {
+        "趋势做空": 15
+      },
+      "symbols": {
+        "BTC-USDT-SWAP": 4,
+        "ETH-USDT-SWAP": 5,
+        "DOGE-USDT-SWAP": 4,
+        "ADA-USDT-SWAP": 2
+      },
+      "action_cn": "暂不启用"
+    },
+    {
+      "factor_key": "趋势做多|强趋势|放量|RSI中性|贴近均线",
+      "trades": 5,
+      "wins": 0,
+      "pnl": -5.3824,
+      "win_rate": 0.0,
+      "avg_pnl": -1.0765,
+      "reasons_cn": {
+        "趋势做多": 5
+      },
+      "symbols": {
+        "BTC-USDT-SWAP": 2,
+        "SOL-USDT-SWAP": 1,
+        "SUI-USDT-SWAP": 1,
+        "AAVE-USDT-SWAP": 1
+      },
+      "action_cn": "暂不启用"
+    }
+  ]
+}

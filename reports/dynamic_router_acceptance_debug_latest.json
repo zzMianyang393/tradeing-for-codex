@@ -1,0 +1,118 @@
+{
+  "reports": [
+    {
+      "label": "debug",
+      "path": "reports/dynamic_router_debug_latest.json",
+      "verdict": {
+        "mode": "conservative",
+        "rank": "goal_30d_fullseed_40#7",
+        "status_cn": "可继续打磨",
+        "target_pass": false,
+        "risk_flags_cn": [
+          "未达到收益目标",
+          "交易次数不足"
+        ],
+        "result": {
+          "end_equity": 13.5609,
+          "pnl": 3.5609,
+          "return_pct": 35.6088,
+          "max_drawdown_pct": 17.985,
+          "trades": 8,
+          "win_rate": 0.375
+        },
+        "overfit_risk": {
+          "risk_cn": "未知",
+          "evidence_cn": [
+            "未提供预筛选窗口结果"
+          ],
+          "window_results": []
+        },
+        "router_rejection_summary": {
+          "total": 2546,
+          "by_rejection_reason": {
+            "blocked_reason": 1194,
+            "not_allowed_reason": 1352
+          },
+          "top_rejected_strategies": [
+            {
+              "reason": "trend_short",
+              "strategy_cn": "趋势做空",
+              "count": 1352,
+              "share": 0.531,
+              "action_cn": "优先审计"
+            },
+            {
+              "reason": "trend_long",
+              "strategy_cn": "趋势做多",
+              "count": 977,
+              "share": 0.3837,
+              "action_cn": "优先审计"
+            },
+            {
+              "reason": "range_revert_long",
+              "strategy_cn": "震荡反转做多",
+              "count": 135,
+              "share": 0.053,
+              "action_cn": "观察"
+            },
+            {
+              "reason": "range_revert_short",
+              "strategy_cn": "震荡反转做空",
+              "count": 80,
+              "share": 0.0314,
+              "action_cn": "暂不处理"
+            },
+            {
+              "reason": "transition_breakout_short",
+              "strategy_cn": "转换突破做空",
+              "count": 2,
+              "share": 0.0008,
+              "action_cn": "暂不处理"
+            }
+          ],
+          "top_rejected_regimes": [
+            {
+              "regime": "downtrend",
+              "count": 1352,
+              "share": 0.531
+            },
+            {
+              "regime": "uptrend",
+              "count": 977,
+              "share": 0.3837
+            },
+            {
+              "regime": "range",
+              "count": 215,
+              "share": 0.0844
+            },
+            {
+              "regime": "transition",
+              "count": 2,
+              "share": 0.0008
+            }
+          ],
+          "diagnosis_cn": [
+            "趋势做空候选很多但未准入，需要拆分子行情验证是否存在可启用子集"
+          ]
+        },
+        "strategies": [
+          {
+            "reason": "transition_breakout_long",
+            "strategy_cn": "转换突破做多",
+            "suitable_market_cn": "趋势转换/突破",
+            "adaptability_cn": "强",
+            "trades": 8,
+            "wins": 3,
+            "pnl": 3.687,
+            "win_rate": 0.375
+          }
+        ]
+      }
+    }
+  ],
+  "comparison": {
+    "best_label": "debug",
+    "comparisons": []
+  }
+}
