@@ -14,12 +14,18 @@ class Signal:
     reason: str
 
 
-def classify_regime(bar: FeatureBar) -> str:
-    if bar.ema50 > bar.ema200 and bar.trend_strength > 1.2:
+def classify_regime(bar: FeatureBar, config=None) -> str:
+    # Configurable regime thresholds
+    uptrend_threshold = getattr(config, "regime_uptrend_threshold", 1.2) if config else 1.2
+    downtrend_threshold = getattr(config, "regime_downtrend_threshold", -1.2) if config else -1.2
+    range_strength_max = getattr(config, "regime_range_strength_max", 0.9) if config else 0.9
+    range_atr_pct_max = getattr(config, "regime_range_atr_pct_max", 0.0045) if config else 0.0045
+
+    if bar.ema50 > bar.ema200 and bar.trend_strength > uptrend_threshold:
         return "uptrend"
-    if bar.ema50 < bar.ema200 and bar.trend_strength < -1.2:
+    if bar.ema50 < bar.ema200 and bar.trend_strength < downtrend_threshold:
         return "downtrend"
-    if bar.atr_pct < 0.0045 or abs(bar.trend_strength) < 0.9:
+    if bar.atr_pct < range_atr_pct_max or abs(bar.trend_strength) < range_strength_max:
         return "range"
     return "transition"
 
@@ -29,7 +35,7 @@ def signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Si
         return None
     bar = bars[idx]
     prev = bars[idx - 1]
-    regime = classify_regime(bar)
+    regime = classify_regime(bar, config)
     vol_ratio = bar.volume_quote / bar.vol_sma if bar.vol_sma > 0 else 1.0
     atr_pct = max(bar.atr_pct, 0.0001)
     lookback_1d = bars[max(0, idx - 96)]
@@ -243,7 +249,7 @@ def attack_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None
         return None
     bar = bars[idx]
     prev = bars[idx - 1]
-    regime = classify_regime(bar)
+    regime = classify_regime(bar, config)
     vol_ratio = bar.volume_quote / bar.vol_sma if bar.vol_sma > 0 else 1.0
     atr_pct = max(bar.atr_pct, 0.0001)
     candle_range = (bar.high - bar.low) / bar.close if bar.close else 0.0

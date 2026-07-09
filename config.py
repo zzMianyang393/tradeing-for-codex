@@ -114,6 +114,11 @@ class BacktestConfig:
     transition_long_consolidation_rsi_max: float = 64.0
     transition_long_consolidation_min_trend_strength: float = 0.5
     transition_long_consolidation_min_body_atr: float = 0.25
+    # Regime classification thresholds (configurable for wider transition band)
+    regime_uptrend_threshold: float = 1.2
+    regime_downtrend_threshold: float = -1.2
+    regime_range_strength_max: float = 0.9
+    regime_range_atr_pct_max: float = 0.0045
     enable_target_window_profiles: bool = True
     target_window_excluded_symbols: tuple[str, ...] = (
         "XRP-USDT-SWAP",

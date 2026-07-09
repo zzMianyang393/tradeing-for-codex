@@ -24,13 +24,11 @@ from market import FeatureBar, load_market
 MS_PER_DAY = 24 * 60 * 60 * 1000
 
 
-def make_transition_only_config(base: BacktestConfig) -> BacktestConfig:
+def make_transition_only_config(base: BacktestConfig, wider_regime: bool = False) -> BacktestConfig:
     """Create a config that only allows transition_breakout_long."""
-    return replace(
-        base,
+    overrides = dict(
         transition_long_enabled=True,
         transition_short_enabled=False,
-        # Block all other signals
         enable_attack_module=False,
         enable_continuation_module=False,
         enable_micro_momentum_module=False,
@@ -39,6 +37,13 @@ def make_transition_only_config(base: BacktestConfig) -> BacktestConfig:
         enable_trade_flow_module=False,
         enable_order_book_module=False,
     )
+    if wider_regime:
+        overrides.update(dict(
+            regime_uptrend_threshold=1.0,
+            regime_downtrend_threshold=-1.0,
+            regime_range_strength_max=0.7,
+        ))
+    return replace(base, **overrides)
 
 
 def rolling_endpoints(
@@ -111,6 +116,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--stride-days", type=int, default=30, help="Stride between windows")
     parser.add_argument("--warmup-days", type=int, default=45, help="Warmup period before each window")
     parser.add_argument("--timeframe", type=int, default=15, help="Timeframe in minutes")
+    parser.add_argument("--wider-regime", action="store_true", help="Use wider transition band (0.7-1.0)")
     args = parser.parse_args(argv)
 
     window_sizes = [int(w.strip()) for w in args.windows.split(",")]
@@ -130,7 +136,9 @@ def main(argv: list[str] | None = None) -> int:
 
     # Use a base config and make it transition-only
     base_config = BacktestConfig()
-    transition_config = make_transition_only_config(base_config)
+    transition_config = make_transition_only_config(base_config, wider_regime=args.wider_regime)
+    if args.wider_regime:
+        print("Using wider transition band (0.7-1.0)", flush=True)
 
     all_results: dict[str, list[dict]] = {}
 
