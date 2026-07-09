@@ -56,8 +56,8 @@ class BacktestConfig:
     take_profit_atr: float = 1.8
     trailing_atr: float = 2.34
     max_hold_bars: int = 8
-    range_stop_atr: float = 2.4
-    range_take_profit_atr: float = 0.55
+    range_stop_atr: float = 2.0
+    range_take_profit_atr: float = 0.85
     range_trailing_atr: float = 1.56
     range_max_hold_bars: int = 8
     defensive_range_exit_equity_fraction: float = 1.1
