@@ -1,0 +1,94 @@
+{
+  "overall": {
+    "trades": 249,
+    "win_rate": 0.5422,
+    "pnl": -3.8756,
+    "return_pct": -38.7563,
+    "max_drawdown_pct": 59.28
+  },
+  "by_reason": {
+    "trend_short": {
+      "trades": 70,
+      "wins": 53,
+      "pnl": 1.893,
+      "win_rate": 0.7571428571428571
+    },
+    "trend_long": {
+      "trades": 159,
+      "wins": 71,
+      "pnl": -6.7006,
+      "win_rate": 0.44654088050314467
+    },
+    "transition_breakout_long": {
+      "trades": 20,
+      "wins": 11,
+      "pnl": 1.3889,
+      "win_rate": 0.55
+    }
+  },
+  "relative_strength": {
+    "AAVE-USDT-SWAP": 0.3303585407859715,
+    "ADA-USDT-SWAP": -0.06178764247150559,
+    "APT-USDT-SWAP": -0.03733459357277891,
+    "ARB-USDT-SWAP": -0.03829470814227287,
+    "ATOM-USDT-SWAP": -0.18143236074270563,
+    "AVAX-USDT-SWAP": 0.014071720381298336,
+    "CRV-USDT-SWAP": -0.21279937180997244,
+    "DOGE-USDT-SWAP": -0.1433266815353914,
+    "DOT-USDT-SWAP": -0.11488469601677143,
+    "DYDX-USDT-SWAP": 0.1556972789115647,
+    "FIL-USDT-SWAP": 0.0158476494872819,
+    "IMX-USDT-SWAP": -0.14366998577524903,
+    "INJ-USDT-SWAP": -0.11393869288606129,
+    "LINK-USDT-SWAP": -0.038476337052712584,
+    "LTC-USDT-SWAP": 0.007525870178739513,
+    "NEAR-USDT-SWAP": -0.033033033033033066,
+    "OP-USDT-SWAP": 0.05553168635875405,
+    "RENDER-USDT-SWAP": -0.01590330788804084,
+    "SEI-USDT-SWAP": -0.007478188616535042,
+    "STX-USDT-SWAP": -0.09325287986834885,
+    "SUI-USDT-SWAP": -0.022471910112359605,
+    "TIA-USDT-SWAP": 0.13263417643429998,
+    "TRX-USDT-SWAP": -0.016678550392162927,
+    "UNI-USDT-SWAP": 0.13647246608140473
+  },
+  "long_candidates": [
+    "AAVE-USDT-SWAP",
+    "DYDX-USDT-SWAP",
+    "UNI-USDT-SWAP",
+    "TIA-USDT-SWAP"
+  ],
+  "short_candidates": [
+    "DOGE-USDT-SWAP",
+    "IMX-USDT-SWAP",
+    "ATOM-USDT-SWAP",
+    "CRV-USDT-SWAP"
+  ],
+  "universe_size": 24,
+  "universe": [
+    "AAVE-USDT-SWAP",
+    "ADA-USDT-SWAP",
+    "APT-USDT-SWAP",
+    "ARB-USDT-SWAP",
+    "ATOM-USDT-SWAP",
+    "AVAX-USDT-SWAP",
+    "CRV-USDT-SWAP",
+    "DOGE-USDT-SWAP",
+    "DOT-USDT-SWAP",
+    "DYDX-USDT-SWAP",
+    "FIL-USDT-SWAP",
+    "IMX-USDT-SWAP",
+    "INJ-USDT-SWAP",
+    "LINK-USDT-SWAP",
+    "LTC-USDT-SWAP",
+    "NEAR-USDT-SWAP",
+    "OP-USDT-SWAP",
+    "RENDER-USDT-SWAP",
+    "SEI-USDT-SWAP",
+    "STX-USDT-SWAP",
+    "SUI-USDT-SWAP",
+    "TIA-USDT-SWAP",
+    "TRX-USDT-SWAP",
+    "UNI-USDT-SWAP"
+  ]
+}
