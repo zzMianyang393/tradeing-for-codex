@@ -1,0 +1,43 @@
+{
+  "overall": {
+    "trades": 249,
+    "win_rate": 0.49,
+    "pnl": -5.9854,
+    "return_pct": -59.8543,
+    "max_drawdown_pct": 64.7367
+  },
+  "by_reason": {
+    "trend_long": {
+      "trades": 176,
+      "wins": 78,
+      "pnl": -3.6048,
+      "win_rate": 0.4431818181818182
+    },
+    "trend_short": {
+      "trades": 61,
+      "wins": 40,
+      "pnl": -0.6112,
+      "win_rate": 0.6557377049180327
+    },
+    "transition_breakout_long": {
+      "trades": 12,
+      "wins": 4,
+      "pnl": -0.964,
+      "win_rate": 0.3333333333333333
+    }
+  },
+  "extreme_moves": {
+    "total_bars": 174769,
+    "extreme_up": 4,
+    "extreme_down": 13,
+    "extreme_pct": 0.009727125519972077
+  },
+  "universe_size": 5,
+  "universe": [
+    "BNB-USDT-SWAP",
+    "BTC-USDT-SWAP",
+    "ETH-USDT-SWAP",
+    "SOL-USDT-SWAP",
+    "XRP-USDT-SWAP"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "overall": {
+    "trades": 249,
+    "win_rate": 0.5422,
+    "pnl": -3.8756,
+    "return_pct": -38.7563,
+    "max_drawdown_pct": 59.28
+  },
+  "by_reason": {
+    "trend_short": {
+      "trades": 70,
+      "wins": 53,
+      "pnl": 1.893,
+      "win_rate": 0.7571428571428571
+    },
+    "trend_long": {
+      "trades": 159,
+      "wins": 71,
+      "pnl": -6.7006,
+      "win_rate": 0.44654088050314467
+    },
+    "transition_breakout_long": {
+      "trades": 20,
+      "wins": 11,
+      "pnl": 1.3889,
+      "win_rate": 0.55
+    }
+  },
+  "extreme_moves": {
+    "total_bars": 828020,
+    "extreme_up": 130,
+    "extreme_down": 147,
+    "extreme_pct": 0.03345329822951137
+  },
+  "universe_size": 24,
+  "universe": [
+    "AAVE-USDT-SWAP",
+    "ADA-USDT-SWAP",
+    "APT-USDT-SWAP",
+    "ARB-USDT-SWAP",
+    "ATOM-USDT-SWAP",
+    "AVAX-USDT-SWAP",
+    "CRV-USDT-SWAP",
+    "DOGE-USDT-SWAP",
+    "DOT-USDT-SWAP",
+    "DYDX-USDT-SWAP",
+    "FIL-USDT-SWAP",
+    "IMX-USDT-SWAP",
+    "INJ-USDT-SWAP",
+    "LINK-USDT-SWAP",
+    "LTC-USDT-SWAP",
+    "NEAR-USDT-SWAP",
+    "OP-USDT-SWAP",
+    "RENDER-USDT-SWAP",
+    "SEI-USDT-SWAP",
+    "STX-USDT-SWAP",
+    "SUI-USDT-SWAP",
+    "TIA-USDT-SWAP",
+    "TRX-USDT-SWAP",
+    "UNI-USDT-SWAP"
+  ]
+}
