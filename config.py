@@ -265,6 +265,21 @@ class BacktestConfig:
     order_book_take_profit_atr: float = 1.0
     order_book_trailing_atr: float = 1.2
     order_book_max_hold_bars: int = 8
+    # --- Candidate Pool (3-layer funnel) ---
+    enable_candidate_pool: bool = False
+    cp_min_proximity: float = 0.25
+    cp_ml_model_path: str = ""              # path to trained ML model JSON
+    cp_use_rules: bool = True
+    cp_use_ml: bool = True
+    cp_risk_per_trade: float = 0.10
+    cp_stop_atr: float = 2.0
+    cp_take_profit_atr: float = 1.2
+    cp_trailing_atr: float = 1.8
+    cp_max_hold_bars: int = 8
+    cp_enabled_regimes: tuple[str, ...] = ("uptrend", "downtrend", "transition", "range")
+    cp_enabled_patterns: tuple[str, ...] = ("breakout", "pullback", "reclaim", "volume_surge", "ema_turn", "range_revert")
+    cp_min_score: float = 2.5               # min proximity_score to consider
+    cp_retrain_interval_bars: int = 96 * 7  # retrain ML weekly
     # --- RiskManager configuration ---
     rm_enabled: bool = True
     rm_max_single_position_pct: float = 0.80

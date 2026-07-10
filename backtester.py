@@ -195,6 +195,42 @@ class Backtester:
             except Exception as exc:
                 import logging
                 logging.getLogger("backtester").warning("ML model init failed: %s", exc)
+
+        # Candidate Pool filter initialization
+        cp_filter = None
+        cp_last_train_step = -1
+        if self.config.enable_candidate_pool:
+            from candidate_filter import CandidateFilter, RuleFilterConfig, MLFilterConfig
+            cp_filter = CandidateFilter(
+                rule_config=RuleFilterConfig(min_proximity=self.config.cp_min_proximity),
+                ml_config=MLFilterConfig(n_estimators=80, learning_rate=0.08),
+                use_rules=self.config.cp_use_rules,
+                use_ml=self.config.cp_use_ml,
+            )
+            # Load pre-trained model or train on initial window
+            if self.config.cp_ml_model_path and Path(self.config.cp_ml_model_path).exists():
+                try:
+                    cp_filter.load_ml(self.config.cp_ml_model_path)
+                    cp_last_train_step = 0
+                except Exception as exc:
+                    import logging
+                    logging.getLogger("backtester").warning("CP model load failed: %s", exc)
+            else:
+                try:
+                    from candidate_pool import scan_all_symbols as cp_scan
+                    cp_train_end_ts = timeline[min(len(timeline) - 1, 96 * 30)]
+                    cp_train_timeline = [t for t in timeline if t <= cp_train_end_ts]
+                    if len(cp_train_timeline) > 96:
+                        cp_cands = cp_scan(market, cp_train_timeline, index, self.config.cp_min_proximity)
+                        if cp_cands:
+                            from mfe_labeler import label_candidates as cp_label
+                            cp_labeled = cp_label(cp_cands, market, index, horizon_bars=self.config.cp_max_hold_bars)
+                            cp_filter.train_ml(cp_labeled)
+                            cp_last_train_step = 0
+                except Exception as exc:
+                    import logging
+                    logging.getLogger("backtester").warning("CP filter init failed: %s", exc)
+
         peak = equity
         max_drawdown = 0.0
         trades: list[Trade] = []
@@ -329,141 +365,205 @@ class Backtester:
             slots = position_cap - len(positions)
             if slots > 0 and free_margin_limit > 0 and step >= edge_pause_until:
                 signals: list[Signal] = []
-                for symbol in active_symbols:
-                    if symbol in positions or symbol in cooldown:
-                        continue
-                    idx = index[symbol].get(ts)
-                    if idx is None:
-                        continue
-                    sig = signal_for(symbol, market[symbol], idx, self.config)
-                    if sig and sig.score >= self.config.min_score:
-                        # Regime-aware策略选择: 基于行情选择策略
-                        if not router_allows(sig, market[symbol][idx]):
-                            continue
-                        adaptive_trend = self._is_adaptive_trend_signal(sig)
-                        if sig.regime not in self.config.enabled_regimes and not adaptive_trend:
-                            continue
-                        if adaptive_trend and sig.score < self.config.adaptive_trend_min_score:
-                            continue
-                        if step < direction_pause_until.get(sig.direction, -1):
-                            continue
-                        if step < reason_pause_until.get(sig.reason, -1):
-                            continue
-                        if self._blocked_by_reversal_risk(sig, market[symbol], idx):
-                            continue
-                        signals.append(sig)
-                    attack_sig = attack_signal_for(symbol, market[symbol], idx, self.config)
-                    if self.config.enable_attack_module and attack_sig and attack_sig.score >= self.config.attack_min_score:
-                        if not router_allows(attack_sig, market[symbol][idx]):
-                            continue
-                        if attack_sig.regime not in self.config.attack_enabled_regimes:
-                            continue
-                        if step < direction_pause_until.get(attack_sig.direction, -1):
-                            continue
-                        if step < reason_pause_until.get(attack_sig.reason, -1):
-                            continue
-                        if self._blocked_by_reversal_risk(attack_sig, market[symbol], idx):
-                            continue
-                        signals.append(attack_sig)
-                    continuation_sig = continuation_signal_for(symbol, market[symbol], idx, self.config)
-                    if continuation_sig and continuation_sig.score >= self.config.min_score:
-                        if not router_allows(continuation_sig, market[symbol][idx]):
-                            continue
-                        if step < direction_pause_until.get(continuation_sig.direction, -1):
-                            continue
-                        if step < reason_pause_until.get(continuation_sig.reason, -1):
-                            continue
-                        signals.append(continuation_sig)
-                    micro_sig = micro_momentum_signal_for(symbol, market[symbol], idx, self.config)
-                    if micro_sig and micro_sig.score >= self.config.min_score:
-                        if not router_allows(micro_sig, market[symbol][idx]):
-                            continue
-                        if step < direction_pause_until.get(micro_sig.direction, -1):
-                            continue
-                        if step < reason_pause_until.get(micro_sig.reason, -1):
-                            continue
-                        if self._blocked_by_reversal_risk(micro_sig, market[symbol], idx):
-                            continue
-                        signals.append(micro_sig)
-                    funding_sig = funding_signal_for(symbol, market[symbol], idx, self.config)
-                    if funding_sig and funding_sig.score >= self.config.min_score:
-                        if not router_allows(funding_sig, market[symbol][idx]):
-                            continue
-                        if step < direction_pause_until.get(funding_sig.direction, -1):
-                            continue
-                        if step < reason_pause_until.get(funding_sig.reason, -1):
-                            continue
-                        signals.append(funding_sig)
-                    open_interest_sig = open_interest_signal_for(symbol, market[symbol], idx, self.config)
-                    if open_interest_sig and open_interest_sig.score >= self.config.min_score:
-                        if not router_allows(open_interest_sig, market[symbol][idx]):
-                            continue
-                        if step < direction_pause_until.get(open_interest_sig.direction, -1):
-                            continue
-                        if step < reason_pause_until.get(open_interest_sig.reason, -1):
-                            continue
-                        if self._blocked_by_reversal_risk(open_interest_sig, market[symbol], idx):
-                            continue
-                        signals.append(open_interest_sig)
-                    trade_flow_sig = trade_flow_signal_for(symbol, market[symbol], idx, self.config)
-                    if trade_flow_sig and trade_flow_sig.score >= self.config.min_score:
-                        if not router_allows(trade_flow_sig, market[symbol][idx]):
-                            continue
-                        if step < direction_pause_until.get(trade_flow_sig.direction, -1):
-                            continue
-                        if step < reason_pause_until.get(trade_flow_sig.reason, -1):
-                            continue
-                        if self._blocked_by_reversal_risk(trade_flow_sig, market[symbol], idx):
-                            continue
-                        signals.append(trade_flow_sig)
-                    order_book_sig = order_book_signal_for(symbol, market[symbol], idx, self.config)
-                    if order_book_sig and order_book_sig.score >= self.config.min_score:
-                        if not router_allows(order_book_sig, market[symbol][idx]):
-                            continue
-                        if step < direction_pause_until.get(order_book_sig.direction, -1):
-                            continue
-                        if step < reason_pause_until.get(order_book_sig.reason, -1):
-                            continue
-                        if self._blocked_by_reversal_risk(order_book_sig, market[symbol], idx):
-                            continue
-                        signals.append(order_book_sig)
-                    # ML signal generation
-                    if ml_model is not None and self.config.enable_ml_module:
+
+                if self.config.enable_candidate_pool and cp_filter is not None:
+                    # --- Candidate Pool signal generation ---
+                    # Periodic ML retrain
+                    if (self.config.cp_use_ml
+                        and cp_filter.ml_filter.trained
+                        and step - cp_last_train_step >= self.config.cp_retrain_interval_bars):
                         try:
-                            from ml_signal import extract_features
-                            bar = market[symbol][idx]
-                            feat = extract_features(bar)
-                            import numpy as np
-                            X = np.array([[feat[col] for col in [
-                                "ema20", "ema50", "ema200", "atr", "atr_pct", "rsi",
-                                "bb_mid", "bb_upper", "bb_lower", "vol_sma",
-                                "donchian_high", "donchian_low", "trend_strength",
-                                "volume_ratio", "close_to_ema20", "close_to_ema50",
-                                "close_to_donchian_high", "close_to_donchian_low",
-                                "bb_position", "candle_body_pct", "candle_range_pct",
-                                "upper_shadow_pct", "lower_shadow_pct",
-                            ]]], dtype=np.float64)
-                            prob = ml_model.predict_proba(X)[0][1]
-                            if prob >= self.config.ml_min_score:
-                                ml_sig = Signal(
-                                    symbol=symbol,
-                                    direction=1,  # ML predicts up
-                                    score=3.0 + prob,
-                                    regime="ml",
-                                    reason="ml_long",
-                                )
-                                if not router_allows(ml_sig, bar):
-                                    pass  # skip
-                                elif step < direction_pause_until.get(ml_sig.direction, -1):
-                                    pass
-                                elif step < reason_pause_until.get(ml_sig.reason, -1):
-                                    pass
-                                elif self._blocked_by_reversal_risk(ml_sig, market[symbol], idx):
-                                    pass
-                                else:
-                                    signals.append(ml_sig)
+                            cp_retrain_start = max(0, step - 96 * 30)
+                            cp_retrain_ts_start = timeline[cp_retrain_start]
+                            cp_retrain_timeline = [t for t in timeline[cp_retrain_start:step] if t >= cp_retrain_ts_start]
+                            if len(cp_retrain_timeline) > 96:
+                                from candidate_pool import scan_all_symbols as cp_scan_rt
+                                from mfe_labeler import label_candidates as cp_label_rt
+                                cp_rc = cp_scan_rt(market, cp_retrain_timeline, index, self.config.cp_min_proximity)
+                                if cp_rc:
+                                    cp_rl = cp_label_rt(cp_rc, market, index, horizon_bars=self.config.cp_max_hold_bars)
+                                    cp_filter.train_ml(cp_rl)
+                                    cp_last_train_step = step
                         except Exception:
-                            pass  # ML signal failure is non-fatal
+                            pass
+
+                    for symbol in active_symbols:
+                        if symbol in positions or symbol in cooldown:
+                            continue
+                        idx = index[symbol].get(ts)
+                        if idx is None or idx < 1:
+                            continue
+                        try:
+                            from candidate_pool import scan_candidates as cp_scan_sym
+                            cands = cp_scan_sym(symbol, market[symbol], idx, self.config.cp_min_proximity)
+                            for cand in cands:
+                                # Regime filter
+                                if cand.regime not in self.config.cp_enabled_regimes:
+                                    continue
+                                if cand.pattern_type not in self.config.cp_enabled_patterns:
+                                    continue
+                                # ML + rule filter
+                                passed, reason, prob = cp_filter.should_trade(cand)
+                                if not passed:
+                                    continue
+                                # Convert to Signal
+                                cp_score = 2.5 + cand.proximity_score * 2.0 + prob
+                                cp_reason = f"cp_{cand.pattern_type}_{('long' if cand.direction == 1 else 'short')}"
+                                cp_sig = Signal(
+                                    symbol=symbol,
+                                    direction=cand.direction,
+                                    score=round(cp_score, 3),
+                                    regime=cand.regime,
+                                    reason=cp_reason,
+                                )
+                                if not router_allows(cp_sig, market[symbol][idx]):
+                                    continue
+                                if step < direction_pause_until.get(cp_sig.direction, -1):
+                                    continue
+                                if step < reason_pause_until.get(cp_sig.reason, -1):
+                                    continue
+                                if self._blocked_by_reversal_risk(cp_sig, market[symbol], idx):
+                                    continue
+                                signals.append(cp_sig)
+                        except Exception:
+                            pass  # CP signal failure is non-fatal
+                else:
+                    # --- Original signal generation ---
+                    for symbol in active_symbols:
+                        if symbol in positions or symbol in cooldown:
+                            continue
+                        idx = index[symbol].get(ts)
+                        if idx is None:
+                            continue
+                        sig = signal_for(symbol, market[symbol], idx, self.config)
+                        if sig and sig.score >= self.config.min_score:
+                            # Regime-aware策略选择: 基于行情选择策略
+                            if not router_allows(sig, market[symbol][idx]):
+                                continue
+                            adaptive_trend = self._is_adaptive_trend_signal(sig)
+                            if sig.regime not in self.config.enabled_regimes and not adaptive_trend:
+                                continue
+                            if adaptive_trend and sig.score < self.config.adaptive_trend_min_score:
+                                continue
+                            if step < direction_pause_until.get(sig.direction, -1):
+                                continue
+                            if step < reason_pause_until.get(sig.reason, -1):
+                                continue
+                            if self._blocked_by_reversal_risk(sig, market[symbol], idx):
+                                continue
+                            signals.append(sig)
+                        attack_sig = attack_signal_for(symbol, market[symbol], idx, self.config)
+                        if self.config.enable_attack_module and attack_sig and attack_sig.score >= self.config.attack_min_score:
+                            if not router_allows(attack_sig, market[symbol][idx]):
+                                continue
+                            if attack_sig.regime not in self.config.attack_enabled_regimes:
+                                continue
+                            if step < direction_pause_until.get(attack_sig.direction, -1):
+                                continue
+                            if step < reason_pause_until.get(attack_sig.reason, -1):
+                                continue
+                            if self._blocked_by_reversal_risk(attack_sig, market[symbol], idx):
+                                continue
+                            signals.append(attack_sig)
+                        continuation_sig = continuation_signal_for(symbol, market[symbol], idx, self.config)
+                        if continuation_sig and continuation_sig.score >= self.config.min_score:
+                            if not router_allows(continuation_sig, market[symbol][idx]):
+                                continue
+                            if step < direction_pause_until.get(continuation_sig.direction, -1):
+                                continue
+                            if step < reason_pause_until.get(continuation_sig.reason, -1):
+                                continue
+                            signals.append(continuation_sig)
+                        micro_sig = micro_momentum_signal_for(symbol, market[symbol], idx, self.config)
+                        if micro_sig and micro_sig.score >= self.config.min_score:
+                            if not router_allows(micro_sig, market[symbol][idx]):
+                                continue
+                            if step < direction_pause_until.get(micro_sig.direction, -1):
+                                continue
+                            if step < reason_pause_until.get(micro_sig.reason, -1):
+                                continue
+                            if self._blocked_by_reversal_risk(micro_sig, market[symbol], idx):
+                                continue
+                            signals.append(micro_sig)
+                        funding_sig = funding_signal_for(symbol, market[symbol], idx, self.config)
+                        if funding_sig and funding_sig.score >= self.config.min_score:
+                            if not router_allows(funding_sig, market[symbol][idx]):
+                                continue
+                            if step < direction_pause_until.get(funding_sig.direction, -1):
+                                continue
+                            if step < reason_pause_until.get(funding_sig.reason, -1):
+                                continue
+                            signals.append(funding_sig)
+                        open_interest_sig = open_interest_signal_for(symbol, market[symbol], idx, self.config)
+                        if open_interest_sig and open_interest_sig.score >= self.config.min_score:
+                            if not router_allows(open_interest_sig, market[symbol][idx]):
+                                continue
+                            if step < direction_pause_until.get(open_interest_sig.direction, -1):
+                                continue
+                            if step < reason_pause_until.get(open_interest_sig.reason, -1):
+                                continue
+                            if self._blocked_by_reversal_risk(open_interest_sig, market[symbol], idx):
+                                continue
+                            signals.append(open_interest_sig)
+                        trade_flow_sig = trade_flow_signal_for(symbol, market[symbol], idx, self.config)
+                        if trade_flow_sig and trade_flow_sig.score >= self.config.min_score:
+                            if not router_allows(trade_flow_sig, market[symbol][idx]):
+                                continue
+                            if step < direction_pause_until.get(trade_flow_sig.direction, -1):
+                                continue
+                            if step < reason_pause_until.get(trade_flow_sig.reason, -1):
+                                continue
+                            if self._blocked_by_reversal_risk(trade_flow_sig, market[symbol], idx):
+                                continue
+                            signals.append(trade_flow_sig)
+                        order_book_sig = order_book_signal_for(symbol, market[symbol], idx, self.config)
+                        if order_book_sig and order_book_sig.score >= self.config.min_score:
+                            if not router_allows(order_book_sig, market[symbol][idx]):
+                                continue
+                            if step < direction_pause_until.get(order_book_sig.direction, -1):
+                                continue
+                            if step < reason_pause_until.get(order_book_sig.reason, -1):
+                                continue
+                            if self._blocked_by_reversal_risk(order_book_sig, market[symbol], idx):
+                                continue
+                            signals.append(order_book_sig)
+                        # ML signal generation
+                        if ml_model is not None and self.config.enable_ml_module:
+                            try:
+                                from ml_signal import extract_features
+                                bar = market[symbol][idx]
+                                feat = extract_features(bar)
+                                import numpy as np
+                                X = np.array([[feat[col] for col in [
+                                    "ema20", "ema50", "ema200", "atr", "atr_pct", "rsi",
+                                    "bb_mid", "bb_upper", "bb_lower", "vol_sma",
+                                    "donchian_high", "donchian_low", "trend_strength",
+                                    "volume_ratio", "close_to_ema20", "close_to_ema50",
+                                    "close_to_donchian_high", "close_to_donchian_low",
+                                    "bb_position", "candle_body_pct", "candle_range_pct",
+                                    "upper_shadow_pct", "lower_shadow_pct",
+                                ]]], dtype=np.float64)
+                                prob = ml_model.predict_proba(X)[0][1]
+                                if prob >= self.config.ml_min_score:
+                                    ml_sig = Signal(
+                                        symbol=symbol,
+                                        direction=1,  # ML predicts up
+                                        score=3.0 + prob,
+                                        regime="ml",
+                                        reason="ml_long",
+                                    )
+                                    if not router_allows(ml_sig, bar):
+                                        pass  # skip
+                                    elif step < direction_pause_until.get(ml_sig.direction, -1):
+                                        pass
+                                    elif step < reason_pause_until.get(ml_sig.reason, -1):
+                                        pass
+                                    elif self._blocked_by_reversal_risk(ml_sig, market[symbol], idx):
+                                        pass
+                                    else:
+                                        signals.append(ml_sig)
+                            except Exception:
+                                pass  # ML signal failure is non-fatal
                 signals.sort(key=lambda sig: sig.score, reverse=True)
                 opened_symbols: set[str] = set()
                 for sig in signals[:slots]:
@@ -754,6 +854,9 @@ class Backtester:
         elif self._is_range_revert_reason(pos.reason):
             trailing_atr = self.config.range_trailing_atr
             max_hold_bars = self.config.range_max_hold_bars
+        elif pos.reason.startswith("cp_"):
+            trailing_atr = self.config.cp_trailing_atr
+            max_hold_bars = self.config.cp_max_hold_bars
         else:
             trailing_atr = self.config.trailing_atr
             max_hold_bars = self.config.max_hold_bars
@@ -887,12 +990,15 @@ class Backtester:
     
     def _regime_allows_signal(self, sig: Signal) -> bool:
         """根据当前regime判断是否允许交易该信号
-        
+
         原则 (不过拟合):
         - 趋势市只做顺势 (避免逆势亏损)
         - 震荡市只做反转 (range_revert)
         - 规则基于市场结构, 不是历史表现
         """
+        # Candidate pool signals have their own regime/pattern filtering
+        if sig.reason.startswith("cp_"):
+            return True
         allowed = self._REGIME_STRATEGIES.get(sig.regime, set())
         return sig.reason in allowed
 
@@ -938,6 +1044,8 @@ class Backtester:
     def _stop_atr_for_signal(self, sig: Signal) -> float:
         if sig.reason == "ml_long":
             return self.config.ml_stop_atr
+        if sig.reason.startswith("cp_"):
+            return self.config.cp_stop_atr
         if self._is_trend_short_factor(sig):
             return self.config.trend_short_factor_stop_atr
         if self._is_attack_reason(sig.reason):
@@ -963,6 +1071,8 @@ class Backtester:
     def _take_profit_atr_for_signal(self, sig: Signal, equity: float | None = None) -> float:
         if sig.reason == "ml_long":
             return self.config.ml_take_profit_atr
+        if sig.reason.startswith("cp_"):
+            return self.config.cp_take_profit_atr
         if self._is_trend_short_factor(sig):
             return self.config.trend_short_factor_take_profit_atr
         if self._is_attack_reason(sig.reason):
@@ -995,6 +1105,8 @@ class Backtester:
     def _risk_per_trade_for_signal(self, sig: Signal) -> float:
         if sig.reason == "ml_long":
             return self.config.ml_risk_per_trade
+        if sig.reason.startswith("cp_"):
+            return self.config.cp_risk_per_trade
         if self._is_trend_short_factor(sig):
             return self.config.trend_short_factor_risk_per_trade
         if self._is_attack_reason(sig.reason):

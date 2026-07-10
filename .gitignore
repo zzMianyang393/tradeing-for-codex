@@ -7,3 +7,6 @@ __pycache__/
 venv/
 *.log
 .claude/
+
+# Large report files (>100MB)
+reports/candidate_pool/*.jsonl
