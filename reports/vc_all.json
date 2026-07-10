@@ -1,0 +1,54 @@
+{
+  "overall": {
+    "trades": 27,
+    "win_rate": 0.4074,
+    "pnl": -3.3222,
+    "return_pct": -33.2218,
+    "max_drawdown_pct": 38.4389
+  },
+  "by_reason": {
+    "transition_breakout_long": {
+      "trades": 27,
+      "wins": 11,
+      "pnl": -3.2625,
+      "win_rate": 0.4074074074074074
+    }
+  },
+  "compression_signals": {
+    "total_compression": 52670,
+    "breakout_up": 637,
+    "breakout_down": 847
+  },
+  "universe_size": 29,
+  "universe": [
+    "AAVE-USDT-SWAP",
+    "ADA-USDT-SWAP",
+    "APT-USDT-SWAP",
+    "ARB-USDT-SWAP",
+    "ATOM-USDT-SWAP",
+    "AVAX-USDT-SWAP",
+    "BNB-USDT-SWAP",
+    "BTC-USDT-SWAP",
+    "CRV-USDT-SWAP",
+    "DOGE-USDT-SWAP",
+    "DOT-USDT-SWAP",
+    "DYDX-USDT-SWAP",
+    "ETH-USDT-SWAP",
+    "FIL-USDT-SWAP",
+    "IMX-USDT-SWAP",
+    "INJ-USDT-SWAP",
+    "LINK-USDT-SWAP",
+    "LTC-USDT-SWAP",
+    "NEAR-USDT-SWAP",
+    "OP-USDT-SWAP",
+    "RENDER-USDT-SWAP",
+    "SEI-USDT-SWAP",
+    "SOL-USDT-SWAP",
+    "STX-USDT-SWAP",
+    "SUI-USDT-SWAP",
+    "TIA-USDT-SWAP",
+    "TRX-USDT-SWAP",
+    "UNI-USDT-SWAP",
+    "XRP-USDT-SWAP"
+  ]
+}
