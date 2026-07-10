@@ -1,0 +1,324 @@
+{
+  "full_365d": {
+    "trades": 71,
+    "win_rate": 0.7465,
+    "pnl": 0.2726,
+    "return_pct": 2.7262,
+    "max_drawdown_pct": 25.6308
+  },
+  "by_reason": {
+    "trend_short": {
+      "trades": 71,
+      "wins": 53,
+      "pnl": 0.4826,
+      "win_rate": 0.7464788732394366
+    }
+  },
+  "by_symbol": {
+    "CRV-USDT-SWAP": {
+      "trades": 2,
+      "wins": 2,
+      "pnl": 0.279,
+      "win_rate": 1.0
+    },
+    "AVAX-USDT-SWAP": {
+      "trades": 4,
+      "wins": 3,
+      "pnl": 0.0572,
+      "win_rate": 0.75
+    },
+    "DOT-USDT-SWAP": {
+      "trades": 3,
+      "wins": 3,
+      "pnl": 0.4012,
+      "win_rate": 1.0
+    },
+    "AAVE-USDT-SWAP": {
+      "trades": 7,
+      "wins": 6,
+      "pnl": 0.5355,
+      "win_rate": 0.8571428571428571
+    },
+    "LTC-USDT-SWAP": {
+      "trades": 5,
+      "wins": 5,
+      "pnl": 0.6708,
+      "win_rate": 1.0
+    },
+    "DYDX-USDT-SWAP": {
+      "trades": 1,
+      "wins": 1,
+      "pnl": 0.1661,
+      "win_rate": 1.0
+    },
+    "UNI-USDT-SWAP": {
+      "trades": 13,
+      "wins": 7,
+      "pnl": -0.9028,
+      "win_rate": 0.5384615384615384
+    },
+    "DOGE-USDT-SWAP": {
+      "trades": 11,
+      "wins": 10,
+      "pnl": 1.1225,
+      "win_rate": 0.9090909090909091
+    },
+    "TRX-USDT-SWAP": {
+      "trades": 3,
+      "wins": 3,
+      "pnl": 0.3504,
+      "win_rate": 1.0
+    },
+    "ADA-USDT-SWAP": {
+      "trades": 6,
+      "wins": 3,
+      "pnl": -0.9661,
+      "win_rate": 0.5
+    },
+    "FIL-USDT-SWAP": {
+      "trades": 6,
+      "wins": 3,
+      "pnl": -1.618,
+      "win_rate": 0.5
+    },
+    "APT-USDT-SWAP": {
+      "trades": 1,
+      "wins": 0,
+      "pnl": -0.6259,
+      "win_rate": 0.0
+    },
+    "SUI-USDT-SWAP": {
+      "trades": 4,
+      "wins": 3,
+      "pnl": 0.4262,
+      "win_rate": 0.75
+    },
+    "NEAR-USDT-SWAP": {
+      "trades": 1,
+      "wins": 1,
+      "pnl": 0.1676,
+      "win_rate": 1.0
+    },
+    "LINK-USDT-SWAP": {
+      "trades": 4,
+      "wins": 3,
+      "pnl": 0.4189,
+      "win_rate": 0.75
+    }
+  },
+  "monthly": {
+    "2026-07": {
+      "trades": 8,
+      "pnl": 0.2937,
+      "win_rate": 0.75,
+      "by_reason": {
+        "trend_short": {
+          "trades": 8,
+          "wins": 6,
+          "pnl": 0.3181,
+          "win_rate": 0.75
+        }
+      }
+    },
+    "2026-06": {
+      "trades": 13,
+      "pnl": 0.6555,
+      "win_rate": 0.8462,
+      "by_reason": {
+        "trend_short": {
+          "trades": 13,
+          "wins": 11,
+          "pnl": 0.6999,
+          "win_rate": 0.8461538461538461
+        }
+      }
+    },
+    "2026-05": {
+      "trades": 28,
+      "pnl": 0.486,
+      "win_rate": 0.6071,
+      "by_reason": {
+        "trend_long": {
+          "trades": 19,
+          "wins": 9,
+          "pnl": -0.5643,
+          "win_rate": 0.47368421052631576
+        },
+        "transition_breakout_long": {
+          "trades": 3,
+          "wins": 2,
+          "pnl": 0.3925,
+          "win_rate": 0.6666666666666666
+        },
+        "trend_short": {
+          "trades": 6,
+          "wins": 6,
+          "pnl": 0.7832,
+          "win_rate": 1.0
+        }
+      }
+    },
+    "2026-04": {
+      "trades": 12,
+      "pnl": -1.6513,
+      "win_rate": 0.5,
+      "by_reason": {
+        "trend_short": {
+          "trades": 12,
+          "wins": 6,
+          "pnl": -1.6123,
+          "win_rate": 0.5
+        }
+      }
+    },
+    "2026-03": {
+      "trades": 15,
+      "pnl": -0.7093,
+      "win_rate": 0.4667,
+      "by_reason": {
+        "trend_long": {
+          "trades": 11,
+          "wins": 6,
+          "pnl": 0.5915,
+          "win_rate": 0.5454545454545454
+        },
+        "transition_breakout_long": {
+          "trades": 3,
+          "wins": 1,
+          "pnl": -1.1713,
+          "win_rate": 0.3333333333333333
+        },
+        "trend_short": {
+          "trades": 1,
+          "wins": 0,
+          "pnl": -0.0813,
+          "win_rate": 0.0
+        }
+      }
+    },
+    "2026-02": {
+      "trades": 28,
+      "pnl": 2.2063,
+      "win_rate": 0.8929,
+      "by_reason": {
+        "trend_short": {
+          "trades": 28,
+          "wins": 25,
+          "pnl": 2.2874,
+          "win_rate": 0.8928571428571429
+        }
+      }
+    },
+    "2026-01": {
+      "trades": 27,
+      "pnl": -2.8894,
+      "win_rate": 0.3704,
+      "by_reason": {
+        "trend_long": {
+          "trades": 16,
+          "wins": 5,
+          "pnl": -1.4744,
+          "win_rate": 0.3125
+        },
+        "transition_breakout_long": {
+          "trades": 3,
+          "wins": 1,
+          "pnl": -0.7982,
+          "win_rate": 0.3333333333333333
+        },
+        "trend_short": {
+          "trades": 8,
+          "wins": 4,
+          "pnl": -0.5678,
+          "win_rate": 0.5
+        }
+      }
+    },
+    "2025-12": {
+      "trades": 4,
+      "pnl": -0.3318,
+      "win_rate": 0.75,
+      "by_reason": {
+        "trend_short": {
+          "trades": 4,
+          "wins": 3,
+          "pnl": -0.3192,
+          "win_rate": 0.75
+        }
+      }
+    },
+    "2025-11": {
+      "trades": 2,
+      "pnl": 0.2323,
+      "win_rate": 1.0,
+      "by_reason": {
+        "trend_short": {
+          "trades": 2,
+          "wins": 2,
+          "pnl": 0.2378,
+          "win_rate": 1.0
+        }
+      }
+    },
+    "2025-10": {
+      "trades": 26,
+      "pnl": -2.476,
+      "win_rate": 0.5,
+      "by_reason": {
+        "trend_long": {
+          "trades": 17,
+          "wins": 5,
+          "pnl": -2.6744,
+          "win_rate": 0.29411764705882354
+        },
+        "trend_short": {
+          "trades": 8,
+          "wins": 7,
+          "pnl": 0.0365,
+          "win_rate": 0.875
+        },
+        "transition_breakout_long": {
+          "trades": 1,
+          "wins": 1,
+          "pnl": 0.2232,
+          "win_rate": 1.0
+        }
+      }
+    },
+    "2025-09": {
+      "trades": 8,
+      "pnl": 0.0745,
+      "win_rate": 0.625,
+      "by_reason": {
+        "trend_short": {
+          "trades": 8,
+          "wins": 5,
+          "pnl": 0.0925,
+          "win_rate": 0.625
+        }
+      }
+    },
+    "2025-08": {
+      "trades": 3,
+      "pnl": 0.3988,
+      "win_rate": 1.0,
+      "by_reason": {
+        "trend_short": {
+          "trades": 3,
+          "wins": 3,
+          "pnl": 0.4054,
+          "win_rate": 1.0
+        }
+      }
+    }
+  },
+  "exclude_months": [
+    "2026-05",
+    "2026-06",
+    "2026-07"
+  ],
+  "excluded_pnl": -5.1459,
+  "excluded_trades": 125,
+  "elimination_reasons": [],
+  "status": "PASSED"
+}
