@@ -329,6 +329,7 @@ class MLFilterConfig:
     n_estimators: int = 80
     learning_rate: float = 0.08
     min_training_samples: int = 50
+    max_training_samples: int = 5000
     min_probability: float = 0.45
     retrain_every_bars: int = 96 * 7  # retrain weekly
 
@@ -347,6 +348,16 @@ class CandidateMLFilter:
         labeled = [c for c in candidates if c.label >= 0]
         if len(labeled) < self.config.min_training_samples:
             return {"trained": False, "reason": f"only {len(labeled)} labeled samples"}
+
+        # The stump learner sorts every feature for every tree.  Cap training
+        # deterministically while preserving the full time span of the data.
+        if len(labeled) > self.config.max_training_samples:
+            max_samples = self.config.max_training_samples
+            sample_indices = [
+                round(i * (len(labeled) - 1) / (max_samples - 1))
+                for i in range(max_samples)
+            ]
+            labeled = [labeled[i] for i in sample_indices]
 
         X = [features_to_array(c) for c in labeled]
         y = [c.label for c in labeled]
@@ -382,6 +393,7 @@ class CandidateMLFilter:
         self.training_stats = {
             "trained": True,
             "n_samples": len(labeled),
+            "n_original_samples": len(candidates),
             "n_positive": sum(y),
             "train_accuracy": round(train_acc, 4),
             "best_threshold": round(best_thresh, 2),

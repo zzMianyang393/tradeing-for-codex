@@ -1,0 +1,106 @@
+{
+  "symbols": [
+    "AAVE-USDT-SWAP",
+    "ADA-USDT-SWAP",
+    "APT-USDT-SWAP",
+    "ARB-USDT-SWAP",
+    "ATOM-USDT-SWAP",
+    "AVAX-USDT-SWAP",
+    "BNB-USDT-SWAP",
+    "BTC-USDT-SWAP",
+    "CRV-USDT-SWAP",
+    "DOGE-USDT-SWAP",
+    "DOT-USDT-SWAP",
+    "DYDX-USDT-SWAP",
+    "ETH-USDT-SWAP",
+    "FIL-USDT-SWAP",
+    "IMX-USDT-SWAP",
+    "INJ-USDT-SWAP",
+    "LINK-USDT-SWAP",
+    "LTC-USDT-SWAP",
+    "NEAR-USDT-SWAP",
+    "OP-USDT-SWAP",
+    "RENDER-USDT-SWAP",
+    "SEI-USDT-SWAP",
+    "SOL-USDT-SWAP",
+    "STX-USDT-SWAP",
+    "SUI-USDT-SWAP",
+    "TIA-USDT-SWAP",
+    "TRX-USDT-SWAP",
+    "UNI-USDT-SWAP",
+    "XRP-USDT-SWAP"
+  ],
+  "windows": {
+    "range_revert_short": {
+      "365": {
+        "return_pct": -6.0951,
+        "pnl": -0.6095,
+        "max_drawdown_pct": 27.6057,
+        "trades": 45,
+        "win_rate": 0.6444,
+        "by_reason": {
+          "range_revert_short": {
+            "trades": 45,
+            "wins": 29,
+            "pnl": -0.4096,
+            "win_rate": 0.6444444444444445
+          }
+        },
+        "by_regime": {
+          "range": {
+            "trades": 45,
+            "wins": 29,
+            "pnl": -0.4096,
+            "win_rate": 0.6444444444444445
+          }
+        }
+      },
+      "180": {
+        "return_pct": -17.1401,
+        "pnl": -1.714,
+        "max_drawdown_pct": 32.8014,
+        "trades": 22,
+        "win_rate": 0.5455,
+        "by_reason": {
+          "range_revert_short": {
+            "trades": 22,
+            "wins": 12,
+            "pnl": -1.5972,
+            "win_rate": 0.5454545454545454
+          }
+        },
+        "by_regime": {
+          "range": {
+            "trades": 22,
+            "wins": 12,
+            "pnl": -1.5972,
+            "win_rate": 0.5454545454545454
+          }
+        }
+      },
+      "90": {
+        "return_pct": -26.1623,
+        "pnl": -2.6162,
+        "max_drawdown_pct": 27.2351,
+        "trades": 9,
+        "win_rate": 0.3333,
+        "by_reason": {
+          "range_revert_short": {
+            "trades": 9,
+            "wins": 3,
+            "pnl": -2.5723,
+            "win_rate": 0.3333333333333333
+          }
+        },
+        "by_regime": {
+          "range": {
+            "trades": 9,
+            "wins": 3,
+            "pnl": -2.5723,
+            "win_rate": 0.3333333333333333
+          }
+        }
+      }
+    }
+  }
+}

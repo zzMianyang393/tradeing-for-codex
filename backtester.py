@@ -4,6 +4,7 @@ import json
 import math
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
+from typing import Callable
 
 from config import BacktestConfig, SymbolRisk
 from market import FeatureBar, load_market
@@ -18,8 +19,12 @@ from strategy import (
     order_book_signal_for,
     signal_for,
     trade_flow_signal_for,
+    volatility_breakout_signal_for,
 )
 from validation import audit_report
+
+
+ExternalSignalProvider = Callable[[str, list[FeatureBar], int], Signal | None]
 
 
 _TIMELINE_CACHE: dict[tuple[tuple[tuple[str, int, int], ...], float], list[int]] = {}
@@ -142,7 +147,19 @@ class Backtester:
         if config.rm_enabled:
             self.risk_manager = RiskManager(config)
 
-    def run(self, market: dict[str, list[FeatureBar]], days: int | None = None) -> dict:
+    def run(
+        self,
+        market: dict[str, list[FeatureBar]],
+        days: int | None = None,
+        signal_provider: ExternalSignalProvider | None = None,
+    ) -> dict:
+        """Run a backtest.
+
+        ``signal_provider`` is intentionally narrow: it supplies a candidate's
+        actual entry signal for one symbol/bar, while sizing, costs, exits and
+        risk controls remain owned by this backtester.  It prevents research
+        candidates from being silently evaluated through the default router.
+        """
         if self.risk_manager is not None:
             self.risk_manager.reset()
         if self.config.excluded_symbols:
@@ -199,33 +216,213 @@ class Backtester:
         # Candidate Pool filter initialization
         cp_filter = None
         cp_last_train_step = -1
+        cp_warmup_until_step = 0
+        cp_retrain_count = 0
+        cp_retrain_failures = 0
+        cp_active_regimes = tuple(self.config.cp_enabled_regimes)
+        cp_regime_policy_history: list[dict] = []
+        self._cp_regime_risk_multipliers: dict[str, float] = {}
+        cp_quality_rates: dict[tuple[int, str, str], float] = {}
+        cp_candidate_cache: dict[tuple[str, int], list] = {}
+        cp_precomputed_only = False
+        cp_event_store = None
         if self.config.enable_candidate_pool:
             from candidate_filter import CandidateFilter, RuleFilterConfig, MLFilterConfig
+            from candidate_pool import CandidateEventStore, scan_candidates as cp_scan_symbol
+
+            if self.config.cp_candidate_cache_path and Path(self.config.cp_candidate_cache_path).exists():
+                try:
+                    cp_event_store = CandidateEventStore(Path(self.config.cp_candidate_cache_path))
+                    cp_precomputed_only = True
+                except Exception as exc:
+                    import logging
+                    logging.getLogger("backtester").warning(
+                        "CP candidate cache load failed; falling back to live scan: %s", exc
+                    )
+
+            def cp_candidates_for(symbol: str, idx: int) -> list:
+                ts_key = market[symbol][idx].ts
+                cache_key = (symbol, ts_key)
+                # Indexed precomputed candidates are already cheap to retrieve.
+                # Do not retain every bar's list for the whole backtest: over a
+                # long window that duplicates a large portion of the cache in RAM.
+                if cp_precomputed_only:
+                    return cp_event_store.get(symbol, ts_key) if cp_event_store is not None else []
+                if cache_key not in cp_candidate_cache:
+                    cp_candidate_cache[cache_key] = cp_scan_symbol(
+                        symbol,
+                        market[symbol],
+                        idx,
+                        self.config.cp_min_proximity,
+                    )
+                return cp_candidate_cache[cache_key]
+
+            def cp_training_sample(candidates: list) -> list:
+                max_samples = max(1, self.config.cp_ml_max_training_samples)
+                if len(candidates) <= max_samples:
+                    return candidates
+                return [
+                    candidates[round(i * (len(candidates) - 1) / (max_samples - 1))]
+                    for i in range(max_samples)
+                ]
+
+            def cp_scan_cached(scan_timeline: list[int]) -> list:
+                cached_candidates = []
+                for scan_ts in scan_timeline:
+                    for scan_symbol in market:
+                        scan_idx = index.get(scan_symbol, {}).get(scan_ts)
+                        if scan_idx is None or scan_idx < 1:
+                            continue
+                        cached_candidates.extend(cp_candidates_for(scan_symbol, scan_idx))
+                return cached_candidates
+
+            def cp_label_candidates(candidates: list, cutoff_ts: int) -> list:
+                from mfe_labeler import label_candidates
+
+                ready = []
+                pending = []
+                horizon = self.config.cp_max_hold_bars
+                for candidate in candidates:
+                    bar_idx = index.get(candidate.symbol, {}).get(candidate.ts)
+                    bars = market.get(candidate.symbol, [])
+                    end_idx = (bar_idx + horizon) if bar_idx is not None else len(bars)
+                    if (
+                        candidate.label >= 0
+                        and candidate.label_horizon_bars == horizon
+                        and end_idx < len(bars)
+                        and bars[end_idx].ts <= cutoff_ts
+                    ):
+                        ready.append(candidate)
+                    else:
+                        pending.append(candidate)
+                if pending:
+                    ready.extend(
+                        label_candidates(
+                            pending,
+                            market,
+                            index,
+                            horizon_bars=horizon,
+                            label_cutoff_ts=cutoff_ts,
+                            stop_atr=self.config.cp_stop_atr,
+                            take_profit_atr=self.config.cp_take_profit_atr,
+                            trailing_atr=self.config.cp_trailing_atr,
+                            max_hold_bars=self.config.cp_max_hold_bars,
+                            taker_fee=self.config.taker_fee,
+                            slippage=self.config.slippage,
+                        )
+                    )
+                return ready
+
+            def cp_update_regime_policy(labeled: list) -> None:
+                """Choose regimes from past labels only; never inspect the test slice."""
+                nonlocal cp_active_regimes
+                if not (
+                    self.config.cp_dynamic_regime_routing
+                    or self.config.cp_dynamic_regime_risk_scaling
+                ):
+                    return
+                stats: dict[str, dict[str, int]] = {}
+                for candidate in labeled:
+                    if candidate.regime not in self.config.cp_enabled_regimes:
+                        continue
+                    item = stats.setdefault(candidate.regime, {"samples": 0, "positive": 0})
+                    item["samples"] += 1
+                    item["positive"] += int(
+                        candidate.net_pnl_pct >= self.config.cp_dynamic_regime_min_forward_pnl_pct
+                    )
+                selected = tuple(
+                    regime
+                    for regime in self.config.cp_enabled_regimes
+                    if stats.get(regime, {}).get("samples", 0) >= self.config.cp_dynamic_regime_min_samples
+                    and stats[regime]["positive"] / stats[regime]["samples"]
+                    >= self.config.cp_dynamic_regime_min_label_rate
+                )
+                if not selected:
+                    selected = tuple(self.config.cp_enabled_regimes)
+                if self.config.cp_dynamic_regime_routing:
+                    cp_active_regimes = selected
+                if self.config.cp_dynamic_regime_risk_scaling:
+                    reference = max(self.config.cp_dynamic_regime_reference_rate, 1e-6)
+                    floor = max(0.0, min(1.0, self.config.cp_dynamic_regime_risk_floor))
+                    self._cp_regime_risk_multipliers = {
+                        regime: max(
+                            floor,
+                            min(1.0, (stats[regime]["positive"] / stats[regime]["samples"]) / reference),
+                        )
+                        for regime in stats
+                        if stats[regime]["samples"] >= self.config.cp_dynamic_regime_min_samples
+                    }
+                cp_regime_policy_history.append({
+                    "update": len(cp_regime_policy_history),
+                    "active_regimes": selected,
+                    "stats": {
+                        regime: {
+                            "samples": item["samples"],
+                            "forward_pnl_rate": round(item["positive"] / item["samples"], 4),
+                        }
+                        for regime, item in stats.items()
+                    },
+                    "risk_multipliers": dict(self._cp_regime_risk_multipliers),
+                })
+
+            def cp_update_quality_rates(labeled: list) -> None:
+                """Calibrate ranking from completed forward PnL, not MFE labels."""
+                nonlocal cp_quality_rates
+                if not self.config.cp_quality_ranking:
+                    return
+                buckets: dict[tuple[int, str, str], list[int]] = {}
+                for candidate in labeled:
+                    key = (candidate.direction, candidate.regime, candidate.pattern_type)
+                    values = buckets.setdefault(key, [0, 0])
+                    values[0] += 1
+                    values[1] += int(
+                        candidate.net_pnl_pct >= self.config.cp_quality_forward_pnl_threshold
+                    )
+                cp_quality_rates = {
+                    key: positive / samples
+                    for key, (samples, positive) in buckets.items()
+                    if samples >= self.config.cp_quality_min_samples
+                }
+
             cp_filter = CandidateFilter(
                 rule_config=RuleFilterConfig(min_proximity=self.config.cp_min_proximity),
-                ml_config=MLFilterConfig(n_estimators=80, learning_rate=0.08),
+                ml_config=MLFilterConfig(
+                    n_estimators=self.config.cp_ml_n_estimators,
+                    learning_rate=0.08,
+                    max_training_samples=self.config.cp_ml_max_training_samples,
+                ),
                 use_rules=self.config.cp_use_rules,
                 use_ml=self.config.cp_use_ml,
             )
-            # Load pre-trained model or train on initial window
-            if self.config.cp_ml_model_path and Path(self.config.cp_ml_model_path).exists():
+            # A model trained outside this walk-forward run is unsafe by
+            # default: it may have seen the historical test window.
+            loaded_cp_model = False
+            if (
+                self.config.cp_allow_pretrained_model
+                and self.config.cp_ml_model_path
+                and Path(self.config.cp_ml_model_path).exists()
+            ):
                 try:
                     cp_filter.load_ml(self.config.cp_ml_model_path)
                     cp_last_train_step = 0
+                    loaded_cp_model = True
                 except Exception as exc:
                     import logging
                     logging.getLogger("backtester").warning("CP model load failed: %s", exc)
-            else:
+
+            if not loaded_cp_model:
                 try:
-                    from candidate_pool import scan_all_symbols as cp_scan
-                    cp_train_end_ts = timeline[min(len(timeline) - 1, 96 * 30)]
+                    cp_train_end_step = min(len(timeline) - 1, 96 * 30)
+                    cp_train_end_ts = timeline[cp_train_end_step]
                     cp_train_timeline = [t for t in timeline if t <= cp_train_end_ts]
+                    cp_warmup_until_step = cp_train_end_step + 1
                     if len(cp_train_timeline) > 96:
-                        cp_cands = cp_scan(market, cp_train_timeline, index, self.config.cp_min_proximity)
+                        cp_cands = cp_training_sample(cp_scan_cached(cp_train_timeline))
                         if cp_cands:
-                            from mfe_labeler import label_candidates as cp_label
-                            cp_labeled = cp_label(cp_cands, market, index, horizon_bars=self.config.cp_max_hold_bars)
+                            cp_labeled = cp_label_candidates(cp_cands, cp_train_end_ts)
                             cp_filter.train_ml(cp_labeled)
+                            cp_update_regime_policy(cp_labeled)
+                            cp_update_quality_rates(cp_labeled)
                             cp_last_train_step = 0
                 except Exception as exc:
                     import logging
@@ -363,7 +560,12 @@ class Backtester:
                 self.config.attack_max_positions if self.config.enable_attack_module else 0
             )
             slots = position_cap - len(positions)
-            if slots > 0 and free_margin_limit > 0 and step >= edge_pause_until:
+            if (
+                slots > 0
+                and free_margin_limit > 0
+                and step >= edge_pause_until
+                and step >= cp_warmup_until_step
+            ):
                 signals: list[Signal] = []
 
                 if self.config.enable_candidate_pool and cp_filter is not None:
@@ -377,14 +579,23 @@ class Backtester:
                             cp_retrain_ts_start = timeline[cp_retrain_start]
                             cp_retrain_timeline = [t for t in timeline[cp_retrain_start:step] if t >= cp_retrain_ts_start]
                             if len(cp_retrain_timeline) > 96:
-                                from candidate_pool import scan_all_symbols as cp_scan_rt
-                                from mfe_labeler import label_candidates as cp_label_rt
-                                cp_rc = cp_scan_rt(market, cp_retrain_timeline, index, self.config.cp_min_proximity)
+                                cp_rc = []
+                                for retrain_ts in cp_retrain_timeline:
+                                    for retrain_symbol, retrain_bars in market.items():
+                                        retrain_idx = index.get(retrain_symbol, {}).get(retrain_ts)
+                                        if retrain_idx is None or retrain_idx < 1:
+                                            continue
+                                        cp_rc.extend(cp_candidates_for(retrain_symbol, retrain_idx))
+                                cp_rc = cp_training_sample(cp_rc)
                                 if cp_rc:
-                                    cp_rl = cp_label_rt(cp_rc, market, index, horizon_bars=self.config.cp_max_hold_bars)
+                                    cp_rl = cp_label_candidates(cp_rc, timeline[step - 1])
                                     cp_filter.train_ml(cp_rl)
+                                    cp_update_regime_policy(cp_rl)
+                                    cp_update_quality_rates(cp_rl)
+                                    cp_retrain_count += 1
                                     cp_last_train_step = step
                         except Exception:
+                            cp_retrain_failures += 1
                             pass
 
                     for symbol in active_symbols:
@@ -394,11 +605,12 @@ class Backtester:
                         if idx is None or idx < 1:
                             continue
                         try:
-                            from candidate_pool import scan_candidates as cp_scan_sym
-                            cands = cp_scan_sym(symbol, market[symbol], idx, self.config.cp_min_proximity)
+                            cands = cp_candidates_for(symbol, idx)
                             for cand in cands:
+                                if cand.direction not in self.config.cp_enabled_directions:
+                                    continue
                                 # Regime filter
-                                if cand.regime not in self.config.cp_enabled_regimes:
+                                if cand.regime not in cp_active_regimes:
                                     continue
                                 if cand.pattern_type not in self.config.cp_enabled_patterns:
                                     continue
@@ -408,6 +620,15 @@ class Backtester:
                                     continue
                                 # Convert to Signal
                                 cp_score = 2.5 + cand.proximity_score * 2.0 + prob
+                                if self.config.cp_quality_ranking:
+                                    quality_rate = cp_quality_rates.get(
+                                        (cand.direction, cand.regime, cand.pattern_type), 0.5
+                                    )
+                                    cp_score += (
+                                        quality_rate - 0.5
+                                    ) * self.config.cp_quality_bonus_scale
+                                if cp_score < self.config.cp_min_score:
+                                    continue
                                 cp_reason = f"cp_{cand.pattern_type}_{('long' if cand.direction == 1 else 'short')}"
                                 cp_sig = Signal(
                                     symbol=symbol,
@@ -427,6 +648,26 @@ class Backtester:
                                 signals.append(cp_sig)
                         except Exception:
                             pass  # CP signal failure is non-fatal
+                elif signal_provider is not None:
+                    # Candidate strategies must provide their own entries.
+                    # Do not mix them with the legacy strategy router: that
+                    # would make two differently named candidates identical.
+                    for symbol in active_symbols:
+                        if symbol in positions or symbol in cooldown:
+                            continue
+                        idx = index[symbol].get(ts)
+                        if idx is None:
+                            continue
+                        sig = signal_provider(symbol, market[symbol], idx)
+                        if sig is None or sig.score < self.config.min_score:
+                            continue
+                        if step < direction_pause_until.get(sig.direction, -1):
+                            continue
+                        if step < reason_pause_until.get(sig.reason, -1):
+                            continue
+                        if self._blocked_by_reversal_risk(sig, market[symbol], idx):
+                            continue
+                        signals.append(sig)
                 else:
                     # --- Original signal generation ---
                     for symbol in active_symbols:
@@ -465,6 +706,19 @@ class Backtester:
                             if self._blocked_by_reversal_risk(attack_sig, market[symbol], idx):
                                 continue
                             signals.append(attack_sig)
+                        volatility_sig = volatility_breakout_signal_for(symbol, market[symbol], idx, self.config)
+                        if self.config.enable_volatility_breakout and volatility_sig and volatility_sig.score >= self.config.min_score:
+                            if not router_allows(volatility_sig, market[symbol][idx]):
+                                continue
+                            if self.config.router_reason_allowed_regimes.get(volatility_sig.reason) and volatility_sig.regime not in self.config.router_reason_allowed_regimes[volatility_sig.reason]:
+                                continue
+                            if step < direction_pause_until.get(volatility_sig.direction, -1):
+                                continue
+                            if step < reason_pause_until.get(volatility_sig.reason, -1):
+                                continue
+                            if self._blocked_by_reversal_risk(volatility_sig, market[symbol], idx):
+                                continue
+                            signals.append(volatility_sig)
                         continuation_sig = continuation_signal_for(symbol, market[symbol], idx, self.config)
                         if continuation_sig and continuation_sig.score >= self.config.min_score:
                             if not router_allows(continuation_sig, market[symbol][idx]):
@@ -678,7 +932,21 @@ class Backtester:
             "risk_status": {
                 "pauses_triggered": self.risk_manager._pauses_count if self.risk_manager else 0,
                 "orders_rejected": self.risk_manager._rejections_count if self.risk_manager else 0,
+                "rejections_by_reason": (
+                    self.risk_manager.get_rejection_breakdown() if self.risk_manager else {}
+                ),
                 "final_status": asdict(self.risk_manager.get_status()) if self.risk_manager else None,
+            },
+            "candidate_pool_status": {
+                "retrain_count": cp_retrain_count,
+                "retrain_failures": cp_retrain_failures,
+                "precomputed_cache": bool(self.config.cp_candidate_cache_path),
+                "active_regimes": cp_active_regimes,
+                "regime_policy_history": cp_regime_policy_history,
+                "quality_rates": {
+                    f"{direction}:{regime}:{pattern}": round(rate, 4)
+                    for (direction, regime, pattern), rate in cp_quality_rates.items()
+                },
             },
         }
 
@@ -985,7 +1253,7 @@ class Backtester:
         "uptrend": {"trend_long", "attack_breakout_long", "range_revert_long", "micro_momentum_long", "funding_extreme_long", "open_interest_breakout_long"},
         "downtrend": {"trend_short", "attack_breakout_short", "range_revert_short", "micro_momentum_short", "funding_extreme_short", "open_interest_breakout_short"},
         "range": {"range_revert_long", "range_revert_short", "attack_exhaustion_long", "attack_exhaustion_short", "continuation_long", "continuation_short", "micro_momentum_long", "micro_momentum_short", "funding_extreme_long", "funding_extreme_short", "open_interest_breakout_long", "open_interest_breakout_short"},
-        "transition": {"transition_breakout_long", "transition_breakout_short", "continuation_long", "continuation_short", "funding_extreme_long", "funding_extreme_short", "open_interest_breakout_long", "open_interest_breakout_short"},
+        "transition": {"transition_breakout_long", "transition_breakout_short", "volatility_breakout_long", "volatility_breakout_short", "continuation_long", "continuation_short", "funding_extreme_long", "funding_extreme_short", "open_interest_breakout_long", "open_interest_breakout_short"},
     }
     
     def _regime_allows_signal(self, sig: Signal) -> bool:
@@ -1106,7 +1374,10 @@ class Backtester:
         if sig.reason == "ml_long":
             return self.config.ml_risk_per_trade
         if sig.reason.startswith("cp_"):
-            return self.config.cp_risk_per_trade
+            base_risk = self.config.cp_risk_per_trade
+            if self.config.cp_dynamic_regime_risk_scaling:
+                base_risk *= getattr(self, "_cp_regime_risk_multipliers", {}).get(sig.regime, 1.0)
+            return base_risk
         if self._is_trend_short_factor(sig):
             return self.config.trend_short_factor_risk_per_trade
         if self._is_attack_reason(sig.reason):

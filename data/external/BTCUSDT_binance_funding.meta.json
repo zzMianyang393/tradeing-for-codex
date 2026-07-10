@@ -1,0 +1,9 @@
+{
+  "source": "binance_usdm_public_api",
+  "execution_compatibility": "research_proxy_only_not_okx_execution",
+  "requested_start_ms": 1720569600000,
+  "requested_end_ms": 1783641600000,
+  "rows": 2191,
+  "first_ts": 1720569600000,
+  "last_ts": 1783641600000
+}

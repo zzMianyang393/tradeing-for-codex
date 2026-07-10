@@ -104,7 +104,12 @@ class TestFundingRate(unittest.TestCase):
                 )
 
             self.assertEqual(3, count)
-            fetch.assert_called_once_with("BTC-USDT-SWAP", before=1_700_000_000_000, limit=100)
+            fetch.assert_called_once_with(
+                "BTC-USDT-SWAP",
+                before=None,
+                after=1_700_000_000_000,
+                limit=100,
+            )
             loaded = load_funding_rates(out_dir / "BTC-USDT-SWAP_funding.csv")
             self.assertEqual([1_699_942_400_000, 1_699_971_200_000, 1_700_000_000_000], [rate.ts for rate in loaded])
 
@@ -117,7 +122,19 @@ class TestFundingRate(unittest.TestCase):
                     "fundingRate": "0.0002",
                     "realizedRate": "0.0002",
                     "fundingTime": "1700000000000",
-                }
+                },
+                {
+                    "instId": "ETH-USDT-SWAP",
+                    "fundingRate": "0.0001",
+                    "realizedRate": "0.0001",
+                    "fundingTime": "1699971200000",
+                },
+                {
+                    "instId": "ETH-USDT-SWAP",
+                    "fundingRate": "0.0001",
+                    "realizedRate": "0.0001",
+                    "fundingTime": "1699942400000",
+                },
             ]
 
             with patch("funding_rate.fetch_funding_page", side_effect=[RuntimeError("busy"), page]) as fetch:
@@ -131,7 +148,7 @@ class TestFundingRate(unittest.TestCase):
                     limit=100,
                 )
 
-            self.assertEqual(1, count)
+            self.assertEqual(3, count)
             self.assertEqual(2, fetch.call_count)
 
     def test_main_downloads_requested_symbols(self):
@@ -143,7 +160,19 @@ class TestFundingRate(unittest.TestCase):
                     "fundingRate": "0.0002",
                     "realizedRate": "0.0002",
                     "fundingTime": "1700000000000",
-                }
+                },
+                {
+                    "instId": "BTC-USDT-SWAP",
+                    "fundingRate": "0.0001",
+                    "realizedRate": "0.0001",
+                    "fundingTime": "1699971200000",
+                },
+                {
+                    "instId": "BTC-USDT-SWAP",
+                    "fundingRate": "0.0001",
+                    "realizedRate": "0.0001",
+                    "fundingTime": "1699942400000",
+                },
             ]
 
             with patch("funding_rate.fetch_funding_page", return_value=page):
@@ -160,7 +189,24 @@ class TestFundingRate(unittest.TestCase):
 
             self.assertEqual(0, code)
             loaded = load_funding_rates(out_dir / "BTC-USDT-SWAP_funding.csv")
-            self.assertEqual(1, len(loaded))
+            self.assertEqual(3, len(loaded))
+
+    def test_main_returns_nonzero_for_incomplete_history(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp)
+            page = [{
+                "instId": "BTC-USDT-SWAP",
+                "fundingRate": "0.0002",
+                "realizedRate": "0.0002",
+                "fundingTime": "1700000000000",
+            }]
+
+            with patch("funding_rate.fetch_funding_page", return_value=page):
+                code = main([
+                    "--symbols", "BTC-USDT-SWAP", "--days", "1", "--out", str(out_dir), "--sleep", "0",
+                ])
+
+            self.assertEqual(1, code)
 
 
 if __name__ == "__main__":

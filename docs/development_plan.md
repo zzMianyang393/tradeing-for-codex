@@ -320,7 +320,7 @@ def add_oi_features(bars, oi_data) -> list[FeatureBar]
     # - oi_price_divergence: float
 ```
 
-#### 4.3 主动买卖量 `data/trades_flow.py`
+#### 4.3 主动买卖量 `data/trade_flow.py`
 ```python
 def fetch_trades_flow(symbol, days) -> list[TradesFlow]
 def add_flow_features(bars, flow_data) -> list[FeatureBar]

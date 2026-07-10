@@ -1,0 +1,87 @@
+{
+  "symbols": [
+    "AAVE-USDT-SWAP",
+    "ADA-USDT-SWAP",
+    "APT-USDT-SWAP",
+    "ARB-USDT-SWAP",
+    "ATOM-USDT-SWAP",
+    "AVAX-USDT-SWAP",
+    "BNB-USDT-SWAP",
+    "BTC-USDT-SWAP",
+    "CRV-USDT-SWAP",
+    "DOGE-USDT-SWAP"
+  ],
+  "windows": {
+    "range_revert_short": {
+      "365": {
+        "return_pct": 11.7474,
+        "pnl": 1.1747,
+        "max_drawdown_pct": 28.5481,
+        "trades": 57,
+        "win_rate": 0.6667,
+        "by_reason": {
+          "range_revert_short": {
+            "trades": 57,
+            "wins": 38,
+            "pnl": 1.5235,
+            "win_rate": 0.6666666666666666
+          }
+        },
+        "by_regime": {
+          "range": {
+            "trades": 57,
+            "wins": 38,
+            "pnl": 1.5235,
+            "win_rate": 0.6666666666666666
+          }
+        }
+      },
+      "180": {
+        "return_pct": 21.2137,
+        "pnl": 2.1214,
+        "max_drawdown_pct": 11.7346,
+        "trades": 31,
+        "win_rate": 0.6452,
+        "by_reason": {
+          "range_revert_short": {
+            "trades": 31,
+            "wins": 20,
+            "pnl": 2.3379,
+            "win_rate": 0.6451612903225806
+          }
+        },
+        "by_regime": {
+          "range": {
+            "trades": 31,
+            "wins": 20,
+            "pnl": 2.3379,
+            "win_rate": 0.6451612903225806
+          }
+        }
+      },
+      "90": {
+        "return_pct": 0.8849,
+        "pnl": 0.0885,
+        "max_drawdown_pct": 11.5873,
+        "trades": 19,
+        "win_rate": 0.6316,
+        "by_reason": {
+          "range_revert_short": {
+            "trades": 19,
+            "wins": 12,
+            "pnl": 0.2046,
+            "win_rate": 0.631578947368421
+          }
+        },
+        "by_regime": {
+          "range": {
+            "trades": 19,
+            "wins": 12,
+            "pnl": 0.2046,
+            "win_rate": 0.631578947368421
+          }
+        }
+      }
+    }
+  }
+}

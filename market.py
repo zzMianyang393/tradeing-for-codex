@@ -237,9 +237,12 @@ def load_market(
     include_open_interest: bool = False,
     include_trade_flow: bool = False,
     include_order_book: bool = False,
+    symbols: set[str] | None = None,
 ) -> dict[str, list[FeatureBar]]:
     market: dict[str, list[FeatureBar]] = {}
     for symbol in discover_symbols(data_dir):
+        if symbols is not None and symbol not in symbols:
+            continue
         okx_path = data_dir / f"{symbol}_1m.csv"
         base_symbol = symbol.removesuffix("-USDT-SWAP")
         timeframe_suffix = {

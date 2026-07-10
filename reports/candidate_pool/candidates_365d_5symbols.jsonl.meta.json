@@ -1,0 +1,15 @@
+{
+  "kind": "candidate_pool_events",
+  "timeframe_minutes": 15,
+  "days": 365,
+  "symbols": [
+    "AAVE-USDT-SWAP",
+    "ADA-USDT-SWAP",
+    "APT-USDT-SWAP",
+    "ARB-USDT-SWAP",
+    "ATOM-USDT-SWAP"
+  ],
+  "min_proximity": 0.25,
+  "candidates": 418005,
+  "output": "reports\\candidate_pool\\candidates_365d_5symbols.jsonl"
+}

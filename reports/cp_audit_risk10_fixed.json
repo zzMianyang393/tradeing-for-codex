@@ -1,0 +1,226 @@
+{
+  "source": "reports\\cp_unbiased_365d_5symbols_risk_fixed.json",
+  "summary": {
+    "start_equity": 10.0,
+    "end_equity": 2.9973,
+    "return_pct": -70.0273,
+    "max_drawdown_pct": 69.4625,
+    "trades": 321
+  },
+  "by_month": {
+    "2025-08": {
+      "trades": 53,
+      "wins": 28,
+      "win_rate": 0.5283,
+      "pnl": -3.1022
+    },
+    "2025-09": {
+      "trades": 58,
+      "wins": 25,
+      "win_rate": 0.431,
+      "pnl": -2.5028
+    },
+    "2025-10": {
+      "trades": 45,
+      "wins": 27,
+      "win_rate": 0.6,
+      "pnl": 1.1134
+    },
+    "2025-11": {
+      "trades": 31,
+      "wins": 16,
+      "win_rate": 0.5161,
+      "pnl": -1.3781
+    },
+    "2025-12": {
+      "trades": 56,
+      "wins": 30,
+      "win_rate": 0.5357,
+      "pnl": 0.0002
+    },
+    "2026-01": {
+      "trades": 47,
+      "wins": 25,
+      "win_rate": 0.5319,
+      "pnl": 0.334
+    },
+    "2026-02": {
+      "trades": 23,
+      "wins": 11,
+      "win_rate": 0.4783,
+      "pnl": -0.584
+    },
+    "2026-03": {
+      "trades": 8,
+      "wins": 3,
+      "win_rate": 0.375,
+      "pnl": -0.4436
+    }
+  },
+  "by_reason": {
+    "cp_breakout_long": {
+      "trades": 29,
+      "wins": 18,
+      "win_rate": 0.6207,
+      "pnl": -0.0585
+    },
+    "cp_breakout_short": {
+      "trades": 23,
+      "wins": 7,
+      "win_rate": 0.3043,
+      "pnl": -1.6291
+    },
+    "cp_ema_turn_long": {
+      "trades": 10,
+      "wins": 5,
+      "win_rate": 0.5,
+      "pnl": -0.2456
+    },
+    "cp_ema_turn_short": {
+      "trades": 8,
+      "wins": 6,
+      "win_rate": 0.75,
+      "pnl": 0.6199
+    },
+    "cp_pullback_long": {
+      "trades": 59,
+      "wins": 28,
+      "win_rate": 0.4746,
+      "pnl": -1.284
+    },
+    "cp_pullback_short": {
+      "trades": 82,
+      "wins": 46,
+      "win_rate": 0.561,
+      "pnl": -1.6086
+    },
+    "cp_range_revert_long": {
+      "trades": 23,
+      "wins": 14,
+      "win_rate": 0.6087,
+      "pnl": 0.3036
+    },
+    "cp_range_revert_short": {
+      "trades": 23,
+      "wins": 12,
+      "win_rate": 0.5217,
+      "pnl": -0.242
+    },
+    "cp_reclaim_long": {
+      "trades": 7,
+      "wins": 2,
+      "win_rate": 0.2857,
+      "pnl": -0.5755
+    },
+    "cp_reclaim_short": {
+      "trades": 10,
+      "wins": 3,
+      "win_rate": 0.3,
+      "pnl": -0.6298
+    },
+    "cp_volume_surge_long": {
+      "trades": 23,
+      "wins": 12,
+      "win_rate": 0.5217,
+      "pnl": 0.1571
+    },
+    "cp_volume_surge_short": {
+      "trades": 24,
+      "wins": 12,
+      "win_rate": 0.5,
+      "pnl": -1.3706
+    }
+  },
+  "by_symbol": {
+    "AAVE-USDT-SWAP": {
+      "trades": 114,
+      "wins": 55,
+      "win_rate": 0.4825,
+      "pnl": -0.9617
+    },
+    "ADA-USDT-SWAP": {
+      "trades": 133,
+      "wins": 76,
+      "win_rate": 0.5714,
+      "pnl": -2.4002
+    },
+    "APT-USDT-SWAP": {
+      "trades": 52,
+      "wins": 26,
+      "win_rate": 0.5,
+      "pnl": -2.1662
+    },
+    "ARB-USDT-SWAP": {
+      "trades": 22,
+      "wins": 8,
+      "win_rate": 0.3636,
+      "pnl": -1.035
+    }
+  },
+  "by_regime": {
+    "downtrend": {
+      "trades": 155,
+      "wins": 78,
+      "win_rate": 0.5032,
+      "pnl": -4.5981
+    },
+    "range": {
+      "trades": 46,
+      "wins": 26,
+      "win_rate": 0.5652,
+      "pnl": 0.0616
+    },
+    "transition": {
+      "trades": 14,
+      "wins": 7,
+      "win_rate": 0.5,
+      "pnl": -0.9021
+    },
+    "uptrend": {
+      "trades": 106,
+      "wins": 54,
+      "win_rate": 0.5094,
+      "pnl": -1.1245
+    }
+  },
+  "by_exit_reason": {
+    "stop_or_trail": {
+      "trades": 131,
+      "wins": 15,
+      "win_rate": 0.1145,
+      "pnl": -27.5736
+    },
+    "take_profit": {
+      "trades": 140,
+      "wins": 140,
+      "win_rate": 1.0,
+      "pnl": 25.2694
+    },
+    "time_exit": {
+      "trades": 50,
+      "wins": 10,
+      "win_rate": 0.2,
+      "pnl": -4.2589
+    }
+  },
+  "risk_status": {
+    "pauses_triggered": 10,
+    "orders_rejected": 949,
+    "rejections_by_reason": {
+      "consecutive": 10,
+      "paused": 680,
+      "daily": 2,
+      "weekly": 257
+    },
+    "final_status": {
+      "is_paused": false,
+      "pause_reason": "",
+      "pause_until_step": 23300,
+      "daily_pnl": -0.09153508611820932,
+      "weekly_pnl": -0.39033930905372893,
+      "consecutive_losses": 2,
+      "open_positions_count": 0,
+      "total_margin_used": 0
+    }
+  }
+}

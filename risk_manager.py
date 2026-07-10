@@ -44,6 +44,7 @@ class RiskManager:
         self._pause_until_step: int = -1
         self._pauses_count: int = 0
         self._rejections_count: int = 0
+        self._rejections_by_reason: dict[str, int] = {}
         self._open_margins: dict[str, float] = {}
 
     # ------------------------------------------------------------------
@@ -88,9 +89,18 @@ class RiskManager:
         self._pause_until_step = -1
         self._pauses_count = 0
         self._rejections_count = 0
+        self._rejections_by_reason.clear()
         self._open_margins.clear()
 
-    def check_order(
+    def check_order(self, *args, **kwargs) -> RiskDecision:
+        """Evaluate an order and retain a compact rejection breakdown."""
+        decision = self._check_order(*args, **kwargs)
+        if not decision.allowed:
+            category = decision.reason.split(" ", 1)[0].split(":", 1)[0]
+            self._rejections_by_reason[category] = self._rejections_by_reason.get(category, 0) + 1
+        return decision
+
+    def _check_order(
         self,
         symbol: str,
         direction: int,
@@ -119,8 +129,13 @@ class RiskManager:
 
         # Clear expired pause
         if self._is_paused and current_step >= self._pause_until_step:
+            expired_reason = self._pause_reason
             self._is_paused = False
             self._pause_reason = ""
+            # A consecutive-loss cooldown must not immediately re-trigger
+            # forever on the first order after expiry.
+            if expired_reason == "consecutive_losses":
+                self._consecutive_losses = 0
 
         # 2. Single-position margin limit
         if equity > 0:
@@ -242,3 +257,6 @@ class RiskManager:
             open_positions_count=len(self._open_margins),
             total_margin_used=self._total_margin_used,
         )
+
+    def get_rejection_breakdown(self) -> dict[str, int]:
+        return dict(self._rejections_by_reason)

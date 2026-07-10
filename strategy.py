@@ -378,6 +378,49 @@ def attack_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None
     return None
 
 
+def volatility_breakout_signal_for(
+    symbol: str, bars: list[FeatureBar], idx: int, config=None
+) -> Signal | None:
+    """Breakout after a compressed range, independent of transition labels."""
+    if not getattr(config, "enable_volatility_breakout", False):
+        return None
+    lookback = int(getattr(config, "volatility_breakout_lookback_bars", 20))
+    if idx < max(260, lookback + 2):
+        return None
+    bar = bars[idx]
+    window = bars[idx - lookback:idx]
+    if not window or bar.close <= 0:
+        return None
+    range_pct = (max(item.high for item in window) - min(item.low for item in window)) / bar.close
+    avg_atr_pct = sum(max(item.atr_pct, 1e-8) for item in window) / len(window)
+    range_atr = range_pct / avg_atr_pct if avg_atr_pct > 0 else 999.0
+    if range_atr > getattr(config, "volatility_breakout_max_range_atr", 4.0):
+        return None
+    vol_ratio = bar.volume_quote / bar.vol_sma if bar.vol_sma > 0 else 1.0
+    if vol_ratio < getattr(config, "volatility_breakout_min_volume_ratio", 1.2):
+        return None
+    prior_high = max(item.high for item in window)
+    prior_low = min(item.low for item in window)
+    min_trend = getattr(config, "volatility_breakout_min_trend_strength", 0.4)
+    if (
+        bar.close > prior_high * 1.001
+        and bar.ema20 > bar.ema50
+        and bar.trend_strength >= min_trend
+        and 42 <= bar.rsi <= 72
+    ):
+        score = 3.0 + min(0.8, vol_ratio / 5.0) + min(0.5, bar.trend_strength / 4.0)
+        return Signal(symbol, 1, score, "transition", "volatility_breakout_long")
+    if (
+        bar.close < prior_low * 0.999
+        and bar.ema20 < bar.ema50
+        and bar.trend_strength <= -min_trend
+        and 28 <= bar.rsi <= 58
+    ):
+        score = 3.0 + min(0.8, vol_ratio / 5.0) + min(0.5, abs(bar.trend_strength) / 4.0)
+        return Signal(symbol, -1, score, "transition", "volatility_breakout_short")
+    return None
+
+
 def continuation_signal_for(symbol: str, bars: list[FeatureBar], idx: int, config=None) -> Signal | None:
     if not getattr(config, "enable_continuation_module", False):
         return None

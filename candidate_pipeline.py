@@ -148,8 +148,20 @@ def run_pipeline(
 
     # Split: first 70% train, last 30% test
     split_idx = int(len(labeled) * 0.7)
-    train_set = labeled[:split_idx]
     test_set = labeled[split_idx:]
+    test_start_ts = test_set[0].ts if test_set else None
+
+    # Do not let a training candidate borrow labels from the test period.
+    # The forward horizon must finish before the first test timestamp.
+    train_set = []
+    for candidate in labeled[:split_idx]:
+        bar_idx = index.get(candidate.symbol, {}).get(candidate.ts)
+        bars = market.get(candidate.symbol, [])
+        if bar_idx is None or test_start_ts is None:
+            continue
+        end_idx = bar_idx + horizon_bars
+        if end_idx < len(bars) and bars[end_idx].ts < test_start_ts:
+            train_set.append(candidate)
 
     print(f"  Train: {len(train_set)}, Test: {len(test_set)}")
 

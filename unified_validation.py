@@ -1,368 +1,315 @@
-"""Unified validation pipeline for all strategy candidates.
+"""Honest, comparable validation for independently implemented candidates.
 
-Runs comprehensive validation:
-1. 90/180/365 day backtests
-2. 12-month breakdown
-3. Different coin universes
-4. Fee/slippage stress test
-5. Exclude recent data test
-
-Usage:
-    python unified_validation.py --strategy all --out reports/unified_validation.json
+Every candidate supplies its own entry signal through ``candidate_strategies``.
+The shared :class:`backtester.Backtester` owns execution costs, sizing, exits and
+risk controls.  This separation prevents a candidate label from silently using
+the legacy dynamic router instead of its stated signal logic.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from backtester import Backtester, _common_timeline
+from candidate_strategies import (
+    LOCAL_CANDIDATE_PROVIDERS,
+    build_relative_strength_provider,
+)
 from config import BacktestConfig
-from market import FeatureBar, load_market, load_quantify_csv, add_features, resample_minutes, Bar
+from funding_proxy_strategy import build_funding_crowding_reversal_provider, load_proxy_funding
+from market import FeatureBar, load_market
 
 
-def ts_to_month(ts_ms: int) -> str:
-    return datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).strftime("%Y-%m")
+STRATEGIES = (
+    "relative_strength",
+    "multi_timeframe",
+    "volatility_compression",
+    "intraday_reversal",
+    "volume_price_divergence",
+    "volatility_regime",
+    "low_turnover_trend",
+    "post_shock_reversal",
+    "funding_crowding_reversal",
+)
 
 
-def get_4h_trend(bars_4h: list[Bar], lookback: int = 50) -> str:
-    if len(bars_4h) < lookback:
-        return "neutral"
-    features = add_features(bars_4h)
-    if not features:
-        return "neutral"
-    latest = features[-1]
-    if latest.ema20 > latest.ema50 and latest.trend_strength > 0.5:
-        return "up"
-    elif latest.ema20 < latest.ema50 and latest.trend_strength < -0.5:
-        return "down"
-    return "neutral"
-
-
-def resample_to_4h(bars_15m: list[FeatureBar]) -> list[Bar]:
-    if not bars_15m:
-        return []
-    bars = [
-        Bar(ts=b.ts, time=b.time, open=b.open, high=b.high, low=b.low, close=b.close, volume_quote=b.volume_quote)
-        for b in bars_15m
+def strategy_fingerprint(report: dict[str, Any]) -> str:
+    """Stable fingerprint for entry decisions, not aggregate performance."""
+    entries = [
+        {
+            "symbol": trade["symbol"],
+            "direction": trade["direction"],
+            "entry_time": trade["entry_time"],
+            "reason": trade["reason"],
+        }
+        for trade in report.get("trades_detail", [])
     ]
-    return resample_minutes(bars, 240)
+    payload = json.dumps(entries, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def candidate_config(strategy: str = "") -> BacktestConfig:
+    """Shared execution settings without legacy strategy routing."""
+    base = replace(
+        BacktestConfig(),
+        enable_dynamic_strategy_router=False,
+        enable_candidate_pool=False,
+        enable_ml_module=False,
+        enable_attack_module=False,
+        enable_continuation_module=False,
+        enable_micro_momentum_module=False,
+        enable_funding_module=False,
+        enable_open_interest_module=False,
+        enable_trade_flow_module=False,
+        enable_order_book_module=False,
+        enable_volatility_breakout=False,
+    )
+    if strategy == "low_turnover_trend":
+        return replace(
+            base,
+            risk_per_trade=0.025,
+            max_positions=1,
+            active_symbol_limit=2,
+            short_window_symbol_limit=2,
+            stop_atr=3.0,
+            take_profit_atr=6.0,
+            trailing_atr=3.0,
+            max_hold_bars=96 * 4,
+            cooldown_bars=96,
+            loss_cooldown_bars=96 * 2,
+            time_exit_loss_cooldown_bars=96 * 3,
+            edge_lookback_trades=5,
+            edge_pause_bars=96,
+            symbol_edge_lookback_trades=3,
+            symbol_edge_min_win_rate=0.34,
+            symbol_edge_pause_bars=96,
+            reason_edge_lookback_trades=5,
+            reason_edge_min_win_rate=0.34,
+            reason_edge_pause_bars=96,
+        )
+    if strategy == "post_shock_reversal":
+        return replace(
+            base,
+            risk_per_trade=0.02,
+            max_positions=1,
+            active_symbol_limit=2,
+            short_window_symbol_limit=2,
+            stop_atr=2.5,
+            take_profit_atr=4.0,
+            trailing_atr=2.5,
+            max_hold_bars=96 * 2,
+            cooldown_bars=96 * 2,
+            loss_cooldown_bars=96 * 3,
+            time_exit_loss_cooldown_bars=96 * 3,
+            edge_lookback_trades=5,
+            edge_pause_bars=96,
+            symbol_edge_lookback_trades=3,
+            symbol_edge_min_win_rate=0.34,
+            symbol_edge_pause_bars=96,
+            reason_edge_lookback_trades=5,
+            reason_edge_min_win_rate=0.34,
+            reason_edge_pause_bars=96,
+        )
+    if strategy == "funding_crowding_reversal":
+        return replace(
+            base,
+            risk_per_trade=0.02,
+            max_positions=1,
+            active_symbol_limit=2,
+            short_window_symbol_limit=2,
+            stop_atr=2.5,
+            take_profit_atr=3.5,
+            trailing_atr=2.0,
+            max_hold_bars=96,
+            cooldown_bars=96,
+            loss_cooldown_bars=96 * 2,
+            time_exit_loss_cooldown_bars=96 * 2,
+            edge_lookback_trades=5,
+            edge_pause_bars=96,
+            symbol_edge_lookback_trades=3,
+            symbol_edge_min_win_rate=0.34,
+            symbol_edge_pause_bars=96,
+            reason_edge_lookback_trades=5,
+            reason_edge_min_win_rate=0.34,
+            reason_edge_pause_bars=96,
+        )
+    return base
+
+
+def _slice_market(
+    market: dict[str, list[FeatureBar]],
+    days: int,
+    symbol_universe: list[str],
+) -> dict[str, list[FeatureBar]]:
+    timeline = _common_timeline(market, min_count_fraction=0.50)
+    if not timeline:
+        return {}
+    start_ts = timeline[-1] - days * 24 * 3600 * 1000
+    return {
+        symbol: [bar for bar in bars if start_ts <= bar.ts <= timeline[-1]]
+        for symbol, bars in market.items()
+        if symbol in symbol_universe
+    }
+
+
+def _provider_for(strategy: str, market: dict[str, list[FeatureBar]], data_dir: Path):
+    if strategy == "relative_strength":
+        return build_relative_strength_provider(market)
+    if strategy == "funding_crowding_reversal":
+        funding_by_symbol = {}
+        for symbol in market:
+            base = symbol.split("-")[0]
+            path = data_dir / "external" / f"{base}USDT_binance_funding.csv"
+            if path.exists():
+                funding_by_symbol[symbol] = load_proxy_funding(path)
+        return build_funding_crowding_reversal_provider(funding_by_symbol)
+    return LOCAL_CANDIDATE_PROVIDERS[strategy]
 
 
 def run_backtest(
     market: dict[str, list[FeatureBar]],
+    strategy: str,
     config: BacktestConfig,
     days: int,
-    symbol_universe: list[str] | None = None,
+    symbol_universe: list[str],
+    data_dir: Path,
 ) -> dict[str, Any]:
-    """Run backtest with given config and return results."""
-    timeline = _common_timeline(market, min_count_fraction=0.50)
-    if not timeline:
-        return {"error": "no timeline"}
-
-    end_ts = timeline[-1]
-    start_ts = end_ts - days * 24 * 3600 * 1000
-    sliced = {
-        symbol: [bar for bar in bars if start_ts <= bar.ts <= end_ts]
-        for symbol, bars in market.items()
-    }
-    sliced = {s: b for s, b in sliced.items() if b}
-
-    if symbol_universe:
-        sliced = {s: b for s, b in sliced.items() if s in symbol_universe}
-
+    sliced = _slice_market(market, days, symbol_universe)
+    sliced = {symbol: bars for symbol, bars in sliced.items() if bars}
     if not sliced:
         return {"error": "no symbols"}
-
-    tester = Backtester(config)
-    result = tester.run(sliced, days=days)
-    return result
-
-
-def make_relative_strength_config() -> BacktestConfig:
-    """Relative strength rotation config."""
-    return replace(
-        BacktestConfig(),
-        transition_long_enabled=True,
-        transition_short_enabled=False,
-        enable_attack_module=False,
-        enable_continuation_module=False,
-        enable_micro_momentum_module=False,
-        enable_funding_module=False,
-        enable_open_interest_module=False,
-        enable_trade_flow_module=False,
-        enable_order_book_module=False,
-        enable_dynamic_strategy_router=True,
-        router_allowed_reasons=("transition_breakout_long", "trend_long", "trend_short"),
-        router_blocked_reasons=(
-            "attack_breakout_long", "attack_breakout_short",
-            "range_revert_long", "range_revert_short",
-            "transition_breakout_short",
-        ),
-        router_reason_allowed_regimes={
-            "transition_breakout_long": ("transition",),
-            "trend_long": ("uptrend",),
-            "trend_short": ("downtrend",),
-        },
+    report = Backtester(config).run(
+        sliced,
+        days=days,
+        signal_provider=_provider_for(strategy, sliced, data_dir),
     )
+    if not report.get("available", False):
+        return report
+    report["strategy_id"] = strategy
+    report["implementation"] = _implementation_for(strategy)
+    report["signal_fingerprint"] = strategy_fingerprint(report)
+    return report
 
 
-def make_multi_timeframe_config(market: dict[str, list[FeatureBar]], universe: list[str]) -> BacktestConfig:
-    """Multi-timeframe config based on 4h trends."""
-    # Calculate 4h trends for the universe
-    trends = {}
-    for symbol, bars_15m in market.items():
-        if symbol not in universe:
-            continue
-        bars_4h = resample_to_4h(bars_15m)
-        if bars_4h:
-            trends[symbol] = get_4h_trend(bars_4h)
-
-    up_ratio = sum(1 for t in trends.values() if t == "up") / max(len(trends), 1)
-    down_ratio = sum(1 for t in trends.values() if t == "down") / max(len(trends), 1)
-
-    allowed_reasons = []
-    allowed_regimes = {}
-
-    if up_ratio > 0.5:
-        allowed_reasons.extend(["transition_breakout_long", "trend_long"])
-        allowed_regimes["transition_breakout_long"] = ("transition",)
-        allowed_regimes["trend_long"] = ("uptrend",)
-    elif down_ratio > 0.5:
-        allowed_reasons.extend(["trend_short"])
-        allowed_regimes["trend_short"] = ("downtrend",)
-    else:
-        allowed_reasons.extend(["transition_breakout_long", "trend_long", "trend_short"])
-        allowed_regimes["transition_breakout_long"] = ("transition",)
-        allowed_regimes["trend_long"] = ("uptrend",)
-        allowed_regimes["trend_short"] = ("downtrend",)
-
-    return replace(
-        BacktestConfig(),
-        enable_dynamic_strategy_router=True,
-        router_allowed_reasons=tuple(allowed_reasons),
-        router_blocked_reasons=tuple(
-            r for r in ("attack_breakout_long", "attack_breakout_short", "range_revert_long", "range_revert_short", "transition_breakout_short")
-            if r not in allowed_reasons
-        ),
-        router_reason_allowed_regimes=allowed_regimes,
-    )
+def _summary(report: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "trades": report.get("trades", 0),
+        "win_rate": report.get("win_rate", 0),
+        "pnl": report.get("pnl", 0),
+        "return_pct": report.get("return_pct", 0),
+        "max_drawdown_pct": report.get("max_drawdown_pct", 0),
+        "strategy_id": report.get("strategy_id"),
+        "implementation": report.get("implementation"),
+        "signal_fingerprint": report.get("signal_fingerprint"),
+        "by_reason": report.get("by_reason", {}),
+    }
 
 
-def make_volatility_compression_config() -> BacktestConfig:
-    """Volatility compression breakout config."""
-    return replace(
-        BacktestConfig(),
-        transition_long_enabled=True,
-        transition_short_enabled=False,
-        enable_attack_module=False,
-        enable_continuation_module=False,
-        enable_micro_momentum_module=False,
-        enable_funding_module=False,
-        enable_open_interest_module=False,
-        enable_trade_flow_module=False,
-        enable_order_book_module=False,
-        enable_dynamic_strategy_router=True,
-        router_allowed_reasons=("transition_breakout_long",),
-        router_blocked_reasons=(
-            "attack_breakout_long", "attack_breakout_short",
-            "range_revert_long", "range_revert_short",
-            "transition_breakout_short", "trend_long", "trend_short",
-        ),
-        router_reason_allowed_regimes={
-            "transition_breakout_long": ("transition",),
-        },
-    )
+def _implementation_for(strategy: str) -> str:
+    if strategy == "funding_crowding_reversal":
+        return "funding_proxy_strategy.funding_crowding_reversal"
+    return f"candidate_strategies.{strategy}"
 
 
-def make_intraday_reversal_config() -> BacktestConfig:
-    """Intraday reversal config."""
-    return replace(
-        BacktestConfig(),
-        transition_long_enabled=True,
-        transition_short_enabled=False,
-        enable_attack_module=False,
-        enable_continuation_module=False,
-        enable_micro_momentum_module=False,
-        enable_funding_module=False,
-        enable_open_interest_module=False,
-        enable_trade_flow_module=False,
-        enable_order_book_module=False,
-        enable_dynamic_strategy_router=True,
-        router_allowed_reasons=("transition_breakout_long", "trend_long", "trend_short"),
-        router_blocked_reasons=(
-            "attack_breakout_long", "attack_breakout_short",
-            "range_revert_long", "range_revert_short",
-            "transition_breakout_short",
-        ),
-        router_reason_allowed_regimes={
-            "transition_breakout_long": ("transition",),
-            "trend_long": ("uptrend",),
-            "trend_short": ("downtrend",),
-        },
-    )
-
-
-def make_volume_price_divergence_config() -> BacktestConfig:
-    """Volume-price divergence config."""
-    return make_intraday_reversal_config()  # Same signal routing
-
-
-def make_volatility_regime_config() -> BacktestConfig:
-    """Volatility regime switching config."""
-    return replace(
-        BacktestConfig(),
-        transition_long_enabled=True,
-        transition_short_enabled=False,
-        enable_attack_module=False,
-        enable_continuation_module=False,
-        enable_micro_momentum_module=False,
-        enable_funding_module=False,
-        enable_open_interest_module=False,
-        enable_trade_flow_module=False,
-        enable_order_book_module=False,
-        enable_dynamic_strategy_router=True,
-        router_allowed_reasons=("transition_breakout_long", "trend_long", "trend_short", "range_revert_long", "range_revert_short"),
-        router_blocked_reasons=(
-            "attack_breakout_long", "attack_breakout_short",
-            "transition_breakout_short",
-        ),
-        router_reason_allowed_regimes={
-            "transition_breakout_long": ("transition",),
-            "trend_long": ("uptrend",),
-            "trend_short": ("downtrend",),
-            "range_revert_long": ("range",),
-            "range_revert_short": ("range",),
-        },
-    )
-
-
-STRATEGY_CONFIGS = {
-    "relative_strength": make_relative_strength_config,
-    "multi_timeframe": None,  # Special handling needed
-    "volatility_compression": make_volatility_compression_config,
-    "intraday_reversal": make_intraday_reversal_config,
-    "volume_price_divergence": make_volume_price_divergence_config,
-    "volatility_regime": make_volatility_regime_config,
-}
+def _duplicate_fingerprints(results: dict[str, dict[str, dict[str, Any]]]) -> list[dict[str, str]]:
+    duplicates: list[dict[str, str]] = []
+    keys = {key for report in results.values() for key in report}
+    for key in sorted(keys):
+        owners: dict[str, str] = {}
+        for strategy, report in results.items():
+            fingerprint = report.get(key, {}).get("signal_fingerprint")
+            if not fingerprint or report.get(key, {}).get("trades", 0) == 0:
+                continue
+            previous = owners.get(fingerprint)
+            if previous is not None:
+                duplicates.append({"window": key, "first": previous, "duplicate": strategy})
+            else:
+                owners[fingerprint] = strategy
+    return duplicates
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Unified validation pipeline.")
+    parser = argparse.ArgumentParser(description="Validate actual candidate strategy implementations.")
     parser.add_argument("--data", type=Path, default=Path("data"))
     parser.add_argument("--out", type=Path, default=Path("reports/unified_validation.json"))
     parser.add_argument("--timeframe", type=int, default=15)
-    parser.add_argument("--strategy", default="all", choices=["all"] + list(STRATEGY_CONFIGS.keys()))
+    parser.add_argument("--strategy", default="all", choices=["all", *STRATEGIES])
+    parser.add_argument("--windows", default="90,180,365", help="Comma-separated windows, for example 90 or 90,180,365.")
+    parser.add_argument("--universes", default="majors,alts,all", help="Comma-separated universes.")
     args = parser.parse_args(argv)
 
-    print("Loading market data...", flush=True)
     market = load_market(args.data, args.timeframe)
     if not market:
         print("ERROR: No market data", flush=True)
         return 1
 
-    # Define universes
-    universes = {
-        "majors": ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP", "BNB-USDT-SWAP", "XRP-USDT-SWAP"],
-        "alts": [s for s in market.keys() if s not in ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP", "BNB-USDT-SWAP", "XRP-USDT-SWAP"]],
-        "all": list(market.keys()),
+    core = [symbol for symbol in ("BTC-USDT-SWAP", "ETH-USDT-SWAP") if symbol in market]
+    majors = [
+        symbol for symbol in ("BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP", "BNB-USDT-SWAP", "XRP-USDT-SWAP")
+        if symbol in market
+    ]
+    available_universes = {
+        "core": core,
+        "majors": majors,
+        "alts": [symbol for symbol in market if symbol not in majors],
+        "all": list(market),
     }
-
-    # Strategies to test
-    if args.strategy == "all":
-        strategies = list(STRATEGY_CONFIGS.keys())
-    else:
-        strategies = [args.strategy]
-
-    results = {}
+    requested_universes = tuple(item.strip() for item in args.universes.split(",") if item.strip())
+    invalid_universes = [item for item in requested_universes if item not in available_universes]
+    if invalid_universes:
+        parser.error(f"unknown universes: {', '.join(invalid_universes)}")
+    universes = {name: available_universes[name] for name in requested_universes}
+    try:
+        windows = tuple(int(item.strip()) for item in args.windows.split(",") if item.strip())
+    except ValueError:
+        parser.error("--windows must contain comma-separated integers")
+    if not windows or any(window <= 0 for window in windows):
+        parser.error("--windows must contain positive integers")
+    strategies = list(STRATEGIES) if args.strategy == "all" else [args.strategy]
+    results: dict[str, dict[str, dict[str, Any]]] = {}
 
     for strategy in strategies:
-        print(f"\n{'='*60}", flush=True)
-        print(f"STRATEGY: {strategy}", flush=True)
-        print(f"{'='*60}", flush=True)
-
-        strategy_results = {}
-
+        print(f"\nSTRATEGY: {strategy}", flush=True)
+        strategy_results: dict[str, dict[str, Any]] = {}
         for universe_name, universe_symbols in universes.items():
-            print(f"\n  Universe: {universe_name} ({len(universe_symbols)} symbols)", flush=True)
-
-            # Get config
-            if strategy == "multi_timeframe":
-                config = make_multi_timeframe_config(market, universe_symbols)
-            else:
-                config = STRATEGY_CONFIGS[strategy]()
-
-            # Test 90/180/365 days
-            for days in [90, 180, 365]:
-                result = run_backtest(market, config, days, universe_symbols)
-                if "error" in result:
-                    print(f"    {days}d: ERROR - {result['error']}", flush=True)
-                    continue
-
-                trades = result.get("trades", 0)
-                wr = result.get("win_rate", 0)
-                pnl = result.get("pnl", 0)
-                ret = result.get("return_pct", 0)
-                dd = result.get("max_drawdown_pct", 0)
-
-                icon = "+" if pnl > 0 else "-" if pnl < 0 else "="
-                print(f"    {days}d: [{icon}] trades={trades} wr={wr:.0%} pnl={pnl:+.2f} ret={ret:+.1f}% dd={dd:.1f}%", flush=True)
-
+            for days in windows:
+                report = run_backtest(market, strategy, candidate_config(strategy), days, universe_symbols, args.data)
                 key = f"{universe_name}_{days}d"
-                strategy_results[key] = {
-                    "trades": trades,
-                    "win_rate": wr,
-                    "pnl": pnl,
-                    "return_pct": ret,
-                    "max_drawdown_pct": dd,
-                }
-
-            # Fee/slippage stress test (365d with higher fees)
-            stress_config = replace(config, taker_fee=0.001, slippage=0.001)  # 0.1% fee + 0.1% slippage
-            result = run_backtest(market, stress_config, 365, universe_symbols)
-            if "error" not in result:
-                trades = result.get("trades", 0)
-                pnl = result.get("pnl", 0)
-                ret = result.get("return_pct", 0)
-                print(f"    365d (stress): trades={trades} pnl={pnl:+.2f} ret={ret:+.1f}%", flush=True)
-                strategy_results[f"{universe_name}_365d_stress"] = {
-                    "trades": trades,
-                    "pnl": pnl,
-                    "return_pct": ret,
-                }
-
+                strategy_results[key] = _summary(report)
+                print(
+                    f"  {key}: trades={report.get('trades', 0)} "
+                    f"pnl={report.get('pnl', 0):+.2f} ret={report.get('return_pct', 0):+.2f}%",
+                    flush=True,
+                )
+            if 365 in windows:
+                stress = replace(candidate_config(strategy), taker_fee=0.001, slippage=0.001)
+                report = run_backtest(market, strategy, stress, 365, universe_symbols, args.data)
+                strategy_results[f"{universe_name}_365d_stress"] = _summary(report)
         results[strategy] = strategy_results
 
-    # Save results
+    duplicates = _duplicate_fingerprints(results)
+    payload = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "validation_version": 2,
+        "candidate_execution": "actual_external_signal_provider",
+        "results": results,
+        "integrity": {
+            "passed": not duplicates,
+            "duplicate_trade_fingerprints": duplicates,
+        },
+    }
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(results, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
-    print(f"\nSaved to {args.out}", flush=True)
-
-    # Print summary table
-    print(f"\n{'='*60}", flush=True)
-    print(f"SUMMARY TABLE", flush=True)
-    print(f"{'='*60}", flush=True)
-    print(f"{'Strategy':<25} {'Universe':<8} {'90d':<10} {'180d':<10} {'365d':<10} {'Stress':<10}", flush=True)
-    print(f"{'-'*25} {'-'*8} {'-'*10} {'-'*10} {'-'*10} {'-'*10}", flush=True)
-
-    for strategy in strategies:
-        for universe_name in universes.keys():
-            r90 = results.get(strategy, {}).get(f"{universe_name}_90d", {})
-            r180 = results.get(strategy, {}).get(f"{universe_name}_180d", {})
-            r365 = results.get(strategy, {}).get(f"{universe_name}_365d", {})
-            stress = results.get(strategy, {}).get(f"{universe_name}_365d_stress", {})
-
-            p90 = r90.get("pnl", 0)
-            p180 = r180.get("pnl", 0)
-            p365 = r365.get("pnl", 0)
-            ps = stress.get("pnl", 0)
-
-            print(f"{strategy:<25} {universe_name:<8} {p90:>+8.2f} {p180:>+8.2f} {p365:>+8.2f} {ps:>+8.2f}", flush=True)
-
+    args.out.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Saved to {args.out}", flush=True)
+    if duplicates:
+        print("ERROR: duplicate candidate trade fingerprints detected", flush=True)
+        return 2
     return 0
 
 

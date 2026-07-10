@@ -18,7 +18,7 @@ from pathlib import Path
 
 from backtester import Backtester, _common_timeline
 from config import BacktestConfig
-from market import FeatureBar, load_market
+from market import FeatureBar, discover_symbols, load_market
 
 
 MS_PER_DAY = 24 * 60 * 60 * 1000
@@ -90,11 +90,34 @@ def make_trend_short_factor_config(base: BacktestConfig) -> BacktestConfig:
             "transition_breakout_short", "trend_long",
         ),
         router_trend_short_factor_gate_enabled=True,
-        reason_allowed_regimes={
+        router_reason_allowed_regimes={
             "transition_breakout_long": ("transition",),
             "trend_short": ("downtrend",),
         },
         reason_risk_multipliers={"trend_short": 0.35},
+    )
+
+
+def make_range_revert_config(base: BacktestConfig) -> BacktestConfig:
+    """Range-reversion family only, with all optional modules disabled."""
+    from dataclasses import replace
+    return replace(
+        base,
+        enable_target_window_profiles=False,
+        enable_attack_module=False,
+        enable_continuation_module=False,
+        enable_micro_momentum_module=False,
+        enable_funding_module=False,
+        enable_open_interest_module=False,
+        enable_trade_flow_module=False,
+        enable_order_book_module=False,
+        enable_dynamic_strategy_router=True,
+        router_allowed_reasons=("range_revert_long", "range_revert_short"),
+        router_blocked_reasons=(),
+        router_reason_allowed_regimes={
+            "range_revert_long": ("range",),
+            "range_revert_short": ("range",),
+        },
     )
 
 
@@ -208,13 +231,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Monthly breakdown analysis.")
     parser.add_argument("--data", type=Path, default=Path("data"))
     parser.add_argument("--out", type=Path, default=Path("reports/monthly_breakdown.json"))
-    parser.add_argument("--mode", default="conservative", choices=["conservative", "trend_short_factor"])
+    parser.add_argument("--mode", default="conservative", choices=["conservative", "trend_short_factor", "range_revert"])
     parser.add_argument("--days", type=int, default=365)
     parser.add_argument("--timeframe", type=int, default=15)
+    parser.add_argument("--symbols", type=int, default=0, help="Use the first N discovered symbols; 0 means all")
     args = parser.parse_args(argv)
 
     print(f"Loading market data...", flush=True)
-    market = load_market(args.data, args.timeframe)
+    selected_symbols = set(discover_symbols(args.data)[:args.symbols]) if args.symbols > 0 else None
+    market = load_market(args.data, args.timeframe, symbols=selected_symbols)
     if not market:
         print("ERROR: No market data", flush=True)
         return 1
@@ -223,9 +248,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.mode == "conservative":
         config = make_conservative_config(base_config)
         print(f"Mode: conservative (transition_breakout_long only)", flush=True)
-    else:
+    elif args.mode == "trend_short_factor":
         config = make_trend_short_factor_config(base_config)
         print(f"Mode: trend_short_factor", flush=True)
+    else:
+        config = make_range_revert_config(base_config)
+        print(f"Mode: range_revert", flush=True)
 
     print(f"Running {args.days}-day backtest with monthly breakdown...", flush=True)
     result = run_monthly_breakdown(market, config, args.days)

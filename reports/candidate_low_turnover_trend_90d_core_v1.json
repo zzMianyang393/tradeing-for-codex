@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-07-10T11:31:50.267791+00:00",
+  "validation_version": 2,
+  "candidate_execution": "actual_external_signal_provider",
+  "results": {
+    "low_turnover_trend": {
+      "core_90d": {
+        "trades": 27,
+        "win_rate": 0.3704,
+        "pnl": -1.0248,
+        "return_pct": -10.2484,
+        "max_drawdown_pct": 17.7679,
+        "strategy_id": "low_turnover_trend",
+        "implementation": "candidate_strategies.low_turnover_trend",
+        "signal_fingerprint": "387d303254751a2e8e83f5e07bcfd5d249be44dd39615f9c92c2c7b0815f2918",
+        "by_reason": {
+          "candidate_low_turnover_trend": {
+            "trades": 27,
+            "wins": 10,
+            "pnl": -0.986,
+            "win_rate": 0.37037037037037035
+          }
+        }
+      }
+    }
+  },
+  "integrity": {
+    "passed": true,
+    "duplicate_trade_fingerprints": []
+  }
+}

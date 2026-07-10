@@ -244,6 +244,11 @@ class BacktestConfig:
     attack_enabled_regimes: tuple[str, ...] = ("uptrend", "downtrend", "transition", "range")
     attack_breakout_enabled: bool = True
     attack_exhaustion_enabled: bool = True
+    enable_volatility_breakout: bool = False
+    volatility_breakout_lookback_bars: int = 20
+    volatility_breakout_min_volume_ratio: float = 1.2
+    volatility_breakout_max_range_atr: float = 4.0
+    volatility_breakout_min_trend_strength: float = 0.4
     # ML signal module
     enable_ml_module: bool = False
     ml_train_days: int = 180
@@ -268,9 +273,13 @@ class BacktestConfig:
     # --- Candidate Pool (3-layer funnel) ---
     enable_candidate_pool: bool = False
     cp_min_proximity: float = 0.25
+    cp_candidate_cache_path: str = ""     # optional precomputed candidate JSONL
     cp_ml_model_path: str = ""              # path to trained ML model JSON
+    cp_allow_pretrained_model: bool = False  # only permit explicitly OOS models
     cp_use_rules: bool = True
     cp_use_ml: bool = True
+    cp_ml_n_estimators: int = 32
+    cp_ml_max_training_samples: int = 5000
     cp_risk_per_trade: float = 0.10
     cp_stop_atr: float = 2.0
     cp_take_profit_atr: float = 1.2
@@ -278,6 +287,18 @@ class BacktestConfig:
     cp_max_hold_bars: int = 8
     cp_enabled_regimes: tuple[str, ...] = ("uptrend", "downtrend", "transition", "range")
     cp_enabled_patterns: tuple[str, ...] = ("breakout", "pullback", "reclaim", "volume_surge", "ema_turn", "range_revert")
+    cp_enabled_directions: tuple[int, ...] = (1, -1)
+    cp_dynamic_regime_routing: bool = False
+    cp_dynamic_regime_min_samples: int = 100
+    cp_dynamic_regime_min_label_rate: float = 0.52
+    cp_dynamic_regime_min_forward_pnl_pct: float = 0.001
+    cp_dynamic_regime_risk_scaling: bool = False
+    cp_dynamic_regime_risk_floor: float = 0.50
+    cp_dynamic_regime_reference_rate: float = 0.50
+    cp_quality_ranking: bool = False
+    cp_quality_min_samples: int = 50
+    cp_quality_forward_pnl_threshold: float = 0.001
+    cp_quality_bonus_scale: float = 1.0
     cp_min_score: float = 2.5               # min proximity_score to consider
     cp_retrain_interval_bars: int = 96 * 7  # retrain ML weekly
     # --- RiskManager configuration ---

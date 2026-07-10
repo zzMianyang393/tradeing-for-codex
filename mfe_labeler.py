@@ -4,11 +4,11 @@ For each candidate from the pool, simulate "what if we entered here" and compute
   - MFE (Max Favorable Excursion): best price move in our direction
   - MAE (Max Adverse Excursion): worst price move against us
   - forward_pnl_pct: PnL at a fixed horizon (e.g., 8 bars = 2 hours on 15m)
-  - label: 1 = profitable (MFE > threshold), 0 = not
+  - label: 1 = profitable under the configured exit path after costs, 0 = not
 
 Key insight:
-  - MFE不够 → 形态本身没价值，淘汰
-  - MFE够但最终亏 → 不是信号问题，是退出/止损问题
+  - MFE/MAE用于诊断
+  - label使用实际退出路径净PnL，避免把“曾经有利”误当成可交易收益
 """
 from __future__ import annotations
 
@@ -19,21 +19,84 @@ from candidate_pool import Candidate, save_candidates
 from market import FeatureBar
 
 
+def _simulate_net_exit(
+    candidate: Candidate,
+    bars: list[FeatureBar],
+    bar_idx: int,
+    horizon_bars: int,
+    stop_atr: float,
+    take_profit_atr: float,
+    trailing_atr: float,
+    max_hold_bars: int,
+    taker_fee: float,
+    slippage: float,
+) -> float:
+    """Simulate the same coarse exit path used by the backtester."""
+    entry = candidate.close * (1.0 + slippage * candidate.direction)
+    stop_dist = max(candidate.atr * stop_atr, entry * 0.0025)
+    take_dist = max(candidate.atr * take_profit_atr, entry * 0.0022)
+    stop = entry - candidate.direction * stop_dist
+    take_profit = entry + candidate.direction * take_dist
+    trail = stop
+    end_idx = min(bar_idx + horizon_bars, len(bars) - 1)
+    exit_price = bars[end_idx].close * (1.0 - slippage * candidate.direction)
+
+    for idx in range(bar_idx + 1, end_idx + 1):
+        bar = bars[idx]
+        trail_dist = max(bar.atr * trailing_atr, entry * 0.002)
+        if candidate.direction > 0:
+            trail = max(trail, bar.close - trail_dist)
+            stop_price = max(stop, trail)
+            if bar.low <= stop_price:
+                exit_price = stop_price * (1.0 - slippage)
+                break
+            if bar.high >= take_profit:
+                exit_price = take_profit * (1.0 - slippage)
+                break
+            if idx - bar_idx >= max_hold_bars and bar.close < bar.ema20:
+                exit_price = bar.close * (1.0 - slippage)
+                break
+        else:
+            trail = min(trail, bar.close + trail_dist)
+            stop_price = min(stop, trail)
+            if bar.high >= stop_price:
+                exit_price = stop_price * (1.0 + slippage)
+                break
+            if bar.low <= take_profit:
+                exit_price = take_profit * (1.0 + slippage)
+                break
+            if idx - bar_idx >= max_hold_bars and bar.close > bar.ema20:
+                exit_price = bar.close * (1.0 + slippage)
+                break
+
+    gross = candidate.direction * (exit_price - entry) / entry
+    return gross - 2.0 * taker_fee
+
+
 def label_candidates(
     candidates: list[Candidate],
     market: dict[str, list[FeatureBar]],
     index: dict[str, dict[int, int]],
     horizon_bars: int = 8,
     min_mfe_pct: float = 0.003,
+    label_cutoff_ts: int | None = None,
+    stop_atr: float = 2.0,
+    take_profit_atr: float = 1.2,
+    trailing_atr: float = 1.8,
+    max_hold_bars: int = 8,
+    taker_fee: float = 0.0005,
+    slippage: float = 0.0002,
+    min_net_pnl_pct: float = 0.0,
 ) -> list[Candidate]:
-    """Label candidates with forward MFE/MAE.
+    """Label candidates with forward MFE/MAE and executable net PnL.
 
     Args:
         candidates: unlabeled candidates from candidate_pool
         market: symbol → FeatureBar list
         index: symbol → {ts: idx} mapping
         horizon_bars: how many bars to look forward (default 8 = 2h on 15m)
-        min_mfe_pct: minimum MFE to label as "profitable" (default 0.3%)
+        min_mfe_pct: retained for diagnostic MFE reporting.
+        min_net_pnl_pct: net exit PnL threshold used for the ML label.
     """
     labeled: list[Candidate] = []
     for c in candidates:
@@ -56,6 +119,11 @@ def label_candidates(
         forward_pnl = 0.0
 
         end_idx = min(bar_idx + horizon_bars, len(bars) - 1)
+        # Walk-forward training must not label a candidate with candles that
+        # occur after the training cutoff.  Incomplete forward windows are
+        # skipped instead of being treated as negative examples.
+        if label_cutoff_ts is not None and bars[end_idx].ts > label_cutoff_ts:
+            continue
         for fwd_idx in range(bar_idx + 1, end_idx + 1):
             fwd_bar = bars[fwd_idx]
             if c.direction == 1:  # long
@@ -73,7 +141,11 @@ def label_candidates(
             mae = max(mae, adverse)
 
         # Label: profitable if MFE exceeds threshold
-        label = 1 if mfe >= min_mfe_pct else 0
+        net_pnl = _simulate_net_exit(
+            c, bars, bar_idx, horizon_bars, stop_atr, take_profit_atr,
+            trailing_atr, max_hold_bars, taker_fee, slippage,
+        )
+        label = 1 if net_pnl >= min_net_pnl_pct else 0
 
         # Create labeled copy
         labeled_c = Candidate(
@@ -111,6 +183,7 @@ def label_candidates(
             mfe_pct=round(mfe, 6),
             mae_pct=round(mae, 6),
             forward_pnl_pct=round(forward_pnl, 6),
+            net_pnl_pct=round(net_pnl, 6),
             label=label,
             label_horizon_bars=horizon_bars,
         )
@@ -126,9 +199,31 @@ def label_and_save(
     output_path: Path,
     horizon_bars: int = 8,
     min_mfe_pct: float = 0.003,
+    label_cutoff_ts: int | None = None,
+    stop_atr: float = 2.0,
+    take_profit_atr: float = 1.2,
+    trailing_atr: float = 1.8,
+    max_hold_bars: int = 8,
+    taker_fee: float = 0.0005,
+    slippage: float = 0.0002,
+    min_net_pnl_pct: float = 0.0,
 ) -> dict:
     """Label candidates, save to file, and return summary stats."""
-    labeled = label_candidates(candidates, market, index, horizon_bars, min_mfe_pct)
+    labeled = label_candidates(
+        candidates,
+        market,
+        index,
+        horizon_bars,
+        min_mfe_pct,
+        label_cutoff_ts=label_cutoff_ts,
+        stop_atr=stop_atr,
+        take_profit_atr=take_profit_atr,
+        trailing_atr=trailing_atr,
+        max_hold_bars=max_hold_bars,
+        taker_fee=taker_fee,
+        slippage=slippage,
+        min_net_pnl_pct=min_net_pnl_pct,
+    )
     save_candidates(labeled, output_path)
 
     total = len(labeled)
@@ -158,6 +253,7 @@ def label_and_save(
         "win_rate": round(profitable / total, 4) if total > 0 else 0.0,
         "horizon_bars": horizon_bars,
         "min_mfe_pct": min_mfe_pct,
+        "min_net_pnl_pct": min_net_pnl_pct,
         "by_pattern": by_pattern,
     }
     return summary
@@ -166,10 +262,10 @@ def label_and_save(
 def print_label_report(summary: dict) -> None:
     """Print a human-readable label report."""
     print(f"\n{'='*70}")
-    print(f"MFE/MAE Label Report (horizon={summary['horizon_bars']} bars, min_mfe={summary['min_mfe_pct']})")
+    print(f"Executable PnL Label Report (horizon={summary['horizon_bars']} bars, min_net_pnl={summary.get('min_net_pnl_pct', 0.0)})")
     print(f"{'='*70}")
     print(f"Total candidates: {summary['total_candidates']}")
-    print(f"Profitable (MFE >= {summary['min_mfe_pct']}): {summary['profitable']} ({summary['win_rate']:.1%})")
+    print(f"Profitable (net exit PnL >= {summary.get('min_net_pnl_pct', 0.0)}): {summary['profitable']} ({summary['win_rate']:.1%})")
     print(f"\n{'Pattern':<30} {'Total':>6} {'Profit':>7} {'Win%':>6} {'Avg MFE':>9} {'Avg MAE':>9}")
     print("-" * 70)
     for key in sorted(summary["by_pattern"]):

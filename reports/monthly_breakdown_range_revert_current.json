@@ -1,0 +1,302 @@
+{
+  "overall": {
+    "days": 365,
+    "start_equity": 10.0,
+    "end_equity": 13.6379,
+    "pnl": 3.6379,
+    "return_pct": 36.3787,
+    "max_drawdown_pct": 24.2688,
+    "trades": 113,
+    "win_rate": 0.646,
+    "by_reason": {
+      "range_revert_long": {
+        "trades": 71,
+        "wins": 46,
+        "pnl": 3.2425,
+        "win_rate": 0.647887323943662
+      },
+      "range_revert_short": {
+        "trades": 42,
+        "wins": 27,
+        "pnl": 0.8542,
+        "win_rate": 0.6428571428571429
+      }
+    }
+  },
+  "monthly": {
+    "2026-07": {
+      "trades": 21,
+      "pnl": 2.3695,
+      "win_rate": 0.6667,
+      "max_drawdown_pct": 5.9246,
+      "by_reason": {
+        "range_revert_short": {
+          "trades": 7,
+          "wins": 6,
+          "pnl": 2.0843,
+          "win_rate": 0.8571428571428571
+        },
+        "range_revert_long": {
+          "trades": 14,
+          "wins": 8,
+          "pnl": 0.43,
+          "win_rate": 0.5714285714285714
+        }
+      }
+    },
+    "2026-06": {
+      "trades": 19,
+      "pnl": -0.6313,
+      "win_rate": 0.6842,
+      "max_drawdown_pct": 19.9658,
+      "by_reason": {
+        "range_revert_long": {
+          "trades": 14,
+          "wins": 10,
+          "pnl": 0.3931,
+          "win_rate": 0.7142857142857143
+        },
+        "range_revert_short": {
+          "trades": 5,
+          "wins": 3,
+          "pnl": -0.9091,
+          "win_rate": 0.6
+        }
+      }
+    },
+    "2026-05": {
+      "trades": 20,
+      "pnl": -0.9638,
+      "win_rate": 0.6,
+      "max_drawdown_pct": 18.3037,
+      "by_reason": {
+        "range_revert_long": {
+          "trades": 12,
+          "wins": 9,
+          "pnl": 0.8275,
+          "win_rate": 0.75
+        },
+        "range_revert_short": {
+          "trades": 8,
+          "wins": 3,
+          "pnl": -1.6538,
+          "win_rate": 0.375
+        }
+      }
+    },
+    "2026-04": {
+      "trades": 9,
+      "pnl": 0.3077,
+      "win_rate": 0.7778,
+      "max_drawdown_pct": 10.5672,
+      "by_reason": {
+        "range_revert_long": {
+          "trades": 7,
+          "wins": 6,
+          "pnl": 0.8853,
+          "win_rate": 0.8571428571428571
+        },
+        "range_revert_short": {
+          "trades": 2,
+          "wins": 1,
+          "pnl": -0.5316,
+          "win_rate": 0.5
+        }
+      }
+    },
+    "2026-03": {
+      "trades": 10,
+      "pnl": -1.4627,
+      "win_rate": 0.5,
+      "max_drawdown_pct": 22.8911,
+      "by_reason": {
+        "range_revert_short": {
+          "trades": 3,
+          "wins": 1,
+          "pnl": -0.6544,
+          "win_rate": 0.3333333333333333
+        },
+        "range_revert_long": {
+          "trades": 7,
+          "wins": 4,
+          "pnl": -0.7685,
+          "win_rate": 0.5714285714285714
+        }
+      }
+    },
+    "2026-02": {
+      "trades": 20,
+      "pnl": -0.3738,
+      "win_rate": 0.65,
+      "max_drawdown_pct": 16.2162,
+      "by_reason": {
+        "range_revert_long": {
+          "trades": 12,
+          "wins": 6,
+          "pnl": -1.4969,
+          "win_rate": 0.5
+        },
+        "range_revert_short": {
+          "trades": 8,
+          "wins": 7,
+          "pnl": 1.213,
+          "win_rate": 0.875
+        }
+      }
+    },
+    "2026-01": {
+      "trades": 21,
+      "pnl": -2.5531,
+      "win_rate": 0.5238,
+      "max_drawdown_pct": 25.8243,
+      "by_reason": {
+        "range_revert_short": {
+          "trades": 9,
+          "wins": 4,
+          "pnl": -1.5501,
+          "win_rate": 0.4444444444444444
+        },
+        "range_revert_long": {
+          "trades": 12,
+          "wins": 7,
+          "pnl": -0.9287,
+          "win_rate": 0.5833333333333334
+        }
+      }
+    },
+    "2025-12": {
+      "trades": 10,
+      "pnl": -1.6734,
+      "win_rate": 0.5,
+      "max_drawdown_pct": 24.8056,
+      "by_reason": {
+        "range_revert_long": {
+          "trades": 6,
+          "wins": 3,
+          "pnl": -0.2515,
+          "win_rate": 0.5
+        },
+        "range_revert_short": {
+          "trades": 4,
+          "wins": 2,
+          "pnl": -1.3774,
+          "win_rate": 0.5
+        }
+      }
+    },
+    "2025-11": {
+      "trades": 11,
+      "pnl": -2.1523,
+      "win_rate": 0.4545,
+      "max_drawdown_pct": 25.2444,
+      "by_reason": {
+        "range_revert_short": {
+          "trades": 5,
+          "wins": 3,
+          "pnl": -1.3087,
+          "win_rate": 0.6
+        },
+        "range_revert_long": {
+          "trades": 6,
+          "wins": 2,
+          "pnl": -0.8082,
+          "win_rate": 0.3333333333333333
+        }
+      }
+    },
+    "2025-10": {
+      "trades": 11,
+      "pnl": -0.4476,
+      "win_rate": 0.6364,
+      "max_drawdown_pct": 18.4032,
+      "by_reason": {
+        "range_revert_long": {
+          "trades": 5,
+          "wins": 2,
+          "pnl": -0.7008,
+          "win_rate": 0.4
+        },
+        "range_revert_short": {
+          "trades": 6,
+          "wins": 5,
+          "pnl": 0.3103,
+          "win_rate": 0.8333333333333334
+        }
+      }
+    },
+    "2025-09": {
+      "trades": 17,
+      "pnl": -2.5262,
+      "win_rate": 0.5294,
+      "max_drawdown_pct": 33.9188,
+      "by_reason": {
+        "range_revert_long": {
+          "trades": 12,
+          "wins": 5,
+          "pnl": -2.8227,
+          "win_rate": 0.4166666666666667
+        },
+        "range_revert_short": {
+          "trades": 5,
+          "wins": 4,
+          "pnl": 0.3716,
+          "win_rate": 0.8
+        }
+      }
+    },
+    "2025-08": {
+      "trades": 14,
+      "pnl": 0.6191,
+      "win_rate": 0.7143,
+      "max_drawdown_pct": 9.6523,
+      "by_reason": {
+        "range_revert_long": {
+          "trades": 10,
+          "wins": 7,
+          "pnl": 0.51,
+          "win_rate": 0.7
+        },
+        "range_revert_short": {
+          "trades": 4,
+          "wins": 3,
+          "pnl": 0.1874,
+          "win_rate": 0.75
+        }
+      }
+    }
+  },
+  "summary": {
+    "total_months": 12,
+    "profitable_months": 3,
+    "losing_months": 9,
+    "profit_rate": 0.25,
+    "drag_months": [
+      [
+        "2026-01",
+        -2.5531
+      ],
+      [
+        "2025-09",
+        -2.5262
+      ],
+      [
+        "2025-11",
+        -2.1523
+      ]
+    ],
+    "best_months": [
+      [
+        "2026-07",
+        2.3695
+      ],
+      [
+        "2025-08",
+        0.6191
+      ],
+      [
+        "2026-04",
+        0.3077
+      ]
+    ]
+  }
+}

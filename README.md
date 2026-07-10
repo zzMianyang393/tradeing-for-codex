@@ -143,23 +143,11 @@ the latest dashboard payload at `/api/dashboard`.
 - `reports/consistency_search.json`: ranks candidate configs by rolling-window consistency.
 - Console summary: period PnL, win rate, drawdown, trade count, and symbol breakdown.
 
-## Consistency search
-
-Use this before accepting a high-return configuration:
-
-```bash
-python consistency_search.py --trials 12 --max-windows 12 --top 5 --out reports\consistency_search.json
-```
-
-This search scores repeated historical windows by profitability rate, median
-return, worst return, and drawdown. A high single-window return is not enough.
-The default search uses 12 rolling endpoints; reducing `--max-windows` is faster
-but can overfit to recent slices.
-
 ## Notes
 
 - The included `data` folder contains the downloaded local research dataset used by the latest reports.
 - The current default profile is a research profile, not a proven robust production profile.
+- No strategy in this repository is currently approved for simulated or live trading.
 - Long-term development should follow `docs/development_roadmap.md`: mature the project through data expansion, strategy portfolios, anti-overfit validation, risk management, simulated execution, and monitoring.
 - Allowed symbols: all loaded symbols; the program dynamically selects the top symbols each window.
 - Enabled regimes: `transition`, `range`, with a low-risk adaptive downtrend module.
@@ -168,42 +156,24 @@ but can overfit to recent slices.
 - The default profile disables the old 365 day aggressive profile and transition long entries.
 - Selector quality gates filter low-liquidity and high-noise symbols before ranking candidates.
 
-Latest default validation:
+## Candidate validation
 
-```text
-365d  equity=10.6521 pnl=0.6521 return= 6.521% win=76.60%
-180d  equity=15.2297 pnl=5.2297 return=52.297% win=84.21%
- 90d  equity=13.1013 pnl=3.1013 return=31.012% win=83.33%
- 60d  equity=11.7097 pnl=1.7097 return=17.097% win=76.92%
- 30d  equity=13.8567 pnl=3.8567 return=38.567% win=92.86%
- 14d  equity=11.6257 pnl=1.6257 return=16.257% win=83.33%
-  7d  equity=10.4073 pnl=0.4073 return= 4.073% win=66.67%
+Historical validation numbers in older reports are not current performance
+claims. Several earlier candidate scripts counted their own conditions but
+executed the legacy router, so their results are invalid as independent strategy
+evidence. Use the following validator instead; it runs each candidate's actual
+entry signal through the common cost, sizing, exit and risk engine and records a
+trade fingerprint for integrity checks.
+
+```bash
+python unified_validation.py --strategy intraday_reversal --windows 90 --universes majors --out reports\candidate_smoke.json
+python unified_validation.py --strategy all --out reports\unified_validation.json
 ```
 
-Overfit audit:
-
-```text
-window_specific_current: 365d passes, but 180d returns only 3.39%, so audit=CHECK
-same_conservative_all_windows: 365d returns -33.08%, so the 365d jump is not produced by the base profile
-same_aggressive_all_windows: 180d returns -40.02% and 60d returns 0.51%, so the aggressive profile is not generally stable
-```
-
-Rolling-window audit with the default non-window-specific profile:
-
-```text
-180d profitable windows: 12/12, median return  5.08%, worst return  0.77%
- 90d profitable windows: 11/12, median return 28.32%, worst return -0.13%
- 60d profitable windows: 12/12, median return 13.68%, worst return  2.48%
- 30d profitable windows: 11/12, median return  6.34%, worst return -5.17%
- 14d profitable windows:  9/12, median return  4.44%, worst return -5.40%
-  7d profitable windows: 10/12, median return  3.85%, worst return -3.33%
-```
-
-Conclusion: the current default is much less spectacular than the previous
-365-day fitted profile, but it is a cleaner research baseline because repeated
-windows across 7 to 180 days are mostly profitable. The next optimization target
-is reducing the remaining 7/14 day low-trade-count variance without reintroducing
-365-day special casing.
+The first command is the recommended smoke test. Run the full matrix only after
+the individual candidate result is understood. A result is research evidence,
+not a trading approval; it must remain positive across isolated periods,
+universes and stressed costs before any simulated-execution work resumes.
 
 Optional data-source modules can be validated independently before they are
 enabled in the default profile:

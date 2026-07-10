@@ -10,8 +10,10 @@ The downstream MFE/MAE labeler and ML filter decide which candidates are worth t
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Iterable
 
 from market import FeatureBar
 
@@ -59,6 +61,7 @@ class Candidate:
     mfe_pct: float = -1.0   # max favorable excursion % (forward)
     mae_pct: float = -1.0   # max adverse excursion % (forward)
     forward_pnl_pct: float = -999.0  # actual PnL at fixed horizon
+    net_pnl_pct: float = -999.0  # simulated net PnL using the configured exit model
     label: int = -1         # 1=profitable, 0=not, -1=unlabeled
     label_horizon_bars: int = 0
 
@@ -397,6 +400,32 @@ def save_candidates(candidates: list[Candidate], path: Path) -> None:
             fh.write(json.dumps(asdict(c), ensure_ascii=False) + "\n")
 
 
+def save_candidates_indexed(
+    candidates: Iterable[Candidate],
+    path: Path,
+    index_path: Path | None = None,
+) -> None:
+    """Save JSONL candidates and a compact tab-separated offset index."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    index_path = index_path or path.with_suffix(path.suffix + ".idx")
+    offsets: dict[tuple[str, int], list[int]] = {}
+    with path.open("wb") as fh:
+        for candidate in candidates:
+            offset = fh.tell()
+            fh.write((json.dumps(asdict(candidate), ensure_ascii=False) + "\n").encode("utf-8"))
+            key = (candidate.symbol, candidate.ts)
+            offsets.setdefault(key, []).append(offset)
+    with index_path.open("w", encoding="utf-8") as fh:
+        for (symbol, ts), positions in offsets.items():
+            fh.write(f"{symbol}\t{ts}\t{','.join(str(pos) for pos in positions)}\n")
+
+
+def _candidate_from_dict(d: dict) -> Candidate:
+    # Handle the open_ field name (open is a Python builtin).
+    d["open_"] = d.get("open_", d.get("open", 0.0))
+    return Candidate(**{k: v for k, v in d.items() if k != "open"})
+
+
 def load_candidates(path: Path) -> list[Candidate]:
     """Load candidates from JSON Lines file."""
     candidates: list[Candidate] = []
@@ -405,8 +434,54 @@ def load_candidates(path: Path) -> list[Candidate]:
             line = line.strip()
             if not line:
                 continue
-            d = json.loads(line)
-            # Handle the open_ field name (open is a Python builtin)
-            d["open_"] = d.get("open_", d.get("open", 0.0))
-            candidates.append(Candidate(**{k: v for k, v in d.items() if k != "open"}))
+            candidates.append(_candidate_from_dict(json.loads(line)))
     return candidates
+
+
+class CandidateEventStore:
+    """Memory-light random access to a JSONL candidate event file."""
+
+    def __init__(self, path: Path):
+        self.path = path
+        self._file = path.open("rb")
+        self._offsets: dict[tuple[str, int], list[int]] = {}
+        index_path = path.with_suffix(path.suffix + ".idx")
+        if index_path.exists():
+            with index_path.open("r", encoding="utf-8") as fh:
+                for line in fh:
+                    symbol, ts, positions = line.rstrip("\n").split("\t")
+                    self._offsets[(symbol, int(ts))] = [
+                        int(position) for position in positions.split(",") if position
+                    ]
+        else:
+            key_pattern = re.compile(rb'"symbol"\s*:\s*"([^"]+)".*?"ts"\s*:\s*(-?\d+)')
+            with path.open("rb") as fh:
+                while True:
+                    offset = fh.tell()
+                    raw = fh.readline()
+                    if not raw:
+                        break
+                    match = key_pattern.search(raw)
+                    if match is None:
+                        continue
+                    key = (match.group(1).decode("utf-8"), int(match.group(2)))
+                    self._offsets.setdefault(key, []).append(offset)
+
+    def get(self, symbol: str, ts: int) -> list[Candidate]:
+        result: list[Candidate] = []
+        for offset in self._offsets.get((symbol, ts), []):
+            self._file.seek(offset)
+            raw = self._file.readline()
+            if raw:
+                result.append(_candidate_from_dict(json.loads(raw)))
+        return result
+
+    def iter_candidates(self):
+        """Stream all candidates without materializing the file in memory."""
+        self._file.seek(0)
+        for raw in self._file:
+            if raw.strip():
+                yield _candidate_from_dict(json.loads(raw))
+
+    def close(self) -> None:
+        self._file.close()

@@ -349,6 +349,19 @@ class TestPauseExpiry(unittest.TestCase):
         d = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 5, _bars(), 0)
         self.assertTrue(d.allowed)
 
+    def test_consecutive_loss_pause_resets_counter_on_expiry(self):
+        rm = RiskManager(_cfg(
+            rm_max_single_position_pct=1.0,
+            rm_consecutive_loss_pause=2,
+            rm_consecutive_loss_pause_bars=10,
+        ))
+        rm._consecutive_losses = 2
+        first = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 0, _bars(), 0)
+        self.assertFalse(first.allowed)
+        resumed = rm.check_order("BTC-USDT-SWAP", 1, 10.0, 1.0, 10.0, 10, _bars(), 0)
+        self.assertTrue(resumed.allowed)
+        self.assertEqual(rm._consecutive_losses, 0)
+
 
 class TestRmDisabled(unittest.TestCase):
     def test_all_checks_skipped(self):

@@ -1,0 +1,22 @@
+{
+  "source": "binance_coin_m_daily_metrics_archive",
+  "execution_compatibility": "research_proxy_only_not_okx_execution",
+  "symbol": "ETHUSD_PERP",
+  "requested_start": "2024-07-10",
+  "requested_end": "2026-07-10",
+  "rows": 730,
+  "downloaded_this_run": 0,
+  "missing_archives_this_run": 1,
+  "fieldnames": [
+    "archive_date",
+    "count_long_short_ratio",
+    "count_toptrader_long_short_ratio",
+    "create_time",
+    "source",
+    "sum_open_interest",
+    "sum_open_interest_value",
+    "sum_taker_long_short_vol_ratio",
+    "sum_toptrader_long_short_ratio",
+    "symbol"
+  ]
+}

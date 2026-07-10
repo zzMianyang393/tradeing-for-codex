@@ -1,0 +1,229 @@
+{
+  "generated_at": "2026-07-10T09:21:35.652989+00:00",
+  "validation_version": 2,
+  "candidate_execution": "actual_external_signal_provider",
+  "results": {
+    "intraday_reversal": {
+      "majors_90d": {
+        "trades": 1,
+        "win_rate": 0.0,
+        "pnl": -0.4742,
+        "return_pct": -4.7417,
+        "max_drawdown_pct": 4.7417,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "a8d3172bd33b84df03a09efa0958e1e178124f9a5acae65d05bfbc6bba40021f",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 1,
+            "wins": 0,
+            "pnl": -0.4708,
+            "win_rate": 0.0
+          }
+        }
+      },
+      "majors_180d": {
+        "trades": 1,
+        "win_rate": 0.0,
+        "pnl": -0.4742,
+        "return_pct": -4.7417,
+        "max_drawdown_pct": 4.7417,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "a8d3172bd33b84df03a09efa0958e1e178124f9a5acae65d05bfbc6bba40021f",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 1,
+            "wins": 0,
+            "pnl": -0.4708,
+            "win_rate": 0.0
+          }
+        }
+      },
+      "majors_365d": {
+        "trades": 4,
+        "win_rate": 0.5,
+        "pnl": 0.6704,
+        "return_pct": 6.7038,
+        "max_drawdown_pct": 8.0867,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "974921dd7938090e5c54161461e24a9084aa6c2ab7ac392fee217914bf9f44f6",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 4,
+            "wins": 2,
+            "pnl": 0.6842,
+            "win_rate": 0.5
+          }
+        }
+      },
+      "majors_365d_stress": {
+        "trades": 4,
+        "win_rate": 0.25,
+        "pnl": -1.8516,
+        "return_pct": -18.5158,
+        "max_drawdown_pct": 24.8165,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "974921dd7938090e5c54161461e24a9084aa6c2ab7ac392fee217914bf9f44f6",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 4,
+            "wins": 1,
+            "pnl": -1.5936,
+            "win_rate": 0.25
+          }
+        }
+      },
+      "alts_90d": {
+        "trades": 3,
+        "win_rate": 0.3333,
+        "pnl": -0.8178,
+        "return_pct": -8.1776,
+        "max_drawdown_pct": 15.4962,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "424a79e73304656b1d65ee4c4143262a5cf5f1f1ae1ecc4c365750c85b92da40",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 3,
+            "wins": 1,
+            "pnl": -0.8095,
+            "win_rate": 0.3333333333333333
+          }
+        }
+      },
+      "alts_180d": {
+        "trades": 7,
+        "win_rate": 0.5714,
+        "pnl": 0.3681,
+        "return_pct": 3.6809,
+        "max_drawdown_pct": 15.4962,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "cb5653dae72f7f1a681570129bc29d763924b832b9ddfb8aff879c3a505839ca",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 7,
+            "wins": 4,
+            "pnl": 0.3884,
+            "win_rate": 0.5714285714285714
+          }
+        }
+      },
+      "alts_365d": {
+        "trades": 9,
+        "win_rate": 0.4444,
+        "pnl": -1.1815,
+        "return_pct": -11.8147,
+        "max_drawdown_pct": 22.6387,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "231eef5984dd42690a9c03d213033e31696f2486735382083ed7a43a5b52d1ab",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 9,
+            "wins": 4,
+            "pnl": -1.1606,
+            "win_rate": 0.4444444444444444
+          }
+        }
+      },
+      "alts_365d_stress": {
+        "trades": 9,
+        "win_rate": 0.4444,
+        "pnl": -2.3555,
+        "return_pct": -23.5551,
+        "max_drawdown_pct": 30.2615,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "231eef5984dd42690a9c03d213033e31696f2486735382083ed7a43a5b52d1ab",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 9,
+            "wins": 4,
+            "pnl": -1.9748,
+            "win_rate": 0.4444444444444444
+          }
+        }
+      },
+      "all_90d": {
+        "trades": 4,
+        "win_rate": 0.25,
+        "pnl": -1.5129,
+        "return_pct": -15.1291,
+        "max_drawdown_pct": 19.4949,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "261b7abb4e53b7d0cb7f6686b6bf7b9b05c90c70e97d604b986dfb629f14da36",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 4,
+            "wins": 1,
+            "pnl": -1.5028,
+            "win_rate": 0.25
+          }
+        }
+      },
+      "all_180d": {
+        "trades": 7,
+        "win_rate": 0.4286,
+        "pnl": -1.3126,
+        "return_pct": -13.1255,
+        "max_drawdown_pct": 19.8253,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "9c1e0964dc7c8d9042bde63fc331a761bdbe398841a4490c5ba3c640d21ff114",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 7,
+            "wins": 3,
+            "pnl": -1.2947,
+            "win_rate": 0.42857142857142855
+          }
+        }
+      },
+      "all_365d": {
+        "trades": 9,
+        "win_rate": 0.3333,
+        "pnl": -1.9606,
+        "return_pct": -19.6056,
+        "max_drawdown_pct": 31.9462,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "9161125fdf958ed63f1d3e9bd8def2528654122c873bb6fad20d19a07ef674b8",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 9,
+            "wins": 3,
+            "pnl": -1.937,
+            "win_rate": 0.3333333333333333
+          }
+        }
+      },
+      "all_365d_stress": {
+        "trades": 9,
+        "win_rate": 0.3333,
+        "pnl": -2.864,
+        "return_pct": -28.64,
+        "max_drawdown_pct": 36.6645,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "9161125fdf958ed63f1d3e9bd8def2528654122c873bb6fad20d19a07ef674b8",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 9,
+            "wins": 3,
+            "pnl": -2.455,
+            "win_rate": 0.3333333333333333
+          }
+        }
+      }
+    }
+  },
+  "integrity": {
+    "passed": true,
+    "duplicate_trade_fingerprints": []
+  }
+}

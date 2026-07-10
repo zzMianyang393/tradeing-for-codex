@@ -34,10 +34,17 @@ class FundingFeatureBar(FeatureBar):
     funding_rate_ma: float = 0.0
 
 
-def fetch_funding_page(symbol: str, before: int | None = None, limit: int = 100) -> list[dict[str, Any]]:
+def fetch_funding_page(
+    symbol: str,
+    before: int | None = None,
+    after: int | None = None,
+    limit: int = 100,
+) -> list[dict[str, Any]]:
     params = {"instId": symbol, "limit": str(limit)}
     if before is not None:
         params["before"] = str(before)
+    if after is not None:
+        params["after"] = str(after)
     url = f"{OKX_FUNDING_HISTORY_URL}?{urllib.parse.urlencode(params)}"
     request = urllib.request.Request(url, headers={"User-Agent": "tradering-research/1.0"})
     with urllib.request.urlopen(request, timeout=20) as response:
@@ -111,12 +118,12 @@ def download_funding_rates(
     path = funding_output_path(symbol, out_dir)
     rows = {rate.ts: rate for rate in load_funding_rates(path)}
     target_rows = max(1, days * FUNDING_ROWS_PER_DAY)
-    before = max(rows) if rows else None
+    after = min(rows) if rows else None
 
     while len(rows) < target_rows:
         page = _fetch_funding_page_with_retry(
             symbol,
-            before=before,
+            after=after,
             limit=limit,
             retries=retries,
             retry_sleep_seconds=retry_sleep_seconds,
@@ -129,11 +136,9 @@ def download_funding_rates(
         for rate in parsed:
             rows[rate.ts] = rate
         oldest = min(rate.ts for rate in parsed)
-        if before is not None and oldest >= before:
+        if after is not None and oldest >= after:
             break
-        before = oldest
-        if len(page) < limit:
-            break
+        after = oldest
         if sleep_seconds > 0 and len(rows) < target_rows:
             time.sleep(sleep_seconds)
 
@@ -144,15 +149,16 @@ def download_funding_rates(
 
 def _fetch_funding_page_with_retry(
     symbol: str,
-    before: int | None,
-    limit: int,
-    retries: int,
-    retry_sleep_seconds: float,
+    before: int | None = None,
+    after: int | None = None,
+    limit: int = 100,
+    retries: int = 4,
+    retry_sleep_seconds: float = 1.0,
 ) -> list[dict[str, Any]]:
     last_error: Exception | None = None
     for attempt in range(retries + 1):
         try:
-            return fetch_funding_page(symbol, before=before, limit=limit)
+            return fetch_funding_page(symbol, before=before, after=after, limit=limit)
         except Exception as exc:
             last_error = exc
             if attempt >= retries:
@@ -208,6 +214,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=100)
     args = parser.parse_args(argv)
 
+    incomplete = False
+    target_rows = max(1, args.days * FUNDING_ROWS_PER_DAY)
     for symbol in args.symbols:
         count = download_funding_rates(
             symbol,
@@ -219,7 +227,13 @@ def main(argv: list[str] | None = None) -> int:
             limit=args.limit,
         )
         print(f"{symbol}: wrote {count} funding rows to {funding_output_path(symbol, args.out)}", flush=True)
-    return 0
+        if count < target_rows:
+            print(
+                f"{symbol}: ERROR incomplete history ({count}/{target_rows} rows)",
+                flush=True,
+            )
+            incomplete = True
+    return 1 if incomplete else 0
 
 
 if __name__ == "__main__":

@@ -10,7 +10,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from market import FeatureBar
-from candidate_pool import scan_candidates, Candidate, save_candidates, load_candidates
+from candidate_pool import (
+    scan_candidates,
+    Candidate,
+    CandidateEventStore,
+    save_candidates,
+    load_candidates,
+)
 from mfe_labeler import label_candidates
 from candidate_filter import (
     CandidateFilter, RuleFilterConfig, MLFilterConfig,
@@ -151,10 +157,57 @@ def test_mfe_labeling():
     for c in labeled:
         assert c.mfe_pct >= 0, f"MFE should be >= 0, got {c.mfe_pct}"
         assert c.mae_pct >= 0, f"MAE should be >= 0, got {c.mae_pct}"
+        assert c.net_pnl_pct > -1.0, f"Net exit PnL should be finite, got {c.net_pnl_pct}"
         assert c.label in (0, 1), f"Label should be 0 or 1, got {c.label}"
         assert c.label_horizon_bars == 8
 
     print(f"  ✓ mfe_labeling ({len(labeled)} candidates labeled)")
+
+
+def test_net_exit_label_uses_executable_path():
+    """The label follows the configured exit path, not MFE alone."""
+    bars = [_make_bar(ts=i, close=100.0, ema20=100.0) for i in range(5)]
+    bars[1] = _make_bar(ts=1, close=100.0, high=100.2, low=99.8, atr=1.0, atr_pct=0.01)
+    bars[2] = _make_bar(ts=2, close=101.5, high=102.0, low=100.5, ema20=100.0, atr=1.0, atr_pct=0.01)
+    candidate = Candidate(
+        symbol="BTC-USDT-SWAP", ts=1, time="t", direction=1, regime="transition",
+        pattern_type="breakout", proximity_score=0.5, close=100.0, open_=99.8,
+        high=100.2, low=99.8, ema20=100.0, ema50=99.0, ema200=98.0, atr=1.0,
+        atr_pct=0.01, rsi=55.0, bb_upper=103.0, bb_lower=96.0, bb_mid=99.5,
+        donchian_high=101.0, donchian_low=97.0, trend_strength=1.0,
+        vol_ratio=1.2, candle_body_pct=0.01, candle_range_pct=0.02, move_1d=0.01,
+    )
+    market = {candidate.symbol: bars}
+    index = {candidate.symbol: {bar.ts: i for i, bar in enumerate(bars)}}
+    labeled = label_candidates(
+        [candidate], market, index, horizon_bars=2,
+        stop_atr=1.0, take_profit_atr=1.0, trailing_atr=1.0,
+        max_hold_bars=2, taker_fee=0.0, slippage=0.0,
+    )
+    assert len(labeled) == 1
+    assert labeled[0].net_pnl_pct > 0
+    assert labeled[0].label == 1
+
+
+def test_mfe_labeling_respects_cutoff():
+    """Candidates whose forward window crosses the cutoff are not labeled."""
+    bars = [_make_bar(ts=i, close=100.0 + i * 0.1) for i in range(12)]
+    cands = [Candidate(
+        symbol="BTC-USDT-SWAP", ts=5, time="t", direction=1, regime="uptrend",
+        pattern_type="breakout", proximity_score=0.5, close=100.5, open_=100.0,
+        high=101.0, low=99.5, ema20=100.0, ema50=99.0, ema200=98.0,
+        atr=1.5, atr_pct=0.015, rsi=55.0, bb_upper=103.0, bb_lower=96.0,
+        bb_mid=99.5, donchian_high=101.0, donchian_low=97.0,
+        trend_strength=1.0, vol_ratio=1.2, candle_body_pct=0.01,
+        candle_range_pct=0.03, move_1d=0.005,
+    )]
+    market = {"BTC-USDT-SWAP": bars}
+    index = {"BTC-USDT-SWAP": {bar.ts: i for i, bar in enumerate(bars)}}
+    labeled = label_candidates(
+        cands, market, index, horizon_bars=4, label_cutoff_ts=8,
+    )
+    assert labeled == [], "Incomplete forward windows must not enter training"
+    print("  ✓ mfe_labeling_respects_cutoff")
 
 
 def test_save_load_candidates():
@@ -181,6 +234,33 @@ def test_save_load_candidates():
     assert loaded[0].label == c.label
     path.unlink()
     print("  ✓ save_load_candidates")
+
+
+def test_candidate_event_store():
+    """Event store should retrieve only candidates for the requested timestamp."""
+    import tempfile
+    candidates = []
+    for ts in (1000, 1001):
+        candidates.append(Candidate(
+            symbol="BTC", ts=ts, time="t", direction=1, regime="transition",
+            pattern_type="breakout", proximity_score=0.5, close=100.0,
+            open_=99.0, high=101.0, low=98.0, ema20=99.5, ema50=99.0,
+            ema200=98.0, atr=1.5, atr_pct=0.015, rsi=55.0, bb_upper=103.0,
+            bb_lower=96.0, bb_mid=99.5, donchian_high=101.0, donchian_low=97.0,
+            trend_strength=1.0, vol_ratio=1.2, candle_body_pct=0.01,
+            candle_range_pct=0.03, move_1d=0.005,
+        ))
+    with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+        path = Path(f.name)
+    save_candidates(candidates, path)
+    store = CandidateEventStore(path)
+    try:
+        assert [c.ts for c in store.get("BTC", 1001)] == [1001]
+        assert store.get("BTC", 9999) == []
+    finally:
+        store.close()
+        path.unlink()
+    print("  ✓ candidate_event_store")
 
 
 def test_rule_filter():

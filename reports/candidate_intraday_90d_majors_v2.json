@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-07-10T10:41:10.235904+00:00",
+  "validation_version": 2,
+  "candidate_execution": "actual_external_signal_provider",
+  "results": {
+    "intraday_reversal": {
+      "majors_90d": {
+        "trades": 1,
+        "win_rate": 0.0,
+        "pnl": -0.4742,
+        "return_pct": -4.7417,
+        "max_drawdown_pct": 4.7417,
+        "strategy_id": "intraday_reversal",
+        "implementation": "candidate_strategies.intraday_reversal",
+        "signal_fingerprint": "a8d3172bd33b84df03a09efa0958e1e178124f9a5acae65d05bfbc6bba40021f",
+        "by_reason": {
+          "candidate_intraday_reversal": {
+            "trades": 1,
+            "wins": 0,
+            "pnl": -0.4708,
+            "win_rate": 0.0
+          }
+        }
+      }
+    }
+  },
+  "integrity": {
+    "passed": true,
+    "duplicate_trade_fingerprints": []
+  }
+}

@@ -1,0 +1,212 @@
+{
+  "source": "reports\\cp_unbiased_365d_5symbols_short_only.json",
+  "summary": {
+    "start_equity": 10.0,
+    "end_equity": 11.521,
+    "return_pct": 15.2098,
+    "max_drawdown_pct": 15.1499,
+    "trades": 470
+  },
+  "by_month": {
+    "2025-08": {
+      "trades": 46,
+      "wins": 19,
+      "win_rate": 0.413,
+      "pnl": -1.2147
+    },
+    "2025-09": {
+      "trades": 63,
+      "wins": 37,
+      "win_rate": 0.5873,
+      "pnl": 0.0746
+    },
+    "2025-10": {
+      "trades": 42,
+      "wins": 29,
+      "win_rate": 0.6905,
+      "pnl": 1.0326
+    },
+    "2025-11": {
+      "trades": 43,
+      "wins": 30,
+      "win_rate": 0.6977,
+      "pnl": 1.2853
+    },
+    "2025-12": {
+      "trades": 45,
+      "wins": 21,
+      "win_rate": 0.4667,
+      "pnl": -0.1837
+    },
+    "2026-01": {
+      "trades": 41,
+      "wins": 20,
+      "win_rate": 0.4878,
+      "pnl": -0.4698
+    },
+    "2026-02": {
+      "trades": 20,
+      "wins": 9,
+      "win_rate": 0.45,
+      "pnl": -0.1433
+    },
+    "2026-03": {
+      "trades": 47,
+      "wins": 26,
+      "win_rate": 0.5532,
+      "pnl": 0.1874
+    },
+    "2026-04": {
+      "trades": 41,
+      "wins": 24,
+      "win_rate": 0.5854,
+      "pnl": 0.4693
+    },
+    "2026-05": {
+      "trades": 48,
+      "wins": 26,
+      "win_rate": 0.5417,
+      "pnl": -0.1772
+    },
+    "2026-06": {
+      "trades": 33,
+      "wins": 22,
+      "win_rate": 0.6667,
+      "pnl": 0.952
+    },
+    "2026-07": {
+      "trades": 1,
+      "wins": 1,
+      "win_rate": 1.0,
+      "pnl": 0.0047
+    }
+  },
+  "by_reason": {
+    "cp_breakout_short": {
+      "trades": 52,
+      "wins": 30,
+      "win_rate": 0.5769,
+      "pnl": -0.0429
+    },
+    "cp_ema_turn_short": {
+      "trades": 78,
+      "wins": 39,
+      "win_rate": 0.5,
+      "pnl": -0.1106
+    },
+    "cp_pullback_short": {
+      "trades": 170,
+      "wins": 97,
+      "win_rate": 0.5706,
+      "pnl": 1.6085
+    },
+    "cp_range_revert_short": {
+      "trades": 65,
+      "wins": 39,
+      "win_rate": 0.6,
+      "pnl": 0.2997
+    },
+    "cp_reclaim_short": {
+      "trades": 20,
+      "wins": 10,
+      "win_rate": 0.5,
+      "pnl": 0.262
+    },
+    "cp_volume_surge_short": {
+      "trades": 85,
+      "wins": 49,
+      "win_rate": 0.5765,
+      "pnl": -0.1995
+    }
+  },
+  "by_symbol": {
+    "AAVE-USDT-SWAP": {
+      "trades": 198,
+      "wins": 115,
+      "win_rate": 0.5808,
+      "pnl": 1.239
+    },
+    "ADA-USDT-SWAP": {
+      "trades": 200,
+      "wins": 108,
+      "win_rate": 0.54,
+      "pnl": 0.3147
+    },
+    "APT-USDT-SWAP": {
+      "trades": 50,
+      "wins": 31,
+      "win_rate": 0.62,
+      "pnl": 0.5305
+    },
+    "ARB-USDT-SWAP": {
+      "trades": 22,
+      "wins": 10,
+      "win_rate": 0.4545,
+      "pnl": -0.267
+    }
+  },
+  "by_regime": {
+    "downtrend": {
+      "trades": 259,
+      "wins": 140,
+      "win_rate": 0.5405,
+      "pnl": 0.6669
+    },
+    "range": {
+      "trades": 65,
+      "wins": 39,
+      "win_rate": 0.6,
+      "pnl": 0.2997
+    },
+    "transition": {
+      "trades": 37,
+      "wins": 24,
+      "win_rate": 0.6486,
+      "pnl": 0.8728
+    },
+    "uptrend": {
+      "trades": 109,
+      "wins": 61,
+      "win_rate": 0.5596,
+      "pnl": -0.0222
+    }
+  },
+  "by_exit_reason": {
+    "stop_or_trail": {
+      "trades": 156,
+      "wins": 16,
+      "win_rate": 0.1026,
+      "pnl": -13.48
+    },
+    "take_profit": {
+      "trades": 242,
+      "wins": 242,
+      "win_rate": 1.0,
+      "pnl": 18.1148
+    },
+    "time_exit": {
+      "trades": 72,
+      "wins": 6,
+      "win_rate": 0.0833,
+      "pnl": -2.8176
+    }
+  },
+  "risk_status": {
+    "pauses_triggered": 14,
+    "orders_rejected": 625,
+    "rejections_by_reason": {
+      "consecutive": 14,
+      "paused": 611
+    },
+    "final_status": {
+      "is_paused": false,
+      "pause_reason": "",
+      "pause_until_step": 34767,
+      "daily_pnl": 0.0,
+      "weekly_pnl": 0.0,
+      "consecutive_losses": 0,
+      "open_positions_count": 0,
+      "total_margin_used": 0
+    }
+  }
+}

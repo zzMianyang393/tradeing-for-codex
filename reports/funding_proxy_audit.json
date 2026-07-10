@@ -1,0 +1,18 @@
+{
+  "BTC": {
+    "okx_rows": 282,
+    "binance_rows": 2191,
+    "overlap_rows": 282,
+    "pearson_correlation": 0.6124,
+    "sign_agreement": 0.7801,
+    "proxy_alignment_passed": true
+  },
+  "ETH": {
+    "okx_rows": 282,
+    "binance_rows": 2191,
+    "overlap_rows": 282,
+    "pearson_correlation": 0.6343,
+    "sign_agreement": 0.7979,
+    "proxy_alignment_passed": true
+  }
+}
