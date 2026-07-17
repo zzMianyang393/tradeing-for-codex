@@ -1,12 +1,60 @@
+# --- Python ---
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .venv/
 venv/
-*.log
-.claude/
+*.egg-info/
+.eggs/
+dist/
+build/
 
-# Large report files (>100MB)
-reports/candidate_pool/*.jsonl
+# --- Secrets / local env ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Editor / agent ---
+.claude/
+.idea/
+.vscode/
+*.log
+
+# --- Local market data (keep on disk, never push) ---
+data/
+!data/.gitkeep
+
+# --- Reports, DBs, locks, paper state (local artifacts) ---
+reports/
+!reports/.gitkeep
+!reports/prod/
+reports/prod/*
+!reports/prod/.gitkeep
+*.db
+*.sqlite
+*.sqlite3
+*.lock
+
+# --- Pytest / temp caches ---
+pytest_tmp*/
+pytest_tmp_*/
+.cache/
+tmp_*.py
+tmp/
+
+# --- OS ---
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- Legacy oversized research dumps (if reintroduced outside reports/) ---
+*.jsonl
+*.jsonl.idx
+candidate_pool/

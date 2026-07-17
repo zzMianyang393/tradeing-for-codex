@@ -1,2 +1,0 @@
-symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
-ATOM-USDT-SWAP,1783396554008,2026-07-07 03:55:54,1.592,1.593,0.0006279434850862731,163275.096,172169.751,-0.026515998321476674

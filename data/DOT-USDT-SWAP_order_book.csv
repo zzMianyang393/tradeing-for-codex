@@ -1,2 +1,0 @@
-symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
-DOT-USDT-SWAP,1783396558803,2026-07-07 03:55:58,0.8572,0.8573,0.00011665208515600933,108142.0403,99482.1003,0.041709697027398504

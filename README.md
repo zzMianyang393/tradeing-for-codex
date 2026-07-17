@@ -4,6 +4,21 @@
 
 **Requires Python ≥ 3.10** (uses `dataclass(slots=True)`).
 
+## Production track (start here if you want paper trading)
+
+Daily path is **`prod/`** — not the hundreds of research audit scripts.
+
+| Goal | Command |
+|------|---------|
+| Admit 10U high-risk sleeve to paper-prep | `python -m prod.cli admit-ten-u --accept-concentration-risk` |
+| Run one local paper cycle | `python -m prod.cli paper-cycle` |
+| Status | `python -m prod.cli status` |
+
+- Prospective sealed waiting is **not** required for paper-prep.
+- Live trading stays closed until a separate promotion step.
+- Details: [`docs/PRODUCTION_TRACK.md`](docs/PRODUCTION_TRACK.md)
+- GitHub slim notes: [`docs/REPO_SLIM_GITHUB.md`](docs/REPO_SLIM_GITHUB.md)
+
 It uses local OKX 1m CSV data when available, resamples it to 15m bars, then runs a multi-symbol,
 multi-regime strategy from a configurable starting balance.
 

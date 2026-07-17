@@ -1,2 +1,0 @@
-symbol,timestamp_ms,timestamp_utc,best_bid,best_ask,spread_pct,bid_depth_quote,ask_depth_quote,depth_imbalance
-DYDX-USDT-SWAP,1783396559553,2026-07-07 03:55:59,0.12782,0.12783,7.823195775482105e-05,15249.82636,10095.91806,0.2033441280948575
