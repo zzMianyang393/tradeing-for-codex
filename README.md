@@ -11,7 +11,9 @@ Daily path is **`prod/`** — not the hundreds of research audit scripts.
 | Goal | Command |
 |------|---------|
 | Admit 10U high-risk sleeve to paper-prep | `python -m prod.cli admit-ten-u --accept-concentration-risk` |
-| Run one local paper cycle | `python -m prod.cli paper-cycle` |
+| Refresh + paper (locked) | `python -m prod.cli run-ten-u` |
+| Hourly-style finite watch | `python -m prod.cli watch-ten-u --iterations 1` |
+| OKX demo drill (ETH only) | `python -m prod.cli demo-drill --symbol ETH-USDT-SWAP` |
 | Status | `python -m prod.cli status` |
 
 - Prospective sealed waiting is **not** required for paper-prep.

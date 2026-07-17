@@ -18,6 +18,8 @@ from prod.registry import (
     load_registry,
     upsert_entry,
 )
+from prod.demo_execution_drill import run_demo_execution_drill
+from prod.runtime_lock import DEFAULT_LOCK_PATH
 from prod.ten_u_market_refresh import run_ten_u_market_refresh
 from prod.ten_u_paper_runtime import (
     DEFAULT_CYCLE_PATH,
@@ -25,8 +27,8 @@ from prod.ten_u_paper_runtime import (
     run_paper_cycle,
 )
 from prod.universe_check import run_universe_check, write_universe_report
+from prod.watch_loop import run_locked_pipeline, run_watch_loop
 from ten_u_event_trend_contract_v2 import STRATEGY_ID
-
 def _cmd_admit_ten_u(args: argparse.Namespace) -> int:
     report_path = Path(args.report)
     if not report_path.exists():
@@ -145,45 +147,59 @@ def _cmd_refresh_ten_u(args: argparse.Namespace) -> int:
 
 
 def _cmd_run_ten_u(args: argparse.Namespace) -> int:
-    """Refresh public OKX 10U data then run one local paper cycle."""
-    refresh_report = run_ten_u_market_refresh(
-        Path(args.data),
-        Path(args.manifest),
-    )
-    refresh_out = Path(args.refresh_out)
-    refresh_out.parent.mkdir(parents=True, exist_ok=True)
-    refresh_out.write_text(json.dumps(refresh_report, indent=2), encoding="utf-8")
+    """Refresh public OKX 10U data then run one local paper cycle (locked)."""
+    try:
+        locked = run_locked_pipeline(
+            data_dir=Path(args.data),
+            manifest_path=Path(args.manifest),
+            state_path=Path(args.state),
+            registry_path=Path(args.registry),
+            cycle_path=Path(args.cycle_out),
+            lock_path=Path(args.lock),
+            lookback_days=args.lookback_days,
+            force=args.force,
+        )
+    except TimeoutError as exc:
+        payload = {
+            "report_type": "ten_u_run_pipeline",
+            "formal_status": "lock_busy",
+            "error": str(exc),
+        }
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 4
 
-    cycle_report = run_paper_cycle(
-        data_dir=Path(args.data),
-        manifest_path=Path(args.manifest),
-        state_path=Path(args.state),
-        registry_path=Path(args.registry),
-        cycle_path=Path(args.cycle_out),
-        lookback_days=args.lookback_days,
-        force=args.force,
-    )
+    cycle_report = locked.get("paper_cycle") or {}
+    refresh_status = locked.get("refresh_status")
+    # Reconstruct a compact refresh summary for the pipeline file
     combined = {
         "report_type": "ten_u_run_pipeline",
         "formal_status": cycle_report.get("formal_status"),
+        "lock_path": locked.get("lock_path"),
         "refresh": {
-            "formal_status": refresh_report.get("formal_status"),
-            "errors": refresh_report.get("errors"),
-            "available_through": refresh_report.get("available_through"),
-            "candles": {
-                k: {
-                    "added_bars": v.get("added_bars"),
-                    "rows": v.get("rows"),
-                    "error": v.get("error"),
-                }
-                for k, v in (refresh_report.get("candles") or {}).items()
-            },
+            "formal_status": refresh_status,
+            "errors": locked.get("refresh_errors") or [],
+            "available_through": locked.get("available_through"),
         },
         "paper_cycle": cycle_report,
     }
     pipeline_out = Path(args.pipeline_out)
     pipeline_out.parent.mkdir(parents=True, exist_ok=True)
     pipeline_out.write_text(json.dumps(combined, indent=2), encoding="utf-8")
+    # Also keep last refresh report path for operators who expect the file
+    refresh_out = Path(args.refresh_out)
+    refresh_out.parent.mkdir(parents=True, exist_ok=True)
+    refresh_out.write_text(
+        json.dumps(
+            {
+                "report_type": "ten_u_market_refresh_pointer",
+                "formal_status": refresh_status,
+                "errors": locked.get("refresh_errors") or [],
+                "available_through": locked.get("available_through"),
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     print(json.dumps(combined, indent=2, ensure_ascii=False))
     status = cycle_report.get("formal_status")
     if status == "blocked_not_in_paper_prep_registry":
@@ -195,13 +211,51 @@ def _cmd_run_ten_u(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_watch_ten_u(args: argparse.Namespace) -> int:
+    report = run_watch_loop(
+        iterations=args.iterations,
+        interval_seconds=args.interval,
+        data_dir=Path(args.data),
+        manifest_path=Path(args.manifest),
+        state_path=Path(args.state),
+        registry_path=Path(args.registry),
+        cycle_path=Path(args.cycle_out),
+        lock_path=Path(args.lock),
+        lookback_days=args.lookback_days,
+        force=args.force,
+        report_path=Path(args.out),
+    )
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    status = report.get("formal_status")
+    if status == "ok":
+        return 0
+    if status == "partial":
+        return 0
+    return 1
+
+
+def _cmd_demo_drill(args: argparse.Namespace) -> int:
+    report = run_demo_execution_drill(
+        symbol=args.symbol,
+        confirm_smoke=args.confirm_okx_smoke_order,
+        qty=args.qty,
+        report_path=Path(args.out),
+    )
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    status = report.get("formal_status")
+    if status in {"readiness_ok", "smoke_ok"}:
+        return 0
+    if status in {"blocked", "blocked_missing_credentials"}:
+        return 2
+    return 1
+
+
 def _cmd_universe_check(args: argparse.Namespace) -> int:
     report = run_universe_check()
     out = Path(args.out)
     write_universe_report(report, out)
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report.get("formal_status") in {"ok", "partial"} else 1
-
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -279,9 +333,48 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--cycle-out", default=str(DEFAULT_CYCLE_PATH))
     run.add_argument("--refresh-out", default="reports/prod/ten_u_market_refresh.json")
     run.add_argument("--pipeline-out", default="reports/prod/ten_u_run_pipeline.json")
+    run.add_argument("--lock", default=str(DEFAULT_LOCK_PATH))
     run.add_argument("--lookback-days", type=int, default=120)
     run.add_argument("--force", action="store_true")
     run.set_defaults(func=_cmd_run_ten_u)
+
+    watch = sub.add_parser(
+        "watch-ten-u",
+        help="Finite locked loop: refresh+paper every interval (for Task Scheduler / cron)",
+    )
+    watch.add_argument("--iterations", type=int, default=3)
+    watch.add_argument(
+        "--interval",
+        type=float,
+        default=0.0,
+        help="Seconds between iterations (0 for back-to-back; use 3600 for hourly)",
+    )
+    watch.add_argument("--data", default="data/event_trend_v1")
+    watch.add_argument(
+        "--manifest", default="data/event_trend_v1/hourly_dataset_manifest_v1.json"
+    )
+    watch.add_argument("--state", default=str(DEFAULT_STATE_PATH))
+    watch.add_argument("--registry", default=str(DEFAULT_REGISTRY_PATH))
+    watch.add_argument("--cycle-out", default=str(DEFAULT_CYCLE_PATH))
+    watch.add_argument("--lock", default=str(DEFAULT_LOCK_PATH))
+    watch.add_argument("--lookback-days", type=int, default=120)
+    watch.add_argument("--force", action="store_true")
+    watch.add_argument("--out", default="reports/prod/ten_u_watch_loop.json")
+    watch.set_defaults(func=_cmd_watch_ten_u)
+
+    demo = sub.add_parser(
+        "demo-drill",
+        help="OKX simulated readiness/smoke for ETH/BTC only (never RAVE/LAB)",
+    )
+    demo.add_argument("--symbol", default="ETH-USDT-SWAP")
+    demo.add_argument("--qty", type=float, default=0.01)
+    demo.add_argument(
+        "--confirm-okx-smoke-order",
+        action="store_true",
+        help="Place far limit + cancel on demo (requires OKX_* env sandbox keys)",
+    )
+    demo.add_argument("--out", default="reports/prod/demo_execution_drill.json")
+    demo.set_defaults(func=_cmd_demo_drill)
 
     uni = sub.add_parser(
         "universe-check",

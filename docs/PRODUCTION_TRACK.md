@@ -57,8 +57,18 @@ python -m prod.cli admit-ten-u --accept-concentration-risk
 ## 跑预备模拟盘（本地 paper，不需要等前瞻）
 
 ```bash
-# 推荐：刷新 OKX 公开 1H/资金费率 + 一轮本地 paper（生产入口）
+# 推荐：刷新 OKX 公开 1H/资金费率 + 一轮本地 paper（带文件锁）
 python -m prod.cli run-ten-u
+
+# 有限次定时循环（Task Scheduler / cron 可每小时调一次，或本进程内循环）
+python -m prod.cli watch-ten-u --iterations 1
+# 进程内连跑 3 次、间隔 3600 秒：
+# python -m prod.cli watch-ten-u --iterations 3 --interval 3600
+
+# OKX 模拟盘执行演练（仅 ETH/BTC；拒绝 RAVE/LAB）
+python -m prod.cli demo-drill --symbol ETH-USDT-SWAP
+# 真下单+撤单（需 OKX_API_KEY/SECRET/PASSPHRASE 模拟盘密钥）：
+# python -m prod.cli demo-drill --symbol ETH-USDT-SWAP --confirm-okx-smoke-order
 
 # 仅刷新数据
 python -m prod.cli refresh-ten-u
@@ -72,6 +82,8 @@ python -m prod.cli universe-check
 # 查看状态
 python -m prod.cli status
 ```
+
+锁文件：`reports/prod/prod_runtime.lock`（45 分钟过期可回收）。
 
 本地瘦身（归档 candidate_pool / basis / calendar_spread）：
 
