@@ -16,21 +16,30 @@
 3. **Git 只跟踪代码 + 少量文档 + prod 入口**
 4. 需要时把数据/报告当本地工件，不进远程
 
+## 本地归档（磁盘瘦身，非 Git）
+
+```powershell
+python -m prod.slim_local --archive-root E:\ai-trade\tradering-archive\YYYY-MM-DD
+```
+
+默认会把 `reports/candidate_pool`、`data/basis`、`data/calendar_spread*` **move** 到归档目录（保留磁盘，移出工作树）。  
+`data/event_trend_v1` 与 `reports/prod` 在保护列表中不会动。
+
+2026-07-17 已执行归档根：`E:\ai-trade\tradering-archive\2026-07-17\`。
+
 ## 一次性从 Git 索引移除大目录（不删本地文件）
 
 在项目根目录 PowerShell：
 
 ```powershell
-# 仅从 git 索引移除，磁盘文件保留
-git rm -r --cached data reports pytest_tmp* 2>$null
-git rm -r --cached --ignore-unmatch __pycache__
-
-# 确认 .gitignore 已保存后
-git add .gitignore prod docs/PRODUCTION_TRACK.md docs/REPO_SLIM_GITHUB.md
+powershell -File scripts\slim_git_for_github.ps1
+# 或手动：
+git rm -r --cached data reports
+git add .gitignore prod docs tests/test_prod_*.py scripts/slim_git_for_github.ps1
 git status
 ```
 
-然后单独做一次 commit，例如：
+然后 commit（**不需要 force-push**）：
 
 ```text
 chore: stop tracking data/reports bulk; add production paper-prep track
@@ -42,7 +51,7 @@ chore: stop tracking data/reports bulk; add production paper-prep track
 git push origin main
 ```
 
-若远程已有巨大历史，可能仍需 `git filter-repo` 清历史——那是另一步；先保证**新提交不再带大数据**。
+若远程历史里已经有大 blob，可能仍需以后 `git filter-repo`——那是可选清理；新提交已不再带 `data/`、`reports/`。
 
 ## 推荐远程结构
 
