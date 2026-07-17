@@ -10,11 +10,14 @@ Daily path is **`prod/`** — not the hundreds of research audit scripts.
 
 | Goal | Command |
 |------|---------|
+| **Server cold start** (after `git pull`) | `python -m prod.cli bootstrap-server` |
 | Admit 10U high-risk sleeve to paper-prep | `python -m prod.cli admit-ten-u --accept-concentration-risk` |
 | Refresh + paper (locked) | `python -m prod.cli run-ten-u` |
 | Hourly-style finite watch | `python -m prod.cli watch-ten-u --iterations 1` |
 | OKX demo drill (ETH only) | `python -m prod.cli demo-drill --symbol ETH-USDT-SWAP` |
 | Status | `python -m prod.cli status` |
+
+Server guide: [`docs/SERVER_DEPLOY.md`](docs/SERVER_DEPLOY.md)
 
 - Prospective sealed waiting is **not** required for paper-prep.
 - Live trading stays closed until a separate promotion step.

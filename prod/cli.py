@@ -18,6 +18,7 @@ from prod.registry import (
     load_registry,
     upsert_entry,
 )
+from prod.bootstrap_server import run_bootstrap
 from prod.demo_execution_drill import run_demo_execution_drill
 from prod.runtime_lock import DEFAULT_LOCK_PATH
 from prod.ten_u_market_refresh import run_ten_u_market_refresh
@@ -29,6 +30,8 @@ from prod.ten_u_paper_runtime import (
 from prod.universe_check import run_universe_check, write_universe_report
 from prod.watch_loop import run_locked_pipeline, run_watch_loop
 from ten_u_event_trend_contract_v2 import STRATEGY_ID
+
+
 def _cmd_admit_ten_u(args: argparse.Namespace) -> int:
     report_path = Path(args.report)
     if not report_path.exists():
@@ -257,6 +260,22 @@ def _cmd_universe_check(args: argparse.Namespace) -> int:
     print(json.dumps(report, indent=2, ensure_ascii=False))
     return 0 if report.get("formal_status") in {"ok", "partial"} else 1
 
+
+def _cmd_bootstrap_server(args: argparse.Namespace) -> int:
+    report = run_bootstrap(
+        data_dir=Path(args.data),
+        registry_path=Path(args.registry),
+        skip_download=args.skip_download,
+        seed_registry=not args.no_seed_registry,
+        force_registry=args.force_registry,
+    )
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    return 0 if report.get("formal_status") in {"ok", "partial"} else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m prod.cli",
@@ -382,6 +401,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     uni.add_argument("--out", default="reports/prod/okx_universe_check.json")
     uni.set_defaults(func=_cmd_universe_check)
+
+    boot = sub.add_parser(
+        "bootstrap-server",
+        help="Cold-start slim checkout: download 10U data + seed paper registry",
+    )
+    boot.add_argument("--data", default="data/event_trend_v1")
+    boot.add_argument("--registry", default=str(DEFAULT_REGISTRY_PATH))
+    boot.add_argument("--skip-download", action="store_true")
+    boot.add_argument("--no-seed-registry", action="store_true")
+    boot.add_argument("--force-registry", action="store_true")
+    boot.add_argument("--out", default="reports/prod/server_bootstrap.json")
+    boot.set_defaults(func=_cmd_bootstrap_server)
 
     return parser
 

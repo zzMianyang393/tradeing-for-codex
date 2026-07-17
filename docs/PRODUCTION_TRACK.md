@@ -2,6 +2,18 @@
 
 更新日期：2026-07-17
 
+## 服务器部署（交易不在本机）
+
+模拟盘 / 定时 paper **应在服务器**上跑：本机 `git push` → 服务器 `git pull` → 冷启动。
+
+详见 **[SERVER_DEPLOY.md](./SERVER_DEPLOY.md)**。
+
+```bash
+# 服务器首次
+python -m prod.cli bootstrap-server   # 或 python -m prod.bootstrap_server
+python -m prod.cli watch-ten-u --iterations 1
+```
+
 ## 你现在的目标
 
 - **双轨**：多币研究轨 + **10U 高风险起步轨**
