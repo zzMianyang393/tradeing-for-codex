@@ -8,12 +8,30 @@ import json
 from pathlib import Path
 from typing import Any
 
+from prod.policy import operator_policy_snapshot
 
 DEFAULT_REGISTRY_PATH = Path("reports/prod/paper_prep_registry.json")
 
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def default_registry_policy() -> dict[str, Any]:
+    snap = operator_policy_snapshot()
+    return {
+        "prospective_wait_required": False,
+        "live_default": False,
+        "paper_requires_admission": True,
+        "default_pipeline_places_exchange_orders": snap[
+            "default_pipeline_places_exchange_orders"
+        ],
+        "default_start_equity_usdt": snap["default_start_equity_usdt"],
+        "max_start_equity_usdt": snap["max_start_equity_usdt"],
+        "production_bound_symbols": snap["production_bound_symbols"],
+        "local_experiment_symbols": snap["local_experiment_symbols"],
+        "operator_policy_id": snap["policy_id"],
+    }
 
 
 @dataclass
@@ -40,13 +58,15 @@ def load_registry(path: Path = DEFAULT_REGISTRY_PATH) -> dict[str, Any]:
             "version": "v1",
             "updated_at": None,
             "entries": [],
-            "policy": {
-                "prospective_wait_required": False,
-                "live_default": False,
-                "paper_requires_admission": True,
-            },
+            "policy": default_registry_policy(),
         }
-    return json.loads(path.read_text(encoding="utf-8"))
+    registry = json.loads(path.read_text(encoding="utf-8"))
+    # Merge operator hard constraints without wiping older keys.
+    policy = dict(registry.get("policy") or {})
+    for key, value in default_registry_policy().items():
+        policy.setdefault(key, value)
+    registry["policy"] = policy
+    return registry
 
 
 def save_registry(registry: dict[str, Any], path: Path = DEFAULT_REGISTRY_PATH) -> None:

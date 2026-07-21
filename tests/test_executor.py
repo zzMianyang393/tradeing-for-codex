@@ -269,5 +269,193 @@ class TestExecutor(unittest.TestCase):
         self.assertLess(trades[0]["pnl"], 0)
 
 
+    def test_execute_pairs_signal_success(self):
+        live_exchange = MagicMock()
+        live_exchange.place_order.side_effect = [
+            OrderResult(order_id="okx-a", symbol="FIL-USDT-SWAP", direction="long", qty=5.0, status="filled", fill_price=10.0, fill_qty=5.0, success=True),
+            OrderResult(order_id="okx-b", symbol="OP-USDT-SWAP", direction="short", qty=25.0, status="filled", fill_price=2.0, fill_qty=25.0, success=True),
+        ]
+        
+        executor = Executor(live_exchange, self.risk_manager, self.db, self.config)
+        
+        result = executor.execute_pairs_signal(
+            pair_key="FIL-OP",
+            symbol_a="FIL-USDT-SWAP",
+            symbol_b="OP-USDT-SWAP",
+            direction_a=1,
+            direction_b=-1,
+            notional_a=50.0,
+            notional_b=50.0,
+            margin=10.0,
+            leverage=10.0,
+            entry_z=2.1,
+            beta=1.2,
+            alpha=0.1,
+            price_a=10.0,
+            price_b=2.0,
+        )
+        
+        self.assertTrue(result.accepted)
+        self.assertEqual("filled", result.status)
+        order_ids = result.order_id.split(",")
+        order_a = self.db.get_order(order_ids[0])
+        order_b = self.db.get_order(order_ids[1])
+        self.assertEqual("okx-a", order_a["exchange_order_id"])
+        self.assertEqual("okx-b", order_b["exchange_order_id"])
+        
+        open_pos = self.db.get_open_pairs_positions()
+        self.assertEqual(1, len(open_pos))
+        self.assertEqual("FIL-OP", open_pos[0]["pair_key"])
+
+    def test_execute_pairs_signal_leg_lock(self):
+        live_exchange = MagicMock()
+        # Leg A succeeds, Leg B fails
+        live_exchange.place_order.side_effect = [
+            OrderResult(order_id="okx-a", symbol="FIL-USDT-SWAP", direction="long", qty=5.0, status="filled", fill_price=10.0, fill_qty=5.0, success=True),
+            Exception("Exchange down"),
+            # Reversal order for Leg A
+            OrderResult(order_id="okx-rev", symbol="FIL-USDT-SWAP", direction="short", qty=5.0, status="filled", fill_price=10.0, fill_qty=5.0, success=True),
+        ]
+        
+        executor = Executor(live_exchange, self.risk_manager, self.db, self.config)
+        
+        result = executor.execute_pairs_signal(
+            pair_key="FIL-OP",
+            symbol_a="FIL-USDT-SWAP",
+            symbol_b="OP-USDT-SWAP",
+            direction_a=1,
+            direction_b=-1,
+            notional_a=50.0,
+            notional_b=50.0,
+            margin=10.0,
+            leverage=10.0,
+            entry_z=2.1,
+            beta=1.2,
+            alpha=0.1,
+            price_a=10.0,
+            price_b=2.0,
+        )
+        
+        self.assertFalse(result.accepted)
+        self.assertEqual("failed", result.status)
+        self.assertIn("Leg-lock", result.reason)
+        # Check that reversing order was placed
+        live_exchange.place_order.assert_any_call("FIL-USDT-SWAP", "short", 5.0, order_type="market", price=10.0, fee=0.025)
+
+    def test_manage_pairs_positions_exit(self):
+        # Save an open pairs position
+        pos_id = self.db.save_pairs_position(
+            pair_key="FIL-OP",
+            symbol_a="FIL-USDT-SWAP",
+            symbol_b="OP-USDT-SWAP",
+            direction_a="long",
+            direction_b="short",
+            entry_price_a=10.0,
+            entry_price_b=2.0,
+            qty_a=5.0,
+            qty_b=25.0,
+            notional_a=50.0,
+            notional_b=50.0,
+            margin=10.0,
+            leverage=10.0,
+            entry_z=2.1,
+            beta=1.2,
+            alpha=0.1,
+        )
+        
+        live_exchange = MagicMock()
+        live_exchange.close_position.side_effect = [
+            OrderResult(order_id="close-a", symbol="FIL-USDT-SWAP", direction="long", qty=5.0, status="filled", fill_price=11.0, fill_qty=5.0, success=True),
+            OrderResult(order_id="close-b", symbol="OP-USDT-SWAP", direction="short", qty=25.0, status="filled", fill_price=1.8, fill_qty=25.0, success=True),
+        ]
+        
+        executor = Executor(live_exchange, self.risk_manager, self.db, self.config)
+        
+        pairs_signals = {
+            "FIL-OP": {
+                "signal": "exit",
+                "zscore": 0.1,
+                "price_a": 11.0,
+                "price_b": 1.8,
+            }
+        }
+        
+        actions = executor.manage_pairs_positions(pairs_signals, {"FIL-USDT-SWAP": 11.0, "OP-USDT-SWAP": 1.8})
+        
+        self.assertEqual(1, len(actions))
+        self.assertEqual("FIL-OP", actions[0].symbol)
+        self.assertEqual("mean_reversion", actions[0].reason)
+        # PnL: A = (11 - 10)*5 = 5, B = (2 - 1.8)*25 = 5. Total = 10. Fee = (55 + 45)*0.0005 = 0.05. Net = 9.95.
+        self.assertAlmostEqual(9.95, actions[0].pnl)
+        
+        # Verify DB is closed
+        open_pos = self.db.get_open_pairs_positions()
+        self.assertEqual(0, len(open_pos))
+        
+        # Verify trade recorded
+        cursor = self.db._conn.execute("SELECT * FROM pairs_trades")
+        trades = cursor.fetchall()
+        self.assertEqual(1, len(trades))
+        self.assertEqual(9.95, trades[0]["pnl"])
+
+    def test_manage_pairs_positions_time_stop(self):
+        """Positions held longer than pairs_max_hold_bars must be force-closed with reason=time_stop."""
+        import sqlite3
+        from datetime import datetime, timedelta, timezone
+
+        pos_id = self.db.save_pairs_position(
+            pair_key="ARB-AVAX",
+            symbol_a="ARB-USDT-SWAP",
+            symbol_b="AVAX-USDT-SWAP",
+            direction_a="short",
+            direction_b="long",
+            entry_price_a=1.0,
+            entry_price_b=20.0,
+            qty_a=100.0,
+            qty_b=5.0,
+            notional_a=100.0,
+            notional_b=100.0,
+            margin=20.0,
+            leverage=10.0,
+            entry_z=2.5,
+            beta=0.9,
+            alpha=0.05,
+        )
+        # Backdate opened_at to simulate 201 bars ago (> pairs_max_hold_bars=200)
+        old_time = (datetime.now(timezone.utc) - timedelta(minutes=201 * 15)).strftime("%Y-%m-%d %H:%M:%S")
+        self.db._conn.execute("UPDATE pairs_positions SET opened_at=? WHERE id=?", (old_time, pos_id))
+        self.db._conn.commit()
+
+        live_exchange = MagicMock()
+        live_exchange.close_position.side_effect = [
+            OrderResult(order_id="close-a", symbol="ARB-USDT-SWAP", direction="short", qty=100.0, status="filled", fill_price=1.0, fill_qty=100.0, success=True),
+            OrderResult(order_id="close-b", symbol="AVAX-USDT-SWAP", direction="long", qty=5.0, status="filled", fill_price=20.0, fill_qty=5.0, success=True),
+        ]
+        executor = Executor(live_exchange, self.risk_manager, self.db, self.config)
+
+        # Signal is "hold" — should still force-exit due to time stop
+        pairs_signals = {
+            "ARB-AVAX": {
+                "signal": "hold",
+                "zscore": 1.5,
+                "price_a": 1.0,
+                "price_b": 20.0,
+            }
+        }
+        actions = executor.manage_pairs_positions(
+            pairs_signals, {"ARB-USDT-SWAP": 1.0, "AVAX-USDT-SWAP": 20.0}
+        )
+
+        self.assertEqual(1, len(actions))
+        self.assertEqual("ARB-AVAX", actions[0].symbol)
+        self.assertEqual("time_stop", actions[0].reason)
+        self.assertEqual(0, len(self.db.get_open_pairs_positions()))
+
+        cursor = self.db._conn.execute("SELECT exit_reason FROM pairs_trades WHERE pair_key='ARB-AVAX'")
+        row = cursor.fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual("time_stop", row[0])
+
+
 if __name__ == "__main__":
     unittest.main()

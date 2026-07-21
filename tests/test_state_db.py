@@ -354,5 +354,66 @@ class TestSaveBacktestToDb(unittest.TestCase):
             self.assertIn('"orders_rejected": 2', history[0]["risk_status"])
 
 
+class TestPairsPositions(_DBMixin, unittest.TestCase):
+
+    def test_save_get_and_close_pairs_position(self):
+        # 1. Save
+        pos_id = self.db.save_pairs_position(
+            pair_key="FIL-OP",
+            symbol_a="FIL-USDT-SWAP",
+            symbol_b="OP-USDT-SWAP",
+            direction_a="long",
+            direction_b="short",
+            entry_price_a=10.0,
+            entry_price_b=2.0,
+            qty_a=5.0,
+            qty_b=25.0,
+            notional_a=50.0,
+            notional_b=50.0,
+            margin=10.0,
+            leverage=10.0,
+            entry_z=2.1,
+            beta=1.2,
+            alpha=0.1,
+        )
+        
+        # 2. Get Open
+        open_positions = self.db.get_open_pairs_positions()
+        self.assertEqual(1, len(open_positions))
+        pos = open_positions[0]
+        self.assertEqual(pos_id, pos["id"])
+        self.assertEqual("FIL-OP", pos["pair_key"])
+        self.assertEqual("open", pos["status"])
+        
+        # 3. Close
+        self.db.close_pairs_position(
+            pos_id=pos_id,
+            exit_price_a=11.0,
+            exit_price_b=1.8,
+            pnl=10.0,
+            pnl_pct=100.0,
+            fee=0.28,
+            exit_reason="mean_reversion",
+        )
+        
+        # Verify closed
+        open_positions_after = self.db.get_open_pairs_positions()
+        self.assertEqual(0, len(open_positions_after))
+        
+        # Verify in trades table
+        cursor = self.db._conn.execute("SELECT * FROM pairs_trades")
+        trades = cursor.fetchall()
+        self.assertEqual(1, len(trades))
+        trade = trades[0]
+        self.assertEqual(pos_id, trade["id"])
+        self.assertEqual("FIL-OP", trade["pair_key"])
+        self.assertEqual(11.0, trade["exit_price_a"])
+        self.assertEqual(1.8, trade["exit_price_b"])
+        self.assertEqual(10.0, trade["pnl"])
+        self.assertEqual(100.0, trade["pnl_pct"])
+        self.assertEqual(0.28, trade["fee"])
+        self.assertEqual("mean_reversion", trade["exit_reason"])
+
+
 if __name__ == "__main__":
     unittest.main()

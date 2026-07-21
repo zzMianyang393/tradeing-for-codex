@@ -1,128 +1,112 @@
-# 服务器部署：瘦身后从 Git 拉取并跑模拟盘/本地 paper
+# 服务器部署：majors 优先（BTC/ETH 本地 paper）
 
-适用场景：**交易不在本机跑**，而在远端服务器。  
-Git 只含代码；**不含** `data/`、`reports/` 大体量文件。
+适用场景：**交易与密钥不在开发机**，而在远端服务器；密钥由**服务器 agent** 注入。  
+Git 只含代码；**不含** `data/`、`reports/` 大体量文件、**不含** API Key。
+
+更完整的 agent 契约见 **[SERVER_HANDOFF.md](./SERVER_HANDOFF.md)**。
 
 ## 架构分工
 
 | 机器 | 职责 |
 |------|------|
-| 开发机 | 改代码、commit、`git push`；可选本地回测 |
-| **服务器** | `git pull` → bootstrap 数据 → 定时 `watch-ten-u` / `demo-drill` |
-| OKX 模拟盘 | 仅 **ETH/BTC** 等 demo 支持的合约做执行演练；**RAVE/LAB 用本地 paper + 实盘行情** |
+| 开发机 | 改代码、回测、本地 paper 证据、`git push`；**不配交易密钥、不跑 demo/live** |
+| **服务器** | `git pull` → `bootstrap-server --mode majors` → 定时 `majors-hourly`；**agent 配置 OKX_***（后期） |
+| OKX 模拟盘/实盘 | **仅服务器**；合约默认 **BTC/ETH**；RAVE/LAB 不可作晋级标的 |
 
 ```text
 GitHub (slim code)
     │ git pull
     ▼
 Server
-  ├── prod/  ten_u_*  exchange/runner
-  ├── data/event_trend_v1/     ← bootstrap 从 OKX 公开接口下载
-  └── reports/prod/            ← 运行时状态（勿提交）
+  ├── prod/  majors_*  (primary)
+  ├── data/BTC_15m.csv  ETH_15m.csv
+  └── reports/prod/     ← 运行时状态（勿提交）
 ```
 
-## 1. 开发机：推送瘦身代码
+## 1. 开发机：推送代码
 
 ```bash
-# 已在本地做过 untrack data/reports 的前提下
 git push origin main
 ```
 
-确认远程没有强制依赖本地 `data/`。
+确认远程不依赖本机 `data/` / 密钥。
 
 ## 2. 服务器：首次拉取
 
 ```bash
-# 示例
-git clone https://github.com/zzMianyang393/tradeing-for-codex.git tradering
+git clone <your-repo-url> tradering
 cd tradering
-python --version   # 建议 >= 3.10
+python --version   # >= 3.10
 ```
 
-无第三方硬依赖时，生产轨以标准库 + 现有模块为主。若你之后加了依赖，再补 `requirements-prod.txt`。
-
-## 3. 服务器：冷启动（下载 10U 数据 + 注册 paper-prep）
+## 3. 服务器：冷启动（默认 majors）
 
 ```bash
-python -m prod.bootstrap_server
+python -m prod.cli bootstrap-server --mode majors
+# 等价: python -m prod.bootstrap_server --mode majors
 ```
 
 会做：
 
-1. 下载 RAVE/LAB/ETH **1H K 线** → `data/event_trend_v1/`
-2. 下载对应 **funding** CSV  
-3. 写 `hourly_dataset_manifest_v1.json`  
-4. 若无注册表，**seed** `reports/prod/paper_prep_registry.json`（高风险 10U，live 仍关闭）
+1. 准备 BTC/ETH **15m** → `data/`  
+2. seed majors **paper-prep** 注册表（live 关闭）  
+3. 写 `reports/prod/server_handoff_contract.json`  
 
 报告：`reports/prod/server_bootstrap.json`
 
-> 首次下载可能需数分钟（OKX 分页）。可重跑；增量之后用 `run-ten-u` / `watch-ten-u`。
+> 若 15m 已存在则跳过下载。首次全量下载可能较慢。
 
-## 4. 服务器：日常命令
+遗留 10U（可选，非晋级路径）：
 
 ```bash
-# 可交易宇宙（live 有 / demo 政策）
-python -m prod.cli universe-check
-
-# 刷新 + 本地 paper 一轮（带锁）
-python -m prod.cli run-ten-u
-
-# 每小时一次（cron / systemd timer 推荐）
-python -m prod.cli watch-ten-u --iterations 1
-
-# OKX 模拟盘执行演练（仅 ETH；需模拟盘 API Key）
-export OKX_API_KEY=...
-export OKX_API_SECRET=...
-export OKX_API_PASSPHRASE=...
-python -m prod.cli demo-drill --symbol ETH-USDT-SWAP
-# 确认后 smoke：
-python -m prod.cli demo-drill --symbol ETH-USDT-SWAP --confirm-okx-smoke-order
+python -m prod.cli bootstrap-server --mode ten_u
 ```
 
-## 5. 定时任务示例（Linux cron）
+## 4. 服务器：日常（无密钥）
+
+```bash
+python -m prod.cli majors-hourly --commit-refresh
+python -m prod.cli ops-summary
+python -m prod.cli demo-checklist   # 工程 handoff 门槛，非本机下单
+```
+
+## 5. 定时任务（Linux cron）
 
 ```cron
-# 每小时第 5 分钟（等 K 线收盘缓冲）
-5 * * * * cd /path/to/tradering && /usr/bin/python3 -m prod.cli watch-ten-u --iterations 1 >> /var/log/tradering-watch.log 2>&1
+5 * * * * cd /path/to/tradering && /usr/bin/python3 -m prod.cli majors-hourly --commit-refresh >> /var/log/tradering-majors.log 2>&1
 ```
 
-锁文件：`reports/prod/prod_runtime.lock`（防重叠；约 45 分钟过期可回收）。
+锁：`reports/prod/majors_runtime.lock`。
 
-## 6. 密钥与安全
+## 6. 密钥与安全（仅服务器 agent）
 
-- 模拟盘 Key **只放服务器环境变量或权限收紧的 env 文件**，不要进 Git  
-- `sandbox=True`（`demo-drill` / runner OKX 路径默认模拟）  
+- 模拟盘/实盘 Key **只放服务器环境**，不要进 Git、不要在开发机配置  
+- 启用 demo/live 前先满足 `demo-checklist` 与操作规程  
 - **不要**把 live key 配进未审查的自动任务  
 
 ## 7. 更新流程
 
-开发机改完 → push → 服务器：
+开发机 push → 服务器：
 
 ```bash
 cd /path/to/tradering
 git pull
-# 一般不必重新 bootstrap；数据用 refresh 即可
-python -m prod.cli run-ten-u
+python -m prod.cli majors-hourly --commit-refresh
 ```
 
-仅当 manifest/数据目录损坏时再：
-
-```bash
-python -m prod.bootstrap_server --force-registry   # 仅必要时
-```
+数据损坏时再 bootstrap；一般不必 `--force-registry`。
 
 ## 8. 常见问题
 
 | 现象 | 处理 |
 |------|------|
-| `blocked_not_in_paper_prep_registry` | 跑 `bootstrap_server` 或 `admit-ten-u`（若你拷了回测报告） |
-| `dataset fingerprint drift` | `refresh-ten-u` 或重新 bootstrap |
-| demo-drill 缺凭证 | 配置 `OKX_*` 模拟盘密钥 |
-| demo-drill RAVE/LAB | **设计拒绝**；10U 信号用 local paper |
-| Git 很大 / 推不动 | 确认未再次 `git add data reports` |
+| `blocked_not_in_paper_prep_registry` | `bootstrap-server --mode majors` 或 `admit-majors` |
+| 15m 过旧 | `majors-refresh-15m --commit` 或 `majors-hourly --commit-refresh` |
+| 需要密钥相关命令 | **仅服务器 agent** 注入 `OKX_*` 后执行 |
+| RAVE/LAB | 仅 legacy `ten_u`；不可 demo/live 晋级 |
 
 ## 9. 与本机的关系
 
-- **本机**：研发、可选回测、push  
-- **服务器**：拉代码、bootstrap、跑 paper + demo ETH  
-- **状态文件**（`reports/prod/*.json`）留在服务器，不要当 Git 同步手段  
+- **本机**：研发、回测、paper 证据、push  
+- **服务器**：bootstrap、定时 majors paper；后期 agent 开 demo/live  
+- **状态文件**留在服务器，不要当 Git 同步手段  

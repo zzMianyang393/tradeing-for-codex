@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from typing import Any
 from pathlib import Path
 
@@ -69,6 +69,7 @@ class TradingRunner:
         symbols: list[str] | None = None,
         dry_run: bool = False,
         data_dir: Path | None = None,
+        pairs: list[str] | None = None,
     ) -> None:
         self.config = config
         self.executor = executor
@@ -77,8 +78,11 @@ class TradingRunner:
         self.symbols = symbols or []
         self.dry_run = dry_run
         self.data_dir = data_dir
+        self.pairs = pairs or []
         self._market: dict[str, list[FeatureBar]] = {}
         self._step = 0
+        from pairs_signal import PairsSignalGenerator
+        self.pairs_generator = PairsSignalGenerator(self.config)
 
     def load_market_data(self) -> dict[str, list[FeatureBar]]:
         """Load or reload market data from the data directory."""
@@ -207,6 +211,205 @@ class TradingRunner:
             idx=len(bars) - 1,
         )
 
+    def _run_pairs_trading_cycle(self, equity: float) -> tuple[int, int, int]:
+        """Runs the pairs trading cycle for this step: manages positions, checks signals, and executes entries.
+
+        Returns (executed_orders, rejected_orders, closed_positions_count).
+        """
+        if not self.config.enable_pairs_trading or not self.state_db:
+            return 0, 0, 0
+
+        # 1. Gather current price of all assets in our pairs
+        unique_coins = set()
+        for pair in self.pairs:
+            parts = pair.split("-")
+            if len(parts) == 2:
+                unique_coins.add(parts[0])
+                unique_coins.add(parts[1])
+
+        # Get current prices for these coins from market data if available, or fetch from exchange
+        current_prices = {}
+        for coin in unique_coins:
+            symbol = f"{coin}-USDT-SWAP"
+            # Try to get from self._market
+            if symbol in self._market and self._market[symbol]:
+                current_prices[symbol] = self._market[symbol][-1].close
+            else:
+                try:
+                    current_prices[symbol] = self.exchange.get_ticker(symbol).last
+                except Exception:
+                    current_prices[symbol] = 1.0
+
+        # 2. Check and generate signals for all candidate pairs
+        pairs_signals = {}
+        for pair in self.pairs:
+            parts = pair.split("-")
+            if len(parts) != 2:
+                continue
+            coin_a, coin_b = parts[0], parts[1]
+            s1 = f"{coin_a}-USDT-SWAP"
+            s2 = f"{coin_b}-USDT-SWAP"
+
+            # Check if there is an open position for this pair
+            open_pos = None
+            for pos in self.state_db.get_open_pairs_positions():
+                if pos["pair_key"] == pair:
+                    open_pos = pos
+                    break
+
+            current_pos_dir = 0
+            if open_pos:
+                current_pos_dir = 1 if open_pos["direction_a"] == "long" else -1
+
+            try:
+                # Data synchronization is an explicit background concern, not
+                # a latency-sensitive order-management operation.
+                sig_res = self.pairs_generator.get_latest_zscore(s1, s2, sync=False)
+                
+                # Derive signal using z-score
+                z = sig_res["zscore"]
+                entry_z = self.config.pairs_entry_z
+                exit_z = self.config.pairs_exit_z
+                stop_z = self.config.pairs_stop_z
+                
+                signal = "hold"
+                if current_pos_dir == 0:
+                    if z > entry_z and z < stop_z:
+                        signal = "entry_short"
+                    elif z < -entry_z and z > -stop_z:
+                        signal = "entry_long"
+                else:
+                    should_exit = False
+                    if abs(z) >= stop_z:
+                        should_exit = True
+                    elif current_pos_dir == 1 and z >= exit_z:
+                        should_exit = True
+                    elif current_pos_dir == -1 and z <= -exit_z:
+                        should_exit = True
+                    if should_exit:
+                        signal = "exit"
+                
+                sig_res["signal"] = signal
+                pairs_signals[pair] = sig_res
+            except Exception as e:
+                logger.error(f"Error checking signal for pair {pair}: {e}")
+
+        # 3. Manage existing pairs positions (exits)
+        closed_actions = self.executor.manage_pairs_positions(pairs_signals, current_prices, current_step=self._step)
+        for action in closed_actions:
+            logger.info(
+                "Pairs Position closed: %s legs=%s reason=%s pnl=%.4f",
+                action.symbol, action.direction, action.reason, action.pnl,
+            )
+
+        # 4. Check entry signals for non-open pairs
+        open_pairs = {pos["pair_key"] for pos in self.state_db.get_open_pairs_positions()}
+        max_active = self.config.pairs_max_active
+        allocation_fraction = self.config.pairs_allocation_fraction
+
+        executed_orders = 0
+        rejected_orders = 0
+
+        # Filter entry signals
+        entry_candidates = []
+        for pair, sig_info in pairs_signals.items():
+            if pair in open_pairs:
+                continue
+            signal = sig_info.get("signal", "hold")
+            if signal in ("entry_long", "entry_short"):
+                entry_candidates.append((pair, sig_info))
+
+        if entry_candidates:
+            # Sort by Z-score absolute value descending
+            entry_candidates.sort(key=lambda x: abs(x[1]["zscore"]), reverse=True)
+
+            for pair, sig_info in entry_candidates:
+                current_open_count = len(self.state_db.get_open_pairs_positions())
+                if current_open_count >= max_active:
+                    logger.info(f"Pairs portfolio full: {current_open_count}/{max_active} active pairs. Skipping {pair}.")
+                    break
+
+                normal_margin = sum(p["margin"] for p in self.state_db.get_open_positions())
+                pairs_margin = sum(p["margin"] for p in self.state_db.get_open_pairs_positions())
+                pair_margin = equity * allocation_fraction
+                if normal_margin + pairs_margin + pair_margin > equity * self.config.max_total_margin_fraction:
+                    rejected_orders += 1
+                    logger.info("Pairs entry rejected: %s exceeds portfolio margin limit.", pair)
+                    continue
+                parts = pair.split("-")
+                s1 = f"{parts[0]}-USDT-SWAP"
+                s2 = f"{parts[1]}-USDT-SWAP"
+                
+                risk_a = self.config.leverage_caps.get(s1)
+                risk_b = self.config.leverage_caps.get(s2)
+                leverage_a = min(float(risk_a.max_leverage), 10.0) if risk_a else 10.0
+                leverage_b = min(float(risk_b.max_leverage), 10.0) if risk_b else 10.0
+                leverage = min(leverage_a, leverage_b)
+
+                # The log-spread is log(A) - beta * log(B), so beta must
+                # determine the two dollar legs.  ``pair_margin * leverage``
+                # is total gross exposure, not exposure per leg.
+                beta_abs = abs(float(sig_info["beta"]))
+                gross_notional = pair_margin * leverage
+                notional_a = gross_notional / (1.0 + beta_abs)
+                notional_b = gross_notional - notional_a
+
+                direction_a = 1 if sig_info["signal"] == "entry_long" else -1
+                direction_b = -direction_a
+
+                latest_bar = (self._market.get(s1) or [_RiskBar()])[-1]
+                atr_pct = getattr(latest_bar, "atr_pct", 0.0)
+                risk_bar = _RiskBar(atr_pct=float(atr_pct) if isinstance(atr_pct, (int, float)) else 0.0)
+                decision = self.executor.risk_manager.check_order(
+                    pair,
+                    direction_a,
+                    notional_a + notional_b,
+                    pair_margin,
+                    equity,
+                    self._step,
+                    [risk_bar],
+                    0,
+                    current_positions_margin=normal_margin + pairs_margin,
+                    current_positions_count=len(self.state_db.get_open_positions()) + current_open_count,
+                )
+                if not decision.allowed:
+                    rejected_orders += 1
+                    logger.info("Pairs entry rejected: %s risk=%s", pair, decision.reason)
+                    continue
+
+                res = self.executor.execute_pairs_signal(
+                    pair_key=pair,
+                    symbol_a=s1,
+                    symbol_b=s2,
+                    direction_a=direction_a,
+                    direction_b=direction_b,
+                    notional_a=notional_a,
+                    notional_b=notional_b,
+                    margin=pair_margin,
+                    leverage=leverage,
+                    entry_z=sig_info["zscore"],
+                    beta=sig_info["beta"],
+                    alpha=sig_info["alpha"],
+                    price_a=sig_info["price_a"],
+                    price_b=sig_info["price_b"],
+                    current_step=self._step,
+                )
+
+                if res.accepted:
+                    executed_orders += 1
+                    logger.info(
+                        "Pairs entry executed: %s direction=%s zscore=%.2f",
+                        pair, sig_info["signal"], sig_info["zscore"]
+                    )
+                else:
+                    rejected_orders += 1
+                    logger.info(
+                        "Pairs entry rejected: %s reason=%s",
+                        pair, res.reason
+                    )
+
+        return executed_orders, rejected_orders, len(closed_actions)
+
     def run_once(self, run_input: RunInput | None = None) -> RunReport:
         """Run one trading cycle: load data, manage positions, generate signals, execute."""
         if run_input is not None:
@@ -229,9 +432,11 @@ class TradingRunner:
         equity = getattr(account, "equity", 0.0) or getattr(account, "total_equity", 0.0)
         if self.state_db:
             open_positions = self.state_db.get_open_positions()
-            used_margin = sum(p["margin"] for p in open_positions)
+            open_pairs_positions = self.state_db.get_open_pairs_positions()
+            used_margin = sum(p["margin"] for p in open_positions) + sum(p["margin"] for p in open_pairs_positions)
         else:
             open_positions = []
+            open_pairs_positions = []
             used_margin = 0.0
 
         # Manage existing positions (stop/trail/time exit)
@@ -245,7 +450,7 @@ class TradingRunner:
             )
 
         # Generate signals
-        signals = self._generate_signals(market, active_symbols)
+        signals = self._generate_signals(market, active_symbols) if self.config.enable_rule_trading else []
 
         # Filter out symbols already in position
         open_symbols = {p["symbol"] for p in open_positions}
@@ -277,34 +482,41 @@ class TradingRunner:
                     sig.reason, result.reason,
                 )
 
+        # Execute pairs trading cycle
+        pairs_executed, pairs_rejected, pairs_closed = self._run_pairs_trading_cycle(equity)
+        executed_orders += pairs_executed
+        rejected_orders += pairs_rejected
+
         # Sync state
         sync_consistent = True
         if self.state_db:
             sync = self.executor.sync_state(self._step)
             sync_consistent = sync.consistent
             open_positions = self.state_db.get_open_positions()
-            used_margin = sum(p["margin"] for p in open_positions)
+            open_pairs_positions = self.state_db.get_open_pairs_positions()
+            used_margin = sum(p["margin"] for p in open_positions) + sum(p["margin"] for p in open_pairs_positions)
             risk_status = asdict(self.executor.risk_manager.get_status())
             self.state_db.snapshot_account(
                 equity=equity,
                 available_margin=max(0.0, equity - used_margin),
                 used_margin=used_margin,
                 unrealized_pnl=0.0,
-                open_positions=len(open_positions),
+                open_positions=len(open_positions) + len(open_pairs_positions),
                 risk_status=json.dumps(risk_status, ensure_ascii=False),
             )
         else:
+            open_pairs_positions = []
             risk_status = {}
 
         self._step += 1
         return RunReport(
             executed_orders=executed_orders,
             rejected_orders=rejected_orders,
-            closed_positions=len(closed),
-            open_positions=len(open_positions),
+            closed_positions=len(closed) + pairs_closed,
+            open_positions=len(open_positions) + len(open_pairs_positions),
             sync_consistent=sync_consistent,
             risk_status=risk_status,
-            signals_generated=len(signals),
+            signals_generated=len(signals) + len(self.pairs),
             equity=equity,
         )
 
@@ -466,6 +678,9 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--okx-monitor-loop", action="store_true", help="Run finite OKX simulated sync/snapshot monitor cycles")
     mode.add_argument("--okx-health-report", action="store_true", help="Print OKX simulated health report as JSON")
     parser.add_argument("--db", type=Path, default=Path("reports") / "dry_run_state.db")
+    parser.add_argument("--enable-pairs", action="store_true", help="Explicitly enable experimental pairs paper trading")
+    parser.add_argument("--pairs", default="", help="Comma-separated pairs list; requires --enable-pairs")
+    parser.add_argument("--enable-rule-strategies", action="store_true", help="Explicitly enable legacy single-symbol rule signals")
     parser.add_argument("--data", type=Path, default=Path("data"), help="Data directory for market data")
     parser.add_argument("--equity", type=float, default=10.0)
     parser.add_argument("--iterations", type=int, default=1)
@@ -538,6 +753,25 @@ def main(argv: list[str] | None = None) -> int:
         _print_json(payload)
         return code
 
+    # Research has no approved strategy at present.  Keep experimental rule and
+    # pairs engines testable in isolation, but do not let the normal CLI turn
+    # either into paper/live trading merely through an opt-in flag.
+    if args.enable_pairs or args.enable_rule_strategies:
+        _print_json(
+            {
+                "error": "No strategy is approved for paper or live trading.",
+                "blocked_flags": [
+                    name
+                    for name, enabled in (
+                        ("--enable-pairs", args.enable_pairs),
+                        ("--enable-rule-strategies", args.enable_rule_strategies),
+                    )
+                    if enabled
+                ],
+            }
+        )
+        return 2
+
     if args.exchange != "dry-run" and not args.reconcile:
         _print_json({"error": "--exchange okx is currently supported only with --reconcile"})
         return 2
@@ -564,16 +798,24 @@ def main(argv: list[str] | None = None) -> int:
 
     _setup_logging()
     config, exchange, risk_manager, db, executor = _build_components(args.db, equity=args.equity)
+    config = replace(
+        config,
+        enable_pairs_trading=args.enable_pairs,
+        enable_rule_trading=args.enable_rule_strategies,
+    )
+    risk_manager.config = config
+    executor.config = config
+    pairs_list = [p.strip() for p in args.pairs.split(",")] if args.pairs else None
     try:
         if args.once:
-            runner = TradingRunner(config, executor, db, data_dir=args.data)
+            runner = TradingRunner(config, executor, db, data_dir=args.data, pairs=pairs_list)
             report = runner.run_once()
             payload = asdict(report)
             payload["equity"] = args.equity
             _print_json(payload)
             return 0
         if args.loop:
-            runner = TradingRunner(config, executor, db, data_dir=args.data)
+            runner = TradingRunner(config, executor, db, data_dir=args.data, pairs=pairs_list)
             # Pre-load market data once
             runner.load_market_data()
             if args.iterations and args.iterations > 0:

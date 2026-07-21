@@ -58,3 +58,10 @@ Desktop.ini
 *.jsonl
 *.jsonl.idx
 candidate_pool/
+
+# --- Generated research presentations and test snapshots ---
+*.html
+*.xml
+
+# --- Local-only archive / handoff payloads ---
+archive/

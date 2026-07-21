@@ -126,7 +126,7 @@ def parse_timestamp_ms(value: str) -> int:
     stripped = value.strip()
     if stripped.isdigit():
         return int(stripped)
-    parsed = datetime.strptime(stripped, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+    parsed = datetime.fromisoformat(stripped).replace(tzinfo=timezone.utc)
     return int(parsed.timestamp() * 1000)
 
 
@@ -211,6 +211,49 @@ def download_symbol(
     return len(ordered)
 
 
+def repair_symbol_range(
+    symbol: str,
+    start_exclusive: int,
+    end_exclusive: int,
+    out_dir: Path,
+    bar: str = "15m",
+    sleep_seconds: float = 0.12,
+    limit: int = 100,
+    retries: int = 4,
+) -> dict[str, int]:
+    """Merge official candles strictly inside a known internal gap."""
+    if start_exclusive >= end_exclusive:
+        raise ValueError("repair start must be earlier than repair end")
+    path = output_path(symbol, out_dir, bar)
+    rows = read_existing_rows(path, bar)
+    before_count = len(rows)
+    cursor = end_exclusive
+    pages = 0
+    while True:
+        page = fetch_page_with_retry(symbol, bar, after=cursor, limit=limit, retries=retries)
+        if not page:
+            break
+        pages += 1
+        timestamps = [int(item[0]) for item in page]
+        for item, ts in zip(page, timestamps):
+            if start_exclusive < ts < end_exclusive:
+                rows[ts] = item
+        oldest = min(timestamps)
+        if oldest <= start_exclusive + bar_ms(bar):
+            break
+        if oldest >= cursor:
+            raise RuntimeError(f"Non-decreasing OKX repair cursor for {symbol}: {oldest} >= {cursor}")
+        cursor = oldest
+        time.sleep(sleep_seconds)
+    write_rows(path, [rows[ts] for ts in sorted(rows)], bar)
+    return {
+        "before_rows": before_count,
+        "after_rows": len(rows),
+        "added_rows": len(rows) - before_count,
+        "pages": pages,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Download OKX historical candles into Tradering CSV format.")
     parser.add_argument("--symbols", nargs="+", required=True)
@@ -220,9 +263,31 @@ def main() -> None:
     parser.add_argument("--sleep", type=float, default=0.12)
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--retries", type=int, default=4)
+    parser.add_argument("--repair-start")
+    parser.add_argument("--repair-end")
     args = parser.parse_args()
 
+    if bool(args.repair_start) != bool(args.repair_end):
+        parser.error("--repair-start and --repair-end must be provided together")
+
     for symbol in args.symbols:
+        if args.repair_start and args.repair_end:
+            result = repair_symbol_range(
+                symbol,
+                parse_timestamp_ms(args.repair_start),
+                parse_timestamp_ms(args.repair_end),
+                args.out,
+                args.bar,
+                sleep_seconds=args.sleep,
+                limit=args.limit,
+                retries=args.retries,
+            )
+            print(
+                f"{symbol}: repaired {result['added_rows']} rows across {result['pages']} pages; "
+                f"total={result['after_rows']}",
+                flush=True,
+            )
+            continue
         count = download_symbol(
             symbol,
             args.days,

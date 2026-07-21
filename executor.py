@@ -427,6 +427,266 @@ class Executor:
                 logger.warning("Failed to cancel stale order %s: %s", exchange_order_id, exc)
         return cancelled
 
+    def execute_pairs_signal(
+        self,
+        pair_key: str,
+        symbol_a: str,
+        symbol_b: str,
+        direction_a: int,
+        direction_b: int,
+        notional_a: float,
+        notional_b: float,
+        margin: float,
+        leverage: float,
+        entry_z: float,
+        beta: float,
+        alpha: float,
+        price_a: float,
+        price_b: float,
+        current_step: int = 0,
+    ) -> ExecutionResult:
+        """Executes a double-legged pairs trading signal concurrently.
+
+        Ensures atomic execution or immediate recovery (leg-lock prevention).
+        """
+        fee_rate = self.config.taker_fee
+        dir_a_str = "long" if direction_a == 1 else "short"
+        dir_b_str = "long" if direction_b == 1 else "short"
+        
+        qty_a = notional_a / price_a
+        qty_b = notional_b / price_b
+        
+        # 1. Save local order state for both legs
+        order_id_a = self.state_db.save_order(
+            symbol_a, dir_a_str, qty_a, price=price_a, signal_reason=f"pairs_entry_{pair_key}", risk_decision="allowed"
+        )
+        order_id_b = self.state_db.save_order(
+            symbol_b, dir_b_str, qty_b, price=price_b, signal_reason=f"pairs_entry_{pair_key}", risk_decision="allowed"
+        )
+        
+        # 2. Concurrently place both orders to exchange
+        import concurrent.futures
+        
+        def place_order_safe(symbol, direction, qty, price, fee):
+            try:
+                return self.exchange.place_order(
+                    symbol, direction, qty, order_type="market", price=price, fee=fee
+                ), None
+            except Exception as e:
+                return None, e
+
+        fee_a = notional_a * fee_rate
+        fee_b = notional_b * fee_rate
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as th_executor:
+            fut_a = th_executor.submit(place_order_safe, symbol_a, dir_a_str, qty_a, price_a, fee_a)
+            fut_b = th_executor.submit(place_order_safe, symbol_b, dir_b_str, qty_b, price_b, fee_b)
+            
+            fill_a, err_a = fut_a.result()
+            fill_b, err_b = fut_b.result()
+
+        # 3. Handle errors and execution status
+        # Update order status
+        if fill_a:
+            self.state_db.update_order_status(
+                order_id_a, fill_a.status, fill_price=fill_a.fill_price, fill_qty=fill_a.fill_qty, fee=fill_a.fee, exchange_order_id=fill_a.order_id
+            )
+        else:
+            self.state_db.update_order_status(order_id_a, "failed")
+            
+        if fill_b:
+            self.state_db.update_order_status(
+                order_id_b, fill_b.status, fill_price=fill_b.fill_price, fill_qty=fill_b.fill_qty, fee=fill_b.fee, exchange_order_id=fill_b.order_id
+            )
+        else:
+            self.state_db.update_order_status(order_id_b, "failed")
+
+        # Check for Leg-Lock: one filled, one failed
+        filled_a = fill_a and fill_a.status == "filled"
+        filled_b = fill_b and fill_b.status == "filled"
+        
+        if filled_a and not filled_b:
+            logger.warning(f"Leg-lock detected: {symbol_a} filled, {symbol_b} failed ({err_b}). Reversing {symbol_a} order.")
+            try:
+                reverse_dir = "short" if dir_a_str == "long" else "long"
+                self.exchange.place_order(symbol_a, reverse_dir, fill_a.fill_qty, order_type="market", price=fill_a.fill_price, fee=fee_a)
+            except Exception as e:
+                logger.critical(f"Failed to reverse leg-locked position for {symbol_a}: {e}")
+                self.risk_manager.pause("pairs_leg_lock", current_step)
+            return ExecutionResult(False, "failed", f"Leg-lock: {symbol_b} failed. {symbol_a} reversed.", error=str(err_b))
+            
+        elif filled_b and not filled_a:
+            logger.warning(f"Leg-lock detected: {symbol_b} filled, {symbol_a} failed ({err_a}). Reversing {symbol_b} order.")
+            try:
+                reverse_dir = "short" if dir_b_str == "long" else "long"
+                self.exchange.place_order(symbol_b, reverse_dir, fill_b.fill_qty, order_type="market", price=fill_b.fill_price, fee=fee_b)
+            except Exception as e:
+                logger.critical(f"Failed to reverse leg-locked position for {symbol_b}: {e}")
+                self.risk_manager.pause("pairs_leg_lock", current_step)
+            return ExecutionResult(False, "failed", f"Leg-lock: {symbol_a} failed. {symbol_b} reversed.", error=str(err_a))
+            
+        elif not filled_a and not filled_b:
+            return ExecutionResult(False, "failed", "Both orders failed to execute.", error=str(err_a or err_b))
+
+        # Both succeeded! Save pairs position
+        entry_price_a = fill_a.fill_price if fill_a.fill_price is not None else price_a
+        entry_price_b = fill_b.fill_price if fill_b.fill_price is not None else price_b
+        
+        pos_id = self.state_db.save_pairs_position(
+            pair_key=pair_key,
+            symbol_a=symbol_a,
+            symbol_b=symbol_b,
+            direction_a=dir_a_str,
+            direction_b=dir_b_str,
+            entry_price_a=entry_price_a,
+            entry_price_b=entry_price_b,
+            qty_a=fill_a.fill_qty if fill_a.fill_qty is not None else qty_a,
+            qty_b=fill_b.fill_qty if fill_b.fill_qty is not None else qty_b,
+            notional_a=notional_a,
+            notional_b=notional_b,
+            margin=margin,
+            leverage=leverage,
+            entry_z=entry_z,
+            beta=beta,
+            alpha=alpha,
+        )
+        
+        return ExecutionResult(
+            True,
+            "filled",
+            order_id=f"{order_id_a},{order_id_b}",
+            position_id=pos_id,
+            fill_price=entry_price_a,
+            fill_qty=qty_a,
+        )
+
+    def manage_pairs_positions(
+        self,
+        pairs_signals: dict[str, dict[str, Any]],
+        current_prices: dict[str, float],
+        current_step: int = 0,
+    ) -> list[PositionAction]:
+        """Manages open pairs positions, checking for mean-reversion, time stop or stop-loss exits.
+
+        Closes both legs concurrently on exit.
+        """
+        import math
+        from datetime import datetime, timezone
+
+        actions = []
+        fee_rate = self.config.taker_fee
+        max_hold_bars = self.config.pairs_max_hold_bars
+        timeframe_minutes = self.config.timeframe_minutes
+
+        open_positions = self.state_db.get_open_pairs_positions()
+
+        for pos in open_positions:
+            pair_key = pos["pair_key"]
+            s1 = pos["symbol_a"]
+            s2 = pos["symbol_b"]
+
+            sig_info = pairs_signals.get(pair_key, {})
+            signal = sig_info.get("signal", "hold")
+
+            # --- Time stop: force exit if held too long ---
+            if signal != "exit" and max_hold_bars > 0:
+                opened_at_str = pos.get("opened_at", "")
+                if opened_at_str:
+                    try:
+                        opened_at = datetime.fromisoformat(opened_at_str.replace("Z", "+00:00"))
+                        # If naive (no timezone info), assume UTC
+                        if opened_at.tzinfo is None:
+                            opened_at = opened_at.replace(tzinfo=timezone.utc)
+                        now_utc = datetime.now(timezone.utc)
+                        elapsed_minutes = (now_utc - opened_at).total_seconds() / 60.0
+                        bars_held = math.floor(elapsed_minutes / max(timeframe_minutes, 1))
+                        if bars_held >= max_hold_bars:
+                            signal = "exit"
+                            sig_info = dict(sig_info)
+                            sig_info["_exit_reason"] = "time_stop"
+                    except (ValueError, TypeError):
+                        pass
+
+            if signal != "exit":
+                continue
+                
+            # Exit triggered! Close both legs concurrently
+            dir_a = pos["direction_a"]
+            dir_b = pos["direction_b"]
+            qty_a = pos["qty_a"]
+            qty_b = pos["qty_b"]
+            
+            price_a = current_prices.get(s1) or sig_info.get("price_a") or pos["entry_price_a"]
+            price_b = current_prices.get(s2) or sig_info.get("price_b") or pos["entry_price_b"]
+            
+            import concurrent.futures
+            
+            def close_leg(symbol, direction, qty, price, fee):
+                try:
+                    return self.exchange.close_position(symbol, direction, qty, price, fee=fee), None
+                except Exception as e:
+                    return None, e
+                    
+            fee_a = qty_a * price_a * fee_rate
+            fee_b = qty_b * price_b * fee_rate
+            
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as th_executor:
+                fut_a = th_executor.submit(close_leg, s1, dir_a, qty_a, price_a, fee_a)
+                fut_b = th_executor.submit(close_leg, s2, dir_b, qty_b, price_b, fee_b)
+                
+                fill_a, err_a = fut_a.result()
+                fill_b, err_b = fut_b.result()
+                
+            # Compute PnL
+            exit_a = fill_a.fill_price if (fill_a and fill_a.fill_price is not None) else price_a
+            exit_b = fill_b.fill_price if (fill_b and fill_b.fill_price is not None) else price_b
+            
+            if dir_a == "long":
+                pnl_a = (exit_a - pos["entry_price_a"]) * qty_a
+            else:
+                pnl_a = (pos["entry_price_a"] - exit_a) * qty_a
+                
+            if dir_b == "long":
+                pnl_b = (exit_b - pos["entry_price_b"]) * qty_b
+            else:
+                pnl_b = (pos["entry_price_b"] - exit_b) * qty_b
+                
+            total_fee = fee_a + fee_b
+            net_pnl = pnl_a + pnl_b - total_fee
+            pnl_pct = (net_pnl / pos["margin"]) * 100.0 if pos["margin"] else 0.0
+
+            # Determine exit reason
+            if sig_info.get("_exit_reason") == "time_stop":
+                exit_reason = "time_stop"
+            elif abs(sig_info.get("zscore", 0.0)) >= self.config.pairs_stop_z:
+                exit_reason = "stop_loss"
+            else:
+                exit_reason = "mean_reversion"
+
+            self.state_db.close_pairs_position(
+                pos["id"],
+                exit_price_a=exit_a,
+                exit_price_b=exit_b,
+                pnl=net_pnl,
+                pnl_pct=pnl_pct,
+                fee=total_fee,
+                exit_reason=exit_reason,
+            )
+            self.risk_manager.on_trade_close(net_pnl, current_step)
+
+            actions.append(
+                PositionAction(
+                    position_id=pos["id"],
+                    symbol=pair_key,
+                    direction=f"{dir_a}/{dir_b}",
+                    reason=exit_reason,
+                    exit_price=(exit_a + exit_b) / 2.0,
+                    pnl=net_pnl,
+                )
+            )
+            
+        return actions
+
 
 def _direction_label(direction: int) -> str:
     return "long" if direction > 0 else "short"

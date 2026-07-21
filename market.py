@@ -35,6 +35,26 @@ class FeatureBar(Bar):
     trend_strength: float = 0.0
 
 
+def quantify_bar_path(data_dir: Path, base_symbol: str, timeframe_suffix: str) -> Path | None:
+    """Resolve quantify OHLCV path; tolerate OKX-style 1H vs canonical 1h on disk."""
+    primary = data_dir / f"{base_symbol}_{timeframe_suffix}.csv"
+    if primary.exists():
+        return primary
+    if timeframe_suffix == "1h":
+        alt = data_dir / f"{base_symbol}_1H.csv"
+        if alt.exists():
+            return alt
+    if timeframe_suffix == "4h":
+        alt = data_dir / f"{base_symbol}_4H.csv"
+        if alt.exists():
+            return alt
+    if timeframe_suffix == "1d":
+        alt = data_dir / f"{base_symbol}_1D.csv"
+        if alt.exists():
+            return alt
+    return None
+
+
 def discover_symbols(data_dir: Path) -> list[str]:
     okx_symbols = [path.name.removesuffix("_1m.csv") for path in data_dir.glob("*-USDT-SWAP_1m.csv")]
     quantify_symbols = []
@@ -43,6 +63,13 @@ def discover_symbols(data_dir: Path) -> list[str]:
             f"{path.name.removesuffix(f'_{suffix}.csv')}-USDT-SWAP"
             for path in data_dir.glob(f"*_{suffix}.csv")
         )
+    # Linux-case variants written by some OKX download paths
+    for path in data_dir.glob("*_1H.csv"):
+        quantify_symbols.append(f"{path.name.removesuffix('_1H.csv')}-USDT-SWAP")
+    for path in data_dir.glob("*_4H.csv"):
+        quantify_symbols.append(f"{path.name.removesuffix('_4H.csv')}-USDT-SWAP")
+    for path in data_dir.glob("*_1D.csv"):
+        quantify_symbols.append(f"{path.name.removesuffix('_1D.csv')}-USDT-SWAP")
     return sorted(set(okx_symbols + quantify_symbols))
 
 
@@ -252,8 +279,12 @@ def load_market(
             240: "4h",
             1440: "1d",
         }.get(timeframe_minutes)
-        quantify_path = data_dir / f"{base_symbol}_{timeframe_suffix}.csv" if timeframe_suffix else None
-        if quantify_path and quantify_path.exists():
+        quantify_path = (
+            quantify_bar_path(data_dir, base_symbol, timeframe_suffix)
+            if timeframe_suffix
+            else None
+        )
+        if quantify_path is not None:
             bars = load_quantify_csv(quantify_path)
         elif okx_path.exists():
             bars_1m = load_1m_csv(okx_path)

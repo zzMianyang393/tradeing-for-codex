@@ -13,8 +13,10 @@ from pathlib import Path
 from typing import Any, Callable, Protocol
 
 
-DEMO_ALLOWED_SYMBOLS = frozenset({"ETH-USDT-SWAP", "BTC-USDT-SWAP"})
-DEMO_BLOCKED_SYMBOLS = frozenset({"RAVE-USDT-SWAP", "LAB-USDT-SWAP"})
+from prod.policy import LOCAL_EXPERIMENT_SYMBOLS, PRODUCTION_BOUND_SYMBOLS
+
+DEMO_ALLOWED_SYMBOLS = PRODUCTION_BOUND_SYMBOLS
+DEMO_BLOCKED_SYMBOLS = LOCAL_EXPERIMENT_SYMBOLS
 
 
 class ExchangeLike(Protocol):

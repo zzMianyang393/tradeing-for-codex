@@ -9,7 +9,7 @@ from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
-from binance_cm_metrics import archive_url, download_metrics, fetch_day
+from binance_cm_metrics import archive_url, download_metrics, fetch_day, field_coverage
 
 
 def _archive_bytes() -> bytes:
@@ -54,6 +54,14 @@ class BinanceCoinMetricsTests(unittest.TestCase):
             with patch("binance_cm_metrics.fetch_day", return_value={"symbol": "BTCUSD_PERP"}):
                 metadata = download_metrics("BTCUSD_PERP", date(2024, 7, 10), date(2024, 7, 11), Path(tmp), 0, workers=2)
             self.assertEqual(2, metadata["downloaded_this_run"])
+
+    def test_field_coverage_reveals_late_arriving_columns(self):
+        coverage = field_coverage(
+            [{"oi": "1", "late": ""}, {"oi": "2", "late": "3"}],
+            ["oi", "late"],
+        )
+        self.assertEqual(1.0, coverage["oi"]["coverage_ratio"])
+        self.assertEqual(0.5, coverage["late"]["coverage_ratio"])
 
 
 if __name__ == "__main__":

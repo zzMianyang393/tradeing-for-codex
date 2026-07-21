@@ -109,6 +109,52 @@ CREATE TABLE IF NOT EXISTS health_alerts (
     context TEXT,
     FOREIGN KEY(report_id) REFERENCES health_reports(id)
 );
+
+CREATE TABLE IF NOT EXISTS pairs_positions (
+    id TEXT PRIMARY KEY,
+    pair_key TEXT NOT NULL,
+    symbol_a TEXT NOT NULL,
+    symbol_b TEXT NOT NULL,
+    direction_a TEXT NOT NULL,
+    direction_b TEXT NOT NULL,
+    entry_price_a REAL NOT NULL,
+    entry_price_b REAL NOT NULL,
+    qty_a REAL NOT NULL,
+    qty_b REAL NOT NULL,
+    notional_a REAL NOT NULL,
+    notional_b REAL NOT NULL,
+    margin REAL NOT NULL,
+    leverage REAL NOT NULL,
+    entry_z REAL NOT NULL,
+    beta REAL NOT NULL,
+    alpha REAL NOT NULL,
+    opened_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open',
+    position_id_a TEXT,
+    position_id_b TEXT
+);
+
+CREATE TABLE IF NOT EXISTS pairs_trades (
+    id TEXT PRIMARY KEY,
+    pair_key TEXT NOT NULL,
+    symbol_a TEXT NOT NULL,
+    symbol_b TEXT NOT NULL,
+    direction_a TEXT NOT NULL,
+    direction_b TEXT NOT NULL,
+    entry_price_a REAL NOT NULL,
+    entry_price_b REAL NOT NULL,
+    exit_price_a REAL,
+    exit_price_b REAL,
+    qty_a REAL NOT NULL,
+    qty_b REAL NOT NULL,
+    entry_time TEXT NOT NULL,
+    exit_time TEXT,
+    pnl REAL,
+    pnl_pct REAL,
+    fee REAL,
+    exit_reason TEXT
+);
 """
 
 
@@ -535,6 +581,93 @@ class StateDB:
         )
         self._conn.commit()
         return len(rows)
+
+    # ------------------------------------------------------------------
+    # Pairs Positions & Trades
+    # ------------------------------------------------------------------
+
+    def save_pairs_position(
+        self,
+        pair_key: str,
+        symbol_a: str,
+        symbol_b: str,
+        direction_a: str,
+        direction_b: str,
+        entry_price_a: float,
+        entry_price_b: float,
+        qty_a: float,
+        qty_b: float,
+        notional_a: float,
+        notional_b: float,
+        margin: float,
+        leverage: float,
+        entry_z: float,
+        beta: float,
+        alpha: float,
+    ) -> str:
+        pos_id = _uuid()
+        now = _now_utc()
+        self._conn.execute(
+            "INSERT INTO pairs_positions ("
+            "id, pair_key, symbol_a, symbol_b, direction_a, direction_b, "
+            "entry_price_a, entry_price_b, qty_a, qty_b, notional_a, notional_b, "
+            "margin, leverage, entry_z, beta, alpha, opened_at, updated_at, status"
+            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open')",
+            (
+                pos_id, pair_key, symbol_a, symbol_b, direction_a, direction_b,
+                entry_price_a, entry_price_b, qty_a, qty_b, notional_a, notional_b,
+                margin, leverage, entry_z, beta, alpha, now, now
+            )
+        )
+        self._conn.commit()
+        return pos_id
+
+    def get_open_pairs_positions(self) -> list[dict[str, Any]]:
+        cursor = self._conn.execute(
+            "SELECT * FROM pairs_positions WHERE status = 'open'"
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def close_pairs_position(
+        self,
+        pos_id: str,
+        exit_price_a: float,
+        exit_price_b: float,
+        pnl: float,
+        pnl_pct: float,
+        fee: float,
+        exit_reason: str = "mean_reversion",
+    ) -> None:
+        now = _now_utc()
+        # 1. Update position status to closed
+        self._conn.execute(
+            "UPDATE pairs_positions SET status = 'closed', updated_at = ? WHERE id = ?",
+            (now, pos_id)
+        )
+        
+        # 2. Get the position details to save to trades
+        row = self._conn.execute(
+            "SELECT * FROM pairs_positions WHERE id = ?", (pos_id,)
+        ).fetchone()
+        if not row:
+            return
+            
+        # 3. Insert into pairs_trades
+        self._conn.execute(
+            "INSERT INTO pairs_trades ("
+            "id, pair_key, symbol_a, symbol_b, direction_a, direction_b, "
+            "entry_price_a, entry_price_b, exit_price_a, exit_price_b, "
+            "qty_a, qty_b, entry_time, exit_time, pnl, pnl_pct, fee, exit_reason"
+            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                pos_id, row["pair_key"], row["symbol_a"], row["symbol_b"],
+                row["direction_a"], row["direction_b"],
+                row["entry_price_a"], row["entry_price_b"],
+                exit_price_a, exit_price_b, row["qty_a"], row["qty_b"],
+                row["opened_at"], now, pnl, pnl_pct, fee, exit_reason
+            )
+        )
+        self._conn.commit()
 
 
 # ---------------------------------------------------------------------------

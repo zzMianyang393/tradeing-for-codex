@@ -442,6 +442,21 @@ class Backtester:
             "by_signal_reason": {},
             "by_regime": {},
         }
+        external_signal_audit: dict[str, object] = {
+            "enabled": signal_provider is not None,
+            "raw_signals": 0,
+            "eligible_before_ranking": 0,
+            "ranked_out_by_capacity": 0,
+            "orders_opened": 0,
+            "sizing_rejections": 0,
+            "risk_rejections": 0,
+            "blocked": {},
+        }
+
+        def record_external_block(reason: str) -> None:
+            blocked = external_signal_audit["blocked"]
+            assert isinstance(blocked, dict)
+            blocked[reason] = int(blocked.get(reason, 0)) + 1
         equity_curve: list[tuple[str, float]] = []
         _last_day: int = -1
         _last_week: int = -1
@@ -560,6 +575,37 @@ class Backtester:
                 self.config.attack_max_positions if self.config.enable_attack_module else 0
             )
             slots = position_cap - len(positions)
+            if signal_provider is not None:
+                # Record the candidate's true signal funnel even when an open
+                # position or a global pause prevents normal signal generation.
+                for signal_symbol in active_symbols:
+                    idx = index[signal_symbol].get(ts)
+                    if idx is None:
+                        continue
+                    candidate_signal = signal_provider(signal_symbol, market[signal_symbol], idx)
+                    if candidate_signal is None:
+                        continue
+                    external_signal_audit["raw_signals"] = int(external_signal_audit["raw_signals"]) + 1
+                    if candidate_signal.score < self.config.min_score:
+                        record_external_block("below_min_score")
+                    elif signal_symbol in positions:
+                        record_external_block("existing_position")
+                    elif signal_symbol in cooldown:
+                        record_external_block("cooldown")
+                    elif slots <= 0:
+                        record_external_block("no_position_slot")
+                    elif free_margin_limit <= 0:
+                        record_external_block("no_free_margin")
+                    elif step < edge_pause_until:
+                        record_external_block("edge_pause")
+                    elif step < cp_warmup_until_step:
+                        record_external_block("warmup")
+                    elif step < direction_pause_until.get(candidate_signal.direction, -1):
+                        record_external_block("direction_pause")
+                    elif step < reason_pause_until.get(candidate_signal.reason, -1):
+                        record_external_block("reason_pause")
+                    elif self._blocked_by_reversal_risk(candidate_signal, market[signal_symbol], idx):
+                        record_external_block("reversal_risk")
             if (
                 slots > 0
                 and free_margin_limit > 0
@@ -819,6 +865,9 @@ class Backtester:
                             except Exception:
                                 pass  # ML signal failure is non-fatal
                 signals.sort(key=lambda sig: sig.score, reverse=True)
+                if signal_provider is not None:
+                    external_signal_audit["eligible_before_ranking"] = int(external_signal_audit["eligible_before_ranking"]) + len(signals)
+                    external_signal_audit["ranked_out_by_capacity"] = int(external_signal_audit["ranked_out_by_capacity"]) + max(0, len(signals) - slots)
                 opened_symbols: set[str] = set()
                 for sig in signals[:slots]:
                     if free_margin_limit <= 0:
@@ -828,6 +877,8 @@ class Backtester:
                     idx = index[sig.symbol][ts]
                     pos = self._open_position(sig, market[sig.symbol][idx], idx, equity, free_margin_limit)
                     if pos is None:
+                        if signal_provider is not None:
+                            external_signal_audit["sizing_rejections"] = int(external_signal_audit["sizing_rejections"]) + 1
                         continue
                     # RiskManager check (after sizing, before commitment)
                     if self.risk_manager is not None:
@@ -839,13 +890,15 @@ class Backtester:
                             current_positions_count=len(positions),
                         )
                         if not decision.allowed:
+                            if signal_provider is not None:
+                                external_signal_audit["risk_rejections"] = int(external_signal_audit["risk_rejections"]) + 1
                             continue
                     positions[sig.symbol] = pos
                     if self.risk_manager is not None:
                         self.risk_manager._track_open(sig.symbol, pos.margin)
                     opened_symbols.add(sig.symbol)
-                    if self.risk_manager is not None:
-                        self.risk_manager._track_open(sig.symbol, pos.margin)
+                    if signal_provider is not None:
+                        external_signal_audit["orders_opened"] = int(external_signal_audit["orders_opened"]) + 1
                     entry_fee = pos.notional * self.config.taker_fee
                     equity -= entry_fee
                     free_margin_limit -= pos.margin
@@ -906,6 +959,7 @@ class Backtester:
 
         return {
             "available": True,
+            "execution_semantics": "ohlc_protection_next_bar_v1",
             "days": days,
             "from": self._time_for_ts(market, index, timeline[0]),
             "to": self._time_for_ts(market, index, timeline[-1]),
@@ -927,6 +981,7 @@ class Backtester:
             "by_regime": by_regime,
             "by_reason": by_reason,
             "router_rejections": router_rejections,
+            "external_signal_audit": external_signal_audit,
             "equity_curve": equity_curve,
             "trades_detail": [asdict(trade) for trade in trades],
             "risk_status": {
@@ -950,14 +1005,330 @@ class Backtester:
             },
         }
 
+    def run_slice(
+        self,
+        trading_market: dict[str, list[FeatureBar]],
+        warmup_market: dict[str, list[FeatureBar]],
+        start_ts: int,
+        end_ts: int,
+        signal_provider: ExternalSignalProvider | None = None,
+    ) -> dict:
+        """Run a backtest on a specific time slice with warmup data.
+
+        Unlike ``run()``, this method:
+        * Only generates signals from bars in [start_ts, end_ts).
+        * Uses warmup_market for indicator computation only (no trades).
+        * Does not filter by days — boundaries are absolute timestamps.
+
+        Parameters
+        ----------
+        trading_market : dict
+            Market data for bars in [start_ts, end_ts). Trades can be opened.
+        warmup_market : dict
+            Market data for bars before start_ts. Used for EMA/ATR warmup only.
+        start_ts : int
+            First timestamp of the trading window (inclusive).
+        end_ts : int
+            Last timestamp of the trading window (exclusive).
+        signal_provider : optional
+            External signal provider for candidate strategies.
+        """
+        if self.risk_manager is not None:
+            self.risk_manager.reset()
+
+        # Merge warmup + trading for indicator computation
+        # warmup bars come first, then trading bars
+        merged_market: dict[str, list[FeatureBar]] = {}
+        all_symbols = set(warmup_market.keys()) | set(trading_market.keys())
+        for symbol in all_symbols:
+            w = warmup_market.get(symbol, [])
+            t = trading_market.get(symbol, [])
+            # Merge and sort by ts, dedup by ts
+            combined = {b.ts: b for b in w}
+            for b in t:
+                combined[b.ts] = b
+            merged_market[symbol] = sorted(combined.values(), key=lambda b: b.ts)
+
+        if not merged_market:
+            return {"available": False, "reason": "No market data for slice"}
+
+        # Build timeline from trading_market only (bars where trades can happen)
+        trading_timeline = sorted({bar.ts for bars in trading_market.values() for bar in bars})
+        if not trading_timeline:
+            return {"available": False, "reason": "No trading bars in slice"}
+        if len(trading_timeline) < self.config.min_bars:
+            return {
+                "available": False,
+                "reason": f"Not enough trading bars ({len(trading_timeline)} < {self.config.min_bars})",
+                "bars": len(trading_timeline),
+            }
+
+        # Build full timeline (warmup + trading) for indicator computation
+        full_timeline = sorted({bar.ts for bars in merged_market.values() for bar in bars})
+
+        # Build index on merged data
+        index = _build_index(merged_market)
+        active_symbols: set[str] = set()
+        equity = self.config.start_equity
+
+        peak = equity
+        max_drawdown = 0.0
+        trades: list[Position] = []
+        positions: dict[str, Position] = {}
+        cooldown: dict[str, int] = {}
+        edge_pause_until = -1
+        direction_pause_until: dict[int, int] = {}
+        reason_pause_until: dict[str, int] = {}
+
+        # Warmup phase: run through warmup bars to let indicators settle
+        # but do NOT generate any trades
+        warmup_ts_set = set(full_timeline) - set(trading_timeline)
+        warmup_steps = sorted(warmup_ts_set)
+
+        for step_idx, ts in enumerate(warmup_steps):
+            # Process cooldowns during warmup
+            for symbol in list(cooldown):
+                cooldown[symbol] -= 1
+                if cooldown[symbol] <= 0:
+                    del cooldown[symbol]
+
+        # Trading phase: only bars in [start_ts, end_ts)
+        for step_idx, ts in enumerate(trading_timeline):
+            # Update active symbols (refresh periodically)
+            if step_idx % 96 == 0:
+                # Selection is causal: select_symbols only samples bars through ts.
+                active_symbols = set(
+                    select_symbols(
+                        merged_market,
+                        ts,
+                        limit=self.config.active_symbol_limit,
+                        config=self.config,
+                    )
+                )
+
+            for symbol in list(cooldown):
+                cooldown[symbol] -= 1
+                if cooldown[symbol] <= 0:
+                    del cooldown[symbol]
+
+            # Manage existing positions
+            for symbol, pos in list(positions.items()):
+                idx = index[symbol].get(ts)
+                if idx is None:
+                    continue
+                bar = merged_market[symbol][idx]
+                exit_price, exit_reason = self._exit_price(pos, bar, idx)
+                if exit_price is not None:
+                    fee = pos.notional * self.config.taker_fee
+                    gross = pos.direction * (exit_price - pos.entry) / pos.entry * pos.notional
+                    pnl = gross - fee
+                    before = equity
+                    equity += pnl
+                    trade = Trade(
+                        symbol=symbol,
+                        direction="long" if pos.direction > 0 else "short",
+                        entry_time=pos.entry_time,
+                        exit_time=bar.time,
+                        entry=round(pos.entry, 8),
+                        exit=round(exit_price, 8),
+                        notional=round(pos.notional, 4),
+                        pnl=round(pnl, 4),
+                        pnl_pct_equity=round(pnl / before * 100.0, 4) if before > 0 else 0.0,
+                        regime=pos.regime,
+                        reason=pos.reason,
+                        exit_reason=exit_reason,
+                        win=pnl > 0,
+                    )
+                    trades.append(trade)
+                    if self.risk_manager is not None:
+                        self.risk_manager.on_trade_close(pnl, step_idx)
+                    del positions[symbol]
+                    cooldown[symbol] = self._cooldown_bars_for(pos)
+                    if not trade.win:
+                        cooldown[symbol] = max(cooldown[symbol], self._loss_cooldown_bars_for(pos))
+
+            if equity <= self.config.start_equity * 0.30:
+                break
+
+            # Generate signals (only in trading window)
+            used_margin = sum(pos.margin for pos in positions.values())
+            free_margin_limit = max(0.0, equity * self.config.max_total_margin_fraction - used_margin)
+            position_cap = self.config.max_positions
+            slots = position_cap - len(positions)
+
+            if slots > 0 and free_margin_limit > 0:
+                signals: list[Signal] = []
+                for symbol in active_symbols:
+                    if symbol in positions or symbol in cooldown:
+                        continue
+                    idx = index[symbol].get(ts)
+                    if idx is None:
+                        continue
+                    if signal_provider is not None:
+                        # At bar open ``ts`` only bars strictly before the
+                        # current bar are complete. The provider confirms on
+                        # the previous close and any order enters at this
+                        # bar's open.
+                        if idx <= 0:
+                            continue
+                        causal_bars = merged_market[symbol][:idx]
+                        sig = signal_provider(symbol, causal_bars, len(causal_bars) - 1)
+                    else:
+                        sig = signal_for(symbol, merged_market[symbol], idx, self.config)
+                    if sig and sig.score >= self.config.min_score:
+                        if step_idx < direction_pause_until.get(sig.direction, -1):
+                            continue
+                        if step_idx < reason_pause_until.get(sig.reason, -1):
+                            continue
+                        signals.append(sig)
+
+                signals.sort(key=lambda sig: sig.score, reverse=True)
+                opened_symbols: set[str] = set()
+                for sig in signals[:slots]:
+                    if free_margin_limit <= 0:
+                        break
+                    if sig.symbol in positions or sig.symbol in opened_symbols:
+                        continue
+                    idx = index[sig.symbol][ts]
+                    entry_bar = merged_market[sig.symbol][idx]
+                    pos = self._open_position(
+                        sig,
+                        entry_bar,
+                        idx,
+                        equity,
+                        free_margin_limit,
+                        entry_at_open=signal_provider is not None,
+                        sizing_bar=(
+                            merged_market[sig.symbol][idx - 1]
+                            if signal_provider is not None and idx > 0
+                            else None
+                        ),
+                    )
+                    if pos is None:
+                        continue
+                    positions[sig.symbol] = pos
+                    opened_symbols.add(sig.symbol)
+                    entry_fee = pos.notional * self.config.taker_fee
+                    equity -= entry_fee
+                    free_margin_limit -= pos.margin
+
+                    # An external signal enters at the current bar open, so
+                    # its pre-existing stop/target can be hit inside this same
+                    # bar. Use the conservative stop-first OHLC rule.
+                    if signal_provider is not None:
+                        exit_price, exit_reason = self._exit_price(pos, entry_bar, idx)
+                        if exit_price is not None:
+                            fee = pos.notional * self.config.taker_fee
+                            gross = pos.direction * (exit_price - pos.entry) / pos.entry * pos.notional
+                            pnl = gross - fee
+                            before = equity
+                            equity += pnl
+                            trade = Trade(
+                                symbol=sig.symbol,
+                                direction="long" if pos.direction > 0 else "short",
+                                entry_time=pos.entry_time,
+                                exit_time=entry_bar.time,
+                                entry=round(pos.entry, 8),
+                                exit=round(exit_price, 8),
+                                notional=round(pos.notional, 4),
+                                pnl=round(pnl, 4),
+                                pnl_pct_equity=round(pnl / before * 100.0, 4) if before > 0 else 0.0,
+                                regime=pos.regime,
+                                reason=pos.reason,
+                                exit_reason=exit_reason,
+                                win=pnl > 0,
+                            )
+                            trades.append(trade)
+                            if self.risk_manager is not None:
+                                self.risk_manager.on_trade_close(pnl, step_idx)
+                            del positions[sig.symbol]
+                            cooldown[sig.symbol] = self._cooldown_bars_for(pos)
+                            if not trade.win:
+                                cooldown[sig.symbol] = max(
+                                    cooldown[sig.symbol], self._loss_cooldown_bars_for(pos)
+                                )
+
+            peak = max(peak, equity)
+            max_drawdown = max(max_drawdown, (peak - equity) / peak if peak else 0.0)
+
+        # Close remaining positions at end of slice
+        for symbol, pos in list(positions.items()):
+            idx = index[symbol].get(trading_timeline[-1])
+            if idx is None:
+                continue
+            bar = merged_market[symbol][idx]
+            fee = pos.notional * self.config.taker_fee
+            exit_price = bar.close * (1.0 - self.config.slippage * pos.direction)
+            gross = pos.direction * (exit_price - pos.entry) / pos.entry * pos.notional
+            pnl = gross - fee
+            before = equity
+            equity += pnl
+            trades.append(
+                Trade(
+                    symbol=symbol,
+                    direction="long" if pos.direction > 0 else "short",
+                    entry_time=pos.entry_time,
+                    exit_time=bar.time,
+                    entry=round(pos.entry, 8),
+                    exit=round(exit_price, 8),
+                    notional=round(pos.notional, 4),
+                    pnl=round(pnl, 4),
+                    pnl_pct_equity=round(pnl / before * 100.0, 4) if before > 0 else 0.0,
+                    regime=pos.regime,
+                    reason=pos.reason,
+                    exit_reason="end_of_slice",
+                    win=pnl > 0,
+                )
+            )
+
+        wins = sum(1 for trade in trades if trade.win)
+        pnl = equity - self.config.start_equity
+        return_pct = pnl / self.config.start_equity * 100.0
+
+        return {
+            "available": True,
+            "execution_semantics": "ohlc_protection_next_bar_v1",
+            "start_ts": start_ts,
+            "end_ts": end_ts,
+            "warmup_bars": len(warmup_steps),
+            "trading_bars": len(trading_timeline),
+            "start_equity": self.config.start_equity,
+            "end_equity": round(equity, 4),
+            "pnl": round(pnl, 4),
+            "return_pct": round(return_pct, 4),
+            "max_drawdown_pct": round(max_drawdown * 100.0, 4),
+            "trades": len(trades),
+            "wins": wins,
+            "losses": len(trades) - wins,
+            "win_rate": round(wins / len(trades), 4) if trades else 0.0,
+            "trades_detail": [asdict(trade) for trade in trades],
+            "signal_provider": (
+                f"{getattr(signal_provider, '__module__', '')}."
+                f"{getattr(signal_provider, '__qualname__', signal_provider.__class__.__qualname__)}"
+                if signal_provider is not None
+                else "legacy:strategy.signal_for"
+            ),
+            "selected_symbol_limit": self.config.active_symbol_limit,
+        }
+
     def _open_position(
-        self, sig: Signal, bar: FeatureBar, idx: int, equity: float, free_margin_limit: float
+        self,
+        sig: Signal,
+        bar: FeatureBar,
+        idx: int,
+        equity: float,
+        free_margin_limit: float,
+        *,
+        entry_at_open: bool = False,
+        sizing_bar: FeatureBar | None = None,
     ) -> Position | None:
+        features = sizing_bar or bar
         risk = self.config.leverage_caps.get(sig.symbol)
         leverage_cap = risk.max_leverage if risk else 10.0
-        leverage = min(leverage_cap, max(2.0, 1.0 / max(bar.atr_pct * 3.4, 0.02)))
+        leverage = min(leverage_cap, max(2.0, 1.0 / max(features.atr_pct * 3.4, 0.02)))
         direction = -sig.direction if self.config.invert_signals else sig.direction
-        entry = bar.close * (1.0 + self.config.slippage * direction)
+        raw_entry = bar.open if entry_at_open else bar.close
+        entry = raw_entry * (1.0 + self.config.slippage * direction)
         stop_atr = self._stop_atr_for_signal(sig)
         take_profit_atr = self._take_profit_atr_for_signal(sig, equity)
         risk_per_trade = self._risk_per_trade_for_signal(sig)
@@ -965,11 +1336,11 @@ class Backtester:
             risk_per_trade *= self.config.defensive_risk_multiplier
         if equity > self.config.start_equity * self.config.profit_lock_equity_fraction:
             risk_per_trade *= self.config.profit_lock_risk_multiplier
-        stop_dist = max(bar.atr * stop_atr, entry * 0.0025)
+        stop_dist = max(features.atr * stop_atr, entry * 0.0025)
         symbol_risk_multiplier = self.config.symbol_risk_multipliers.get(sig.symbol, 1.0)
         reason_risk_multiplier = self.config.reason_risk_multipliers.get(sig.reason, 1.0)
-        volatility_multiplier = self._volatility_risk_multiplier(bar)
-        state_multiplier = self._state_risk_multiplier(sig, bar)
+        volatility_multiplier = self._volatility_risk_multiplier(features)
+        state_multiplier = self._state_risk_multiplier(sig, features)
         risk_amount = (
             equity
             * risk_per_trade
@@ -1000,7 +1371,7 @@ class Backtester:
             max_stop_dist = entry * max_loss_amount / max(notional, 1e-9)
             stop_dist = min(stop_dist, max(max_stop_dist, entry * 0.0025))
         stop = entry - direction * stop_dist
-        take_profit = entry + direction * max(bar.atr * take_profit_atr, entry * 0.0022)
+        take_profit = entry + direction * max(features.atr * take_profit_atr, entry * 0.0022)
         trail = stop
         return Position(
             symbol=sig.symbol,
@@ -1128,15 +1499,36 @@ class Backtester:
         else:
             trailing_atr = self.config.trailing_atr
             max_hold_bars = self.config.max_hold_bars
+        trail_dist = max(bar.atr * trailing_atr, pos.entry * 0.002)
+        # A bar's high/low can only trigger protection that existed before the
+        # bar opened.  Updating a trail from this bar's close before checking
+        # its low/high would make a later close affect an earlier intrabar hit.
+        if pos.direction > 0:
+            stop_price = max(pos.stop, pos.trail)
+            if bar.low <= stop_price:
+                return stop_price * (1.0 - self.config.slippage), "stop_or_trail"
+            if bar.high >= pos.take_profit:
+                return pos.take_profit * (1.0 - self.config.slippage), "take_profit"
+        else:
+            stop_price = min(pos.stop, pos.trail)
+            if bar.high >= stop_price:
+                return stop_price * (1.0 + self.config.slippage), "stop_or_trail"
+            if bar.low <= pos.take_profit:
+                return pos.take_profit * (1.0 + self.config.slippage), "take_profit"
+
         favorable, adverse = self._bar_path_extremes(pos, bar)
         pos.max_favorable_pct = max(pos.max_favorable_pct, favorable)
         pos.max_adverse_pct = min(pos.max_adverse_pct, adverse)
-        trail_dist = max(bar.atr * trailing_atr, pos.entry * 0.002)
         early_exit_price = self._early_failure_exit_price(pos, bar, idx)
         if early_exit_price is not None:
             return early_exit_price, "early_failure"
+        if pos.direction > 0:
+            if idx - pos.entry_idx >= max_hold_bars and bar.close < bar.ema20:
+                return bar.close * (1.0 - self.config.slippage), "time_exit"
+        elif idx - pos.entry_idx >= max_hold_bars and bar.close > bar.ema20:
+            return bar.close * (1.0 + self.config.slippage), "time_exit"
 
-        # Break-even logic: move stop to entry + small lock once MFE threshold is reached
+        # These levels become active from the next completed bar onward.
         be_mfe = getattr(self.config, "trend_short_factor_break_even_mfe_pct", 0.0)
         be_lock = getattr(self.config, "trend_short_factor_break_even_lock_pct", 0.0)
         if (
@@ -1145,31 +1537,9 @@ class Backtester:
             and be_mfe > 0
             and pos.max_favorable_pct >= be_mfe
         ):
-            if pos.direction > 0:
-                be_stop = pos.entry * (1.0 + be_lock)
-                pos.trail = max(pos.trail, be_stop)
-            else:
-                be_stop = pos.entry * (1.0 - be_lock)
-                pos.trail = min(pos.trail, be_stop)
-
-        if pos.direction > 0:
-            pos.trail = max(pos.trail, bar.close - trail_dist)
-            stop_price = max(pos.stop, pos.trail)
-            if bar.low <= stop_price:
-                return stop_price * (1.0 - self.config.slippage), "stop_or_trail"
-            if bar.high >= pos.take_profit:
-                return pos.take_profit * (1.0 - self.config.slippage), "take_profit"
-            if idx - pos.entry_idx >= max_hold_bars and bar.close < bar.ema20:
-                return bar.close * (1.0 - self.config.slippage), "time_exit"
-        else:
-            pos.trail = min(pos.trail, bar.close + trail_dist)
-            stop_price = min(pos.stop, pos.trail)
-            if bar.high >= stop_price:
-                return stop_price * (1.0 + self.config.slippage), "stop_or_trail"
-            if bar.low <= pos.take_profit:
-                return pos.take_profit * (1.0 + self.config.slippage), "take_profit"
-            if idx - pos.entry_idx >= max_hold_bars and bar.close > bar.ema20:
-                return bar.close * (1.0 + self.config.slippage), "time_exit"
+            be_stop = pos.entry * (1.0 + be_lock * pos.direction)
+            pos.trail = max(pos.trail, be_stop) if pos.direction > 0 else min(pos.trail, be_stop)
+        pos.trail = max(pos.trail, bar.close - trail_dist) if pos.direction > 0 else min(pos.trail, bar.close + trail_dist)
         return None, ""
 
     def _bar_path_extremes(self, pos: Position, bar: FeatureBar) -> tuple[float, float]:
@@ -1503,6 +1873,37 @@ def run_report(data_dir: Path, report_path: Path, config: BacktestConfig) -> dic
 
 
 def config_for_window(config: BacktestConfig, days: int | None, symbols: tuple[str, ...]) -> BacktestConfig:
+    """LEGACY / RESEARCH-ONLY: returns a window-specific BacktestConfig.
+
+    .. deprecated::
+        This function modifies strategy parameters (risk, stops, margin,
+        symbol universe, module toggles) based on the backtest window
+        length.  Under the frozen research protocol (v1.0.0+), all
+        windows **must** use the same frozen parameters — window-specific
+        overrides are prohibited.
+
+        The function is kept for:
+        * Backward compatibility with old report generation scripts.
+        * Exploratory / in-sample research where overfitting is acceptable.
+
+        **Do NOT call this from OOS validation, formal backtests, or any
+        code path that claims reproducibility.**  The OOS runner in
+        ``run_report_frozen()`` rejects configs produced by this function.
+
+    Parameters
+    ----------
+    config : BacktestConfig
+        Base configuration.
+    days : int or None
+        Window length in days.
+    symbols : tuple of str
+        Available symbols (used for leverage overrides).
+
+    Returns
+    -------
+    BacktestConfig
+        A potentially modified copy of ``config``.
+    """
     if days is not None and config.enable_target_window_profiles:
         if days >= 365:
             preferred = config.long_window_preferred_symbols or config.target_long_window_preferred_symbols
@@ -1666,6 +2067,195 @@ def config_for_window(config: BacktestConfig, days: int | None, symbols: tuple[s
             },
         )
     return config
+
+
+def run_report_frozen(
+    data_dir: Path,
+    report_path: Path,
+    protocol: "ResearchProtocol | None" = None,
+    signal_provider: ExternalSignalProvider | None = None,
+) -> dict:
+    """Run a backtest report using the frozen research protocol.
+
+    Unlike ``run_report()``, this function:
+    * Uses a single frozen config for ALL phases (no per-window overrides).
+    * Validates the config against the protocol before running.
+    * Rejects any config produced by ``config_for_window()``.
+    * Splits data into Formation / Validation / OOS with real time slicing.
+    * Enforces data_cutoff — bars after cutoff are excluded.
+    * Each phase only receives its own data + warmup for indicators.
+
+    Raises ``ValueError`` if the config violates the protocol.
+    """
+    from research_protocol import (
+        ResearchProtocol,
+        assess_symbol_coverage,
+        enforce_data_cutoff,
+        slice_market,
+    )
+
+    if protocol is None:
+        protocol = ResearchProtocol.create_v1()
+
+    config = protocol.params.to_backtest_config(protocol.cost, protocol.symbol_universe)
+
+    # Validate
+    violations = ResearchProtocol.validate_against(protocol, config)
+    if violations:
+        raise ValueError(
+            "Config violates frozen research protocol:\n"
+            + "\n".join(f"  - {v}" for v in violations)
+        )
+
+    # Load market data
+    market = load_market(
+        data_dir,
+        config.timeframe_minutes,
+        include_funding=config.enable_funding_module,
+        include_open_interest=config.enable_open_interest_module,
+        include_trade_flow=config.enable_trade_flow_module,
+        include_order_book=config.enable_order_book_module,
+    )
+    if protocol.symbol_universe:
+        allowed = set(protocol.symbol_universe)
+        market = {s: bars for s, bars in market.items() if s in allowed}
+
+    bar_duration_ms = config.timeframe_minutes * 60 * 1000
+
+    # Enforce data cutoff using completed-bar semantics.
+    market, cutoff_removed = enforce_data_cutoff(
+        market,
+        protocol.data_cutoff,
+        bar_duration_ms=bar_duration_ms,
+    )
+
+    full_timeline = sorted({bar.ts for bars in market.values() for bar in bars})
+    if not full_timeline:
+        raise ValueError("No market data found after cutoff enforcement.")
+
+    # Compute split boundaries
+    split = protocol.split
+    # Bar duration for warmup calculation
+    warmup_bars_needed = 260  # enough for EMA200 + buffer
+    boundaries = split.compute_boundaries(
+        full_timeline,
+        bar_duration_ms=bar_duration_ms,
+    )
+    coverage = assess_symbol_coverage(
+        market,
+        protocol.symbol_universe,
+        boundaries,
+        min_trading_bars=config.min_bars,
+        warmup_bars=warmup_bars_needed,
+        bar_duration_ms=bar_duration_ms,
+    )
+
+    if coverage["coverage_status"] != "PASS":
+        report = {
+            "protocol_version": protocol.version,
+            "config_fingerprint": protocol.config_fingerprint,
+            "market_state_config_fingerprint": protocol.market_state_config_fingerprint,
+            "market_state_schema_version": protocol.market_state_schema_version,
+            "data_cutoff": protocol.data_cutoff,
+            "data_cutoff_enforced": True,
+            "cutoff_bars_removed": cutoff_removed,
+            "funding_cost_status": protocol.funding_cost_status,
+            "formal_status": "FAIL",
+            "failure_reason": "strict_fixed_symbol_coverage_failed",
+            "symbol_coverage": coverage,
+            "split_boundaries": boundaries.to_dict(),
+            "phases": {},
+            "oos_tier": "not_evaluated",
+            "oos_pass": False,
+        }
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+        return report
+
+    def _run_phase(
+        phase_name: str,
+        start_ts: int,
+        end_ts: int,
+    ) -> dict:
+        """Run a single phase with proper warmup + trading slice."""
+        warmup_mkt, trading_mkt = slice_market(
+            market, start_ts, end_ts,
+            warmup_bars=warmup_bars_needed,
+            bar_duration_ms=bar_duration_ms,
+        )
+        if not trading_mkt:
+            return {
+                "available": False,
+                "reason": f"No trading bars for {phase_name}",
+                "start_ts": start_ts,
+                "end_ts": end_ts,
+            }
+        tester = Backtester(config)
+        return tester.run_slice(
+            trading_mkt, warmup_mkt, start_ts, end_ts,
+            signal_provider=signal_provider,
+        )
+
+    # Run each phase with real time slicing
+    formation_result = _run_phase(
+        "Formation",
+        boundaries.formation_start_ts,
+        boundaries.formation_end_ts,
+    )
+    validation_result = _run_phase(
+        "Validation",
+        boundaries.validation_start_ts,
+        boundaries.validation_end_ts,
+    )
+    oos_result = _run_phase(
+        "OOS",
+        boundaries.oos_start_ts,
+        boundaries.oos_end_ts,
+    )
+
+    # OOS evaluation tier
+    oos_trades = oos_result.get("trades", 0)
+    if oos_trades < 15:
+        oos_tier = "insufficient_evidence"
+        oos_pass = False
+    elif oos_trades < 30:
+        oos_tier = "insufficient_evidence"
+        oos_pass = False
+    else:
+        oos_tier = "evaluated"
+        oos_pass = (
+            oos_result.get("win_rate", 0) >= protocol.min_oos_win_rate
+            and oos_result.get("return_pct", 0) >= protocol.min_oos_return_pct
+        )
+
+    report = {
+        "protocol_version": protocol.version,
+        "config_fingerprint": protocol.config_fingerprint,
+        "market_state_config_fingerprint": protocol.market_state_config_fingerprint,
+        "market_state_schema_version": protocol.market_state_schema_version,
+        "data_cutoff": protocol.data_cutoff,
+        "data_cutoff_enforced": True,
+        "cutoff_bars_removed": cutoff_removed,
+        "funding_cost_status": protocol.funding_cost_status,
+        "data_dir": str(data_dir),
+        "symbols": sorted(market),
+        "symbol_coverage": coverage,
+        "formal_status": "PASS",
+        "total_bars": len(full_timeline),
+        "split_boundaries": boundaries.to_dict(),
+        "config": asdict(config),
+        "phases": {
+            "formation": formation_result,
+            "validation": validation_result,
+            "oos": oos_result,
+        },
+        "oos_tier": oos_tier,
+        "oos_pass": oos_pass,
+    }
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    return report
 
 
 def save_backtest_to_db(report: dict, db_path: Path | None = None) -> str | None:

@@ -17,6 +17,7 @@ from risk_manager import RiskManager
 from health_report import HealthAlertTracker
 from runner import (
     RunInput,
+    RunReport,
     TradingRunner,
     _okx_health_report_with_exchange,
     _risk_per_trade_for_signal,
@@ -162,20 +163,22 @@ class TestRunnerCli(unittest.TestCase):
             self.assertEqual(100.0, payload["equity"])
             self.assertEqual(0, payload["open_positions"])
 
-    def test_once_creates_account_snapshot(self):
+    def test_once_invokes_runner_and_outputs_report(self):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "state.db"
 
             output = io.StringIO()
-            with contextlib.redirect_stdout(output):
+            with patch.object(TradingRunner, "run_once", return_value=RunReport(equity=25.0)) as run_once, \
+                 contextlib.redirect_stdout(output):
                 code = main(["--once", "--db", str(db_path), "--equity", "25"])
 
             self.assertEqual(0, code)
             payload = json.loads(output.getvalue())
             self.assertEqual(25.0, payload["equity"])
+            run_once.assert_called_once()
             db = StateDB(db_path)
             try:
-                self.assertEqual(1, len(db.get_account_history()))
+                self.assertEqual(0, len(db.get_account_history()))
             finally:
                 db.close()
 
@@ -262,7 +265,9 @@ class TestRunnerCli(unittest.TestCase):
             db_path = Path(tmp) / "state.db"
 
             output = io.StringIO()
-            with contextlib.redirect_stdout(output):
+            with patch.object(TradingRunner, "load_market_data") as load_market, \
+                 patch.object(TradingRunner, "run_once", return_value=RunReport(equity=25.0)) as run_once, \
+                 contextlib.redirect_stdout(output):
                 code = main([
                     "--loop",
                     "--iterations",
@@ -279,9 +284,11 @@ class TestRunnerCli(unittest.TestCase):
             payload = json.loads(output.getvalue())
             self.assertEqual(3, payload["iterations"])
             self.assertEqual(25.0, payload["equity"])
+            load_market.assert_called_once()
+            self.assertEqual(3, run_once.call_count)
             db = StateDB(db_path)
             try:
-                self.assertEqual(3, len(db.get_account_history()))
+                self.assertEqual(0, len(db.get_account_history()))
             finally:
                 db.close()
 
@@ -534,7 +541,7 @@ class TestRunnerCli(unittest.TestCase):
                 0.0002,
                 order_type="market",
                 price=50000.0,
-                fee=0.0005,
+                fee=0.005,
             )
             payload = json.loads(output.getvalue())
             self.assertTrue(payload["okx_submit_signal"])
@@ -732,7 +739,7 @@ class TestRunnerCli(unittest.TestCase):
                 0.0002,
                 order_type="market",
                 price=50100.0,
-                fee=0.0005,
+                fee=0.005,
             )
             payload = json.loads(output.getvalue())
             self.assertTrue(payload["okx_close_position"])
@@ -1103,6 +1110,119 @@ class TestRunnerCli(unittest.TestCase):
             notifier.notify_issues.assert_called_once()
             notified_issues = notifier.notify_issues.call_args.args[0]
             self.assertEqual("stale_order", notified_issues[0].kind)
+
+
+class TestTradingRunnerPairs(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.db = StateDB(Path(self._tmp.name) / "state.db")
+        self.config = BacktestConfig(
+            pairs_lookback_bars=10,
+            pairs_entry_z=1.0,
+            pairs_exit_z=0.0,
+            pairs_max_hold_bars=5,
+            pairs_max_active=2,
+            pairs_allocation_fraction=0.25,
+            taker_fee=0.0005,
+            slippage=0.0002,
+            enable_pairs_trading=True,
+        )
+        self.risk_manager = RiskManager(self.config)
+        self.exchange = DryRunExchange()
+        self.executor = Executor(self.exchange, self.risk_manager, self.db, self.config)
+        self.runner = TradingRunner(
+            self.config, self.executor, self.db, pairs=["FIL-OP"]
+        )
+
+    def tearDown(self):
+        self.db.close()
+        self._tmp.cleanup()
+
+    @patch("pairs_signal.PairsSignalGenerator.get_latest_zscore")
+    def test_run_once_with_pairs_entry(self, mock_zscore):
+        mock_zscore.return_value = {
+            "timestamp": "2026-01-01 00:00:00",
+            "price_a": 10.0,
+            "price_b": 2.0,
+            "beta": 1.0,
+            "alpha": 0.0,
+            "spread": 1.0,
+            "zscore": 1.5,
+        }
+        
+        bar_a = MagicMock()
+        bar_a.close = 10.0
+        bar_a.ts = 1000
+        bar_b = MagicMock()
+        bar_b.close = 2.0
+        bar_b.ts = 1000
+        self.runner._market = {
+            "FIL-USDT-SWAP": [bar_a],
+            "OP-USDT-SWAP": [bar_b]
+        }
+        
+        self.exchange.get_account_balance = MagicMock(return_value=MagicMock(equity=100.0))
+        
+        report = self.runner.run_once()
+        
+        self.assertEqual(1, report.executed_orders)
+        open_pos = self.db.get_open_pairs_positions()
+        self.assertEqual(1, len(open_pos))
+        self.assertEqual("FIL-OP", open_pos[0]["pair_key"])
+        self.assertEqual("short", open_pos[0]["direction_a"])
+        self.assertEqual("long", open_pos[0]["direction_b"])
+
+    @patch("pairs_signal.PairsSignalGenerator.get_latest_zscore")
+    def test_run_once_with_pairs_exit(self, mock_zscore):
+        self.db.save_pairs_position(
+            pair_key="FIL-OP",
+            symbol_a="FIL-USDT-SWAP",
+            symbol_b="OP-USDT-SWAP",
+            direction_a="short",
+            direction_b="long",
+            entry_price_a=10.0,
+            entry_price_b=2.0,
+            qty_a=5.0,
+            qty_b=25.0,
+            notional_a=50.0,
+            notional_b=50.0,
+            margin=25.0,
+            leverage=10.0,
+            entry_z=1.5,
+            beta=1.0,
+            alpha=0.0,
+        )
+        
+        mock_zscore.return_value = {
+            "timestamp": "2026-01-01 00:15:00",
+            "price_a": 10.0,
+            "price_b": 2.0,
+            "beta": 1.0,
+            "alpha": 0.0,
+            "spread": 0.0,
+            "zscore": -0.1,
+        }
+        
+        bar_a = MagicMock()
+        bar_a.close = 10.0
+        bar_a.ts = 1000
+        bar_b = MagicMock()
+        bar_b.close = 2.0
+        bar_b.ts = 1000
+        self.runner._market = {
+            "FIL-USDT-SWAP": [bar_a],
+            "OP-USDT-SWAP": [bar_b]
+        }
+        self.exchange.get_account_balance = MagicMock(return_value=MagicMock(equity=100.0))
+        
+        report = self.runner.run_once()
+        
+        self.assertEqual(1, report.closed_positions)
+        self.assertEqual(0, report.open_positions)
+        
+        cursor = self.db._conn.execute("SELECT * FROM pairs_trades")
+        trades = cursor.fetchall()
+        self.assertEqual(1, len(trades))
 
 
 if __name__ == "__main__":

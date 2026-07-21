@@ -7,8 +7,9 @@ import csv
 import io
 import json
 import urllib.request
+import urllib.error
 import zipfile
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -28,8 +29,13 @@ def daily_url(symbol: str, day: date) -> str:
 
 def _read_zip(url: str) -> list[list[str]]:
     request = urllib.request.Request(url, headers={"User-Agent": "tradering-research/1.0"})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        payload = response.read()
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            payload = response.read()
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return []
+        raise
     with zipfile.ZipFile(io.BytesIO(payload)) as archive:
         name = next(name for name in archive.namelist() if name.endswith(".csv"))
         with archive.open(name) as handle:
@@ -60,14 +66,36 @@ def download_klines(symbol: str, start: date, end: date, out_dir: Path) -> dict[
         else:
             for row in _read_zip(month_url(symbol, month.year, month.month)):
                 records[int(row[0])] = row
-    selected = [row for timestamp, row in sorted(records.items()) if start <= datetime.utcfromtimestamp(timestamp / 1000).date() <= end]
+    # Monthly archives can occasionally omit a day. Fill only with the same
+    # official daily archive; never forward-fill or synthesize a candle.
+    current = start
+    while current <= end:
+        timestamp = int(datetime.combine(current, datetime.min.time(), tzinfo=timezone.utc).timestamp() * 1000)
+        if timestamp not in records:
+            for row in _read_zip(daily_url(symbol, current)):
+                records[int(row[0])] = row
+        current += timedelta(days=1)
+    selected = [
+        row
+        for timestamp, row in sorted(records.items())
+        if start <= datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc).date() <= end
+    ]
     path = out_dir / f"{symbol}_binance_cm_1d.csv"
     out_dir.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(FIELDS)
         writer.writerows(selected)
-    metadata = {"source": "binance_coin_m_archive", "execution_compatibility": "research_native_only_not_okx_execution", "symbol": symbol, "rows": len(selected), "start": start.isoformat(), "end": end.isoformat()}
+    expected_days = (end - start).days + 1
+    metadata = {
+        "source": "binance_coin_m_archive",
+        "execution_compatibility": "research_native_only_not_okx_execution",
+        "symbol": symbol,
+        "rows": len(selected),
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "missing_days": expected_days - len(selected),
+    }
     path.with_suffix(".meta.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return metadata
 

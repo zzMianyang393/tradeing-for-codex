@@ -54,6 +54,23 @@ def _load_existing_dates(path: Path) -> set[str]:
         return {row.get("archive_date", "") for row in csv.DictReader(handle)}
 
 
+def field_coverage(records: list[dict[str, str]], fieldnames: list[str]) -> dict[str, dict[str, float | int]]:
+    """Return non-empty coverage for every raw archive field.
+
+    Binance can add a column partway through the archive history.  A combined
+    CSV then has a valid schema but not necessarily enough observations for a
+    long-window strategy, so row count alone is not an adequate quality check.
+    """
+    total = len(records)
+    return {
+        field: {
+            "non_empty_rows": sum(1 for row in records if row.get(field, "").strip()),
+            "coverage_ratio": (sum(1 for row in records if row.get(field, "").strip()) / total) if total else 0.0,
+        }
+        for field in fieldnames
+    }
+
+
 def download_metrics(
     symbol: str,
     start: date,
@@ -116,6 +133,7 @@ def download_metrics(
         "downloaded_this_run": downloaded,
         "missing_archives_this_run": missing,
         "fieldnames": fieldnames,
+        "field_coverage": field_coverage(records, fieldnames),
     }
     path.with_suffix(".meta.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return metadata

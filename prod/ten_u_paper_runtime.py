@@ -3,22 +3,28 @@
 Does NOT wait for prospective sealed evaluation.
 Requires an entry in reports/prod/paper_prep_registry.json with status paper_prep.
 
-Default mode is local paper ledger (no exchange). Optional --okx-sandbox only
-prints/submits after explicit confirmation flags — live is never enabled here.
+Default mode is local paper ledger (no exchange orders).
+This path NEVER submits OKX demo or live orders — demo-drill is a separate CLI.
+RAVE/LAB symbols remain local_experiment only (not demo/live graduation).
 """
 
 from __future__ import annotations
 
-import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
+from prod.graduation import evaluate_local_paper_graduation
+from prod.policy import (
+    DEFAULT_START_EQUITY_USDT,
+    annotate_local_paper_cycle,
+    default_pipeline_places_exchange_orders,
+)
 from prod.registry import DEFAULT_REGISTRY_PATH, get_entry, is_paper_allowed
 from ten_u_event_trend_contract_v2 import PersistentEventTrendConfig, STRATEGY_ID
-from ten_u_event_trend_data_v1 import HOUR_MS, parse_utc
+from ten_u_event_trend_data_v1 import HOUR_MS
 from ten_u_event_trend_formation_v1 import (
     InstrumentSpec,
     load_bars,
@@ -53,12 +59,15 @@ def load_state(path: Path) -> dict[str, Any]:
             "state_type": "ten_u_paper_state",
             "strategy_id": STRATEGY_ID,
             "mode": "local_paper",
-            "equity": 10.0,
-            "peak_equity": 10.0,
+            "equity": DEFAULT_START_EQUITY_USDT,
+            "peak_equity": DEFAULT_START_EQUITY_USDT,
             "open_position": None,
             "closed_trades": [],
             "last_cycle_at": None,
             "halt_reason": None,
+            "places_exchange_orders": default_pipeline_places_exchange_orders(),
+            "live_allowed": False,
+            "completed_cycle_count": 0,
         }
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -197,13 +206,24 @@ def run_paper_cycle(
     entry = get_entry(STRATEGY_ID, registry_path) or {}
     state = load_state(state_path)
     if state.get("halt_reason"):
+        grad = evaluate_local_paper_graduation(
+            state,
+            registry_entry=entry or None,
+            symbols=list(config.symbols),
+        )
         report = {
             "report_type": "ten_u_paper_cycle",
             "formal_status": "halted",
             "halt_reason": state["halt_reason"],
             "equity": state.get("equity"),
             "as_of": _utc_now(),
+            "mode": "local_paper",
+            "live_allowed": False,
+            "places_exchange_orders": False,
+            "exchange_orders_submitted": 0,
+            "local_graduation": grad.to_dict(),
         }
+        cycle_path.parent.mkdir(parents=True, exist_ok=True)
         cycle_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
         return report
 
@@ -286,6 +306,27 @@ def run_paper_cycle(
     state["last_cycle_at"] = _utc_now()
     state["config_fingerprint"] = config.fingerprint()
     state["registry_status"] = entry.get("status")
+    state["mode"] = "local_paper"
+    state["places_exchange_orders"] = default_pipeline_places_exchange_orders()
+    state["live_allowed"] = False
+    state["completed_cycle_count"] = int(state.get("completed_cycle_count") or 0) + 1
+    state["symbols"] = list(config.symbols)
+    policy_block = annotate_local_paper_cycle(
+        symbols=config.symbols,
+        start_equity=float(state.get("equity", DEFAULT_START_EQUITY_USDT)),
+    )
+    state["track_class"] = policy_block["track_class"]
+    state["demo_live_graduation_eligible"] = policy_block["demo_live_graduation_eligible"]
+    graduation = evaluate_local_paper_graduation(
+        state,
+        registry_entry=entry or None,
+        symbols=list(config.symbols),
+    )
+    state["local_graduation_decision"] = graduation.decision
+    state["local_graduation_graduated"] = graduation.graduated_local
+    # Safety: never promote live/exchange from graduation pass
+    state["live_allowed"] = False
+    state["places_exchange_orders"] = False
     save_state(state, state_path)
 
     report = {
@@ -299,13 +340,22 @@ def run_paper_cycle(
         "peak_equity": state["peak_equity"],
         "open_position": state.get("open_position"),
         "closed_trade_count": len(state.get("closed_trades") or []),
+        "completed_cycle_count": state["completed_cycle_count"],
         "actions": actions,
         "mode": "local_paper",
         "live_allowed": False,
+        "places_exchange_orders": False,
         "exchange_orders_submitted": 0,
+        "track_class": policy_block["track_class"],
+        "demo_live_graduation_eligible": policy_block["demo_live_graduation_eligible"],
+        "local_graduation": graduation.to_dict(),
+        "operator_policy": policy_block["operator_policy"],
+        "universe_validation": policy_block["universe_validation"],
+        "start_equity_validation": policy_block["start_equity_validation"],
         "notes": (
-            "Local paper sleeve only. OKX auto-submit is not enabled in this cycle. "
-            "Prospective sealed wait is not required."
+            "Local paper sleeve only. Default pipeline never places OKX demo/live orders. "
+            "RAVE/LAB (if present) are local_experiment, not demo/live graduation eligible. "
+            "local_graduation is Stage-2 local-only; it never enables live or exchange."
         ),
     }
     cycle_path.parent.mkdir(parents=True, exist_ok=True)

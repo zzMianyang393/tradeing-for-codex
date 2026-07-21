@@ -13,8 +13,8 @@ class SymbolRisk:
 class BacktestConfig:
     start_equity: float = 10.0
     timeframe_minutes: int = 15
-    taker_fee: float = 0.00005
-    slippage: float = 0.0
+    taker_fee: float = 0.0005
+    slippage: float = 0.0002
     risk_per_trade: float = 0.13
     max_margin_fraction: float = 0.65
     max_total_margin_fraction: float = 0.55
@@ -314,6 +314,18 @@ class BacktestConfig:
     rm_min_order_book_depth_quote: float = 0.0
     rm_min_liquidation_distance_pct: float = 0.015
     rm_pause_on_inconsistency: bool = True
+
+    # --- Pairs Trading configuration ---
+    pairs_lookback_bars: int = 2000
+    pairs_entry_z: float = 2.0
+    pairs_exit_z: float = 0.0
+    pairs_max_hold_bars: int = 200
+    pairs_max_active: int = 4
+    pairs_stop_z: float = 3.5
+    pairs_allocation_fraction: float = 0.25
+    # Execution remains opt-in until the research gateway is passed.
+    enable_pairs_trading: bool = False
+    enable_rule_trading: bool = False
 
     min_bars: int = 260
     windows_days: tuple[int, ...] = (365, 180, 90, 60, 30, 14, 7)

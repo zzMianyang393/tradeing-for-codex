@@ -14,7 +14,15 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
+
+from prod.policy import (
+    DEFAULT_START_EQUITY_USDT,
+    MAX_START_EQUITY_USDT,
+    operator_policy_snapshot,
+    validate_production_bound_universe,
+    validate_start_equity,
+)
 
 
 @dataclass(frozen=True)
@@ -22,7 +30,7 @@ class AdmissionThresholds:
     """Frozen paper-prep thresholds for the high-risk 10U sleeve."""
 
     minimum_trades: int = 6
-    minimum_ending_equity: float = 10.0
+    minimum_ending_equity: float = DEFAULT_START_EQUITY_USDT
     maximum_drawdown_fraction: float = 0.70
     minimum_profit_factor: float = 1.0
     # Soft anti-overfit: warn if one trade dominates; hard-fail only above this
@@ -32,6 +40,8 @@ class AdmissionThresholds:
     # Drop-max-winner equity must stay above ruin for non-high-risk paths.
     drop_max_winner_min_equity: float = 2.0
     require_not_ruined: bool = True
+    # Operator capital policy: hard-reject starting equity above 500 USDT.
+    enforce_start_equity_policy: bool = True
 
 
 @dataclass
@@ -91,6 +101,7 @@ def admit_from_account_summary(
     thresholds: AdmissionThresholds | None = None,
     accept_concentration_risk: bool = False,
     high_risk_sleeve: bool = False,
+    symbols: Iterable[str] | None = None,
 ) -> AdmissionResult:
     """Admit using a finished account replay summary + optional trades_detail."""
     thr = thresholds or AdmissionThresholds()
@@ -99,7 +110,7 @@ def admit_from_account_summary(
 
     trades_n = int(account.get("trades", 0))
     ending = float(account.get("ending_equity", 0.0))
-    starting = float(account.get("starting_equity", 10.0))
+    starting = float(account.get("starting_equity", DEFAULT_START_EQUITY_USDT))
     max_dd = float(account.get("max_drawdown_fraction", 1.0))
     pf = float(account.get("profit_factor", 0.0))
     permanent = str(account.get("permanent_account_state", "active_or_temporary_cooldown"))
@@ -114,6 +125,11 @@ def admit_from_account_summary(
         share = max_winner_share(trades_detail)
         drop_eq = equity_after_drop_max_winner(starting, trades_detail)
 
+    equity_check = validate_start_equity(starting)
+    universe_check = None
+    if symbols is not None:
+        universe_check = validate_production_bound_universe(symbols)
+
     metrics = {
         "trades": trades_n,
         "starting_equity": starting,
@@ -124,7 +140,26 @@ def admit_from_account_summary(
         "max_winner_share": share,
         "equity_after_drop_max_winner": drop_eq,
         "permanent_account_state": permanent,
+        "start_equity_validation": equity_check.to_dict(),
+        "max_start_equity_usdt": MAX_START_EQUITY_USDT,
     }
+    if universe_check is not None:
+        metrics["universe_validation"] = universe_check.to_dict()
+
+    if thr.enforce_start_equity_policy and not equity_check.accepted:
+        reasons.extend(equity_check.reasons)
+    elif equity_check.warnings:
+        warnings.extend(equity_check.warnings)
+
+    if universe_check is not None and not universe_check.demo_live_graduation_eligible:
+        warnings.extend(universe_check.warnings or ())
+        if universe_check.track_class == "local_experiment":
+            warnings.append(
+                "universe_is_local_experiment_not_demo_live_graduation_eligible"
+            )
+        elif universe_check.track_class == "mixed_or_invalid":
+            # Still allow local paper-prep admission for research sleeves, but flag hard.
+            warnings.append("universe_not_production_bound_local_paper_only")
 
     if trades_n < thr.minimum_trades:
         reasons.append("trades_below_minimum")
@@ -167,6 +202,10 @@ def admit_from_account_summary(
     else:
         decision = "rejected_for_paper_prep"
 
+    graduation_eligible = bool(
+        universe_check.demo_live_graduation_eligible if universe_check is not None else False
+    )
+
     return AdmissionResult(
         strategy_id=strategy_id,
         track=track,
@@ -183,6 +222,9 @@ def admit_from_account_summary(
             "high_risk_sleeve": high_risk_sleeve,
             "prospective_wait_required": False,
             "live_requires_separate_promotion": True,
+            "demo_live_graduation_eligible": graduation_eligible,
+            "default_pipeline_places_exchange_orders": False,
+            "operator_policy_id": operator_policy_snapshot()["policy_id"],
         },
     )
 
@@ -206,6 +248,9 @@ def admit_ten_u_from_report(
         # informal trades list may lack full fields; map net_pnl if present
     strategy_id = report.get("strategy_id") or "ten_u_single_symbol_persistent_event_trend_48h_v2"
     fingerprint = report.get("config_fingerprint")
+    from ten_u_event_trend_contract_v2 import PersistentEventTrendConfig
+
+    symbols = report.get("symbols") or list(PersistentEventTrendConfig().symbols)
     return admit_from_account_summary(
         strategy_id=strategy_id,
         track="ten_u_high_risk",
@@ -214,6 +259,7 @@ def admit_ten_u_from_report(
         thresholds=thresholds,
         accept_concentration_risk=accept_concentration_risk,
         high_risk_sleeve=high_risk_sleeve,
+        symbols=symbols,
     )
 
 

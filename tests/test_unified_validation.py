@@ -3,8 +3,13 @@ from __future__ import annotations
 import unittest
 from types import SimpleNamespace
 
-from unified_validation import _duplicate_fingerprints, strategy_fingerprint
-from candidate_strategies import low_turnover_trend_signal, post_shock_reversal_signal
+from unified_validation import _duplicate_fingerprints, signal_context_symbols, strategy_fingerprint
+from candidate_signal_audit import audit_signals
+from candidate_strategies import (
+    build_btc_trend_pullback_provider,
+    low_turnover_trend_signal,
+    post_shock_reversal_signal,
+)
 
 
 class UnifiedValidationTests(unittest.TestCase):
@@ -60,6 +65,46 @@ class UnifiedValidationTests(unittest.TestCase):
         assert signal is not None
         self.assertEqual(1, signal.direction)
         self.assertEqual("candidate_post_shock_reversal", signal.reason)
+
+    def test_btc_trend_pullback_requires_btc_trend_and_completed_alt_reclaim(self):
+        bars_by_symbol = {}
+        for symbol in ("BTC-USDT-SWAP", "SOL-USDT-SWAP"):
+            bars = []
+            for index in range(656):
+                close = 100.0 + index * 0.03
+                bars.append(SimpleNamespace(ts=index, close=close, ema20=close - 0.1))
+            bars_by_symbol[symbol] = bars
+        alt = bars_by_symbol["SOL-USDT-SWAP"]
+        alt[-49] = SimpleNamespace(ts=607, close=120.0, ema20=119.0)
+        alt[-17] = SimpleNamespace(ts=639, close=116.0, ema20=115.0)
+        alt[-1] = SimpleNamespace(ts=655, close=117.0, ema20=116.0)
+
+        signal = build_btc_trend_pullback_provider(bars_by_symbol)("SOL-USDT-SWAP", alt, len(alt) - 1)
+
+        self.assertIsNotNone(signal)
+        assert signal is not None
+        self.assertEqual(1, signal.direction)
+        self.assertEqual("candidate_btc_trend_pullback", signal.reason)
+
+    def test_signal_audit_counts_actual_provider_events(self):
+        bars_by_symbol = {}
+        for symbol in ("BTC-USDT-SWAP", "SOL-USDT-SWAP"):
+            bars = [SimpleNamespace(ts=index, close=100.0 + index * 0.03, ema20=99.0) for index in range(656)]
+            bars_by_symbol[symbol] = bars
+        alt = bars_by_symbol["SOL-USDT-SWAP"]
+        alt[-49] = SimpleNamespace(ts=607, close=120.0, ema20=119.0)
+        alt[-17] = SimpleNamespace(ts=639, close=116.0, ema20=115.0)
+        alt[-1] = SimpleNamespace(ts=655, close=117.0, ema20=116.0)
+
+        report = audit_signals(bars_by_symbol, "btc_trend_pullback", SimpleNamespace())
+
+        self.assertEqual(1, report["raw_signals"])
+        self.assertEqual({"SOL-USDT-SWAP": 1}, report["by_symbol"])
+
+    def test_cross_market_candidates_keep_btc_context_without_making_it_tradable(self):
+        symbols = signal_context_symbols("btc_trend_pullback", ["SOL-USDT-SWAP", "AVAX-USDT-SWAP"])
+        self.assertEqual(["AVAX-USDT-SWAP", "BTC-USDT-SWAP", "SOL-USDT-SWAP"], symbols)
+        self.assertEqual(["SOL-USDT-SWAP"], signal_context_symbols("intraday_reversal", ["SOL-USDT-SWAP"]))
 
 
 if __name__ == "__main__":
